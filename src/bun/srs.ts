@@ -1,9 +1,9 @@
 import type { SRSCard, SRSDeck } from "./types";
 
-export function getDueCards(deck: SRSDeck): SRSCard[] {
-  const now = new Date();
+export function getDueCards(deck: SRSDeck, now?: Date): SRSCard[] {
+  const nowDate = now || new Date();
   return Object.values(deck.cards)
-    .filter((c) => new Date(c.nextReviewDate) <= now)
+    .filter((c) => new Date(c.nextReviewDate) <= nowDate)
     .sort((a, b) => new Date(a.nextReviewDate).getTime() - new Date(b.nextReviewDate).getTime());
 }
 
@@ -23,8 +23,8 @@ export function getCardsForSubject(deck: SRSDeck, subjectId: string): SRSCard[] 
   return getAllCards(deck).filter((c) => c.subjectId === subjectId);
 }
 
-export function getDueCardsForSubject(deck: SRSDeck, subjectId: string): SRSCard[] {
-  return getDueCards(deck).filter((c) => c.subjectId === subjectId);
+export function getDueCardsForSubject(deck: SRSDeck, subjectId: string, now?: Date): SRSCard[] {
+  return getDueCards(deck, now).filter((c) => c.subjectId === subjectId);
 }
 
 export function getStarredCardsForSubject(deck: SRSDeck, subjectId: string): SRSCard[] {

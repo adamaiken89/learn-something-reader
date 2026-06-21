@@ -276,7 +276,7 @@ body {
 
 /* ===== Syntax Highlighting (custom warm dark theme) ===== */
 .book-content pre code.hljs {
-  background: none !important;
+  background: none;
 }
 .book-content pre code .hljs-keyword,
 .book-content pre code .hljs-selector-tag,
@@ -391,7 +391,7 @@ body {
 
 /* Sepia syntax highlighting */
 .book-content.book-sepia pre code.hljs {
-  background: none !important;
+  background: none;
 }
 .book-content.book-sepia pre code .hljs-keyword,
 .book-content.book-sepia pre code .hljs-selector-tag,
@@ -454,7 +454,7 @@ body {
 
 /* Light syntax highlighting */
 .book-content.book-light pre code.hljs {
-  background: none !important;
+  background: none;
 }
 .book-content.book-light pre code .hljs-keyword,
 .book-content.book-light pre code .hljs-selector-tag,

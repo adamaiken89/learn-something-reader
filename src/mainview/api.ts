@@ -77,6 +77,8 @@ export const api = {
     bookmarks: () => request<any[]>("/storage/bookmarks"),
     subjectBookmarks: (subjectID: string) =>
       request<any[]>(`/storage/bookmarks/subject/${subjectID}`),
+    moduleBookmarks: (subjectID: string, moduleID: number) =>
+      request<any[]>(`/storage/bookmarks/module/${subjectID}/${moduleID}`),
     addBookmark: (data: any) =>
       request<any>("/storage/bookmarks", { method: "POST", body: JSON.stringify(data) }),
     deleteBookmark: (id: string) =>

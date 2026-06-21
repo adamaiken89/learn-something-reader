@@ -134,6 +134,8 @@ const router = {
     Storage.deleteBookmark(params.id);
     return jsonResponse({ ok: true });
   },
+  "GET /api/storage/bookmarks/module/:subjectID/:moduleID": (params: Record<string, string>) =>
+    jsonResponse(Storage.getBookmarksForModule(params.subjectID, Number(params.moduleID))),
   "GET /api/storage/check-bookmark": (params: Record<string, string>, req: Request) => {
     const url = new URL(req.url);
     const subjectID = url.searchParams.get("subjectID")!;

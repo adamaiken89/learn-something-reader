@@ -55,7 +55,7 @@ export default function SubjectListView({ onSelectSubject, onOpenSettings, onOpe
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8 overflow-y-auto flex-1">
+      <main className="px-6 py-8 overflow-y-auto flex-1">
         {subjects.length === 0 && (
           <div className="text-center py-12 text-gray-500">
             No subjects found. Add subjects to the subjects/ directory.

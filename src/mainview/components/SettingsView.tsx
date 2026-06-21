@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../api";
+import { useSettingsStore } from "../stores/settingsStore";
 
 interface Props {
   onBack: () => void;
@@ -7,19 +8,20 @@ interface Props {
 
 export default function SettingsView({ onBack }: Props) {
   const [apiKey, setApiKey] = useState("");
-  const [hasKey, setHasKey] = useState(false);
   const [saved, setSaved] = useState(false);
+  const hasApiKey = useSettingsStore((s) => s.hasApiKey);
+  const setHasApiKey = useSettingsStore((s) => s.setHasApiKey);
 
   useEffect(() => {
     api.gemini.hasKey().then((r) => {
-      setHasKey(r.hasKey);
+      setHasApiKey(r.hasKey);
     });
-  }, []);
+  }, [setHasApiKey]);
 
   const handleSaveKey = async () => {
     if (!apiKey.trim()) return;
     await api.gemini.setKey(apiKey.trim());
-    setHasKey(true);
+    setHasApiKey(true);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -47,7 +49,7 @@ export default function SettingsView({ onBack }: Props) {
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder={hasKey ? "API key set (enter new key to change)" : "Enter your Gemini API key"}
+              placeholder={hasApiKey ? "API key set (enter new key to change)" : "Enter your Gemini API key"}
               className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-500"
             />
             <button
@@ -58,7 +60,7 @@ export default function SettingsView({ onBack }: Props) {
               {saved ? "Saved!" : "Save"}
             </button>
           </div>
-          {hasKey && !saved && (
+          {hasApiKey && !saved && (
             <p className="text-xs text-emerald-400 mt-2">✓ API key is configured</p>
           )}
         </section>

@@ -168,8 +168,8 @@ export function parseSections(markdown: string): { id: string; heading: string; 
   return sections;
 }
 
-export function createSRSCard(question: QuizQuestion, moduleId: number, subjectId: string): SRSCard {
-  const now = new Date().toISOString();
+export function createSRSCard(question: QuizQuestion, moduleId: number, subjectId: string, now?: Date): SRSCard {
+  const nowISO = (now || new Date()).toISOString();
   return {
     id: `${subjectId}-${moduleId}-${question.id}`,
     questionId: question.id,
@@ -181,14 +181,14 @@ export function createSRSCard(question: QuizQuestion, moduleId: number, subjectI
     easeFactor: 2.5,
     interval: 0,
     repetitions: 0,
-    nextReviewDate: now,
+    nextReviewDate: nowISO,
     lastReviewed: null,
     isStarred: false,
   };
 }
 
-export function performReview(card: SRSCard, correct: boolean): SRSCard {
-  const now = new Date();
+export function performReview(card: SRSCard, correct: boolean, now?: Date): SRSCard {
+  const nowDate = now || new Date();
   const updated = { ...card };
 
   if (correct) {
@@ -203,10 +203,10 @@ export function performReview(card: SRSCard, correct: boolean): SRSCard {
     updated.easeFactor = Math.max(1.3, updated.easeFactor - 0.2);
   }
 
-  const nextDate = new Date(now);
+  const nextDate = new Date(nowDate);
   nextDate.setDate(nextDate.getDate() + updated.interval);
   updated.nextReviewDate = nextDate.toISOString();
-  updated.lastReviewed = now.toISOString();
+  updated.lastReviewed = nowDate.toISOString();
 
   return updated;
 }

@@ -145,6 +145,13 @@ export function getBookmarksForSubject(subjectID: string): Bookmark[] {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
+export function getBookmarksForModule(subjectID: string, moduleID: number): Bookmark[] {
+  const data = load();
+  return data.bookmarks
+    .filter((b) => b.subjectID === subjectID && b.moduleID === moduleID)
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+}
+
 export function deleteBookmark(id: string): void {
   const data = load();
   data.bookmarks = data.bookmarks.filter((b) => b.id !== id);

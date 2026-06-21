@@ -44,6 +44,14 @@ export default function QuizView({ subjectId, moduleId, onBack }: Props) {
     }
   }, [currentIndex, questions.length]);
 
+  const skipQuestion = useCallback(() => {
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex((i) => i + 1);
+    } else {
+      setCompleted(true);
+    }
+  }, [currentIndex, questions.length]);
+
   const handleFinishOrRetry = () => {
     setCurrentIndex(0);
     setSelectedAnswers({});
@@ -69,8 +77,7 @@ export default function QuizView({ subjectId, moduleId, onBack }: Props) {
           <div className="text-sm text-gray-400">Quiz Complete</div>
           <div className="w-16" />
         </header>
-        <main className="overflow-y-auto flex-1">
-          <div className="max-w-md mx-auto px-6 py-8">
+        <main className="overflow-y-auto flex-1 px-6 py-8">
             <div className="bg-gray-800 rounded-xl p-8 w-full text-center">
               <h2 className="text-2xl font-bold mb-2">Quiz Complete!</h2>
               <div className="text-5xl font-bold text-indigo-400 mb-2">{percentage}%</div>
@@ -92,7 +99,6 @@ export default function QuizView({ subjectId, moduleId, onBack }: Props) {
                 <button onClick={onBack} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg">Back to Lesson</button>
               </div>
             </div>
-          </div>
         </main>
       </div>
     );
@@ -102,14 +108,14 @@ export default function QuizView({ subjectId, moduleId, onBack }: Props) {
   const hasAnswer = selectedAnswers[currentQuestion.id] !== undefined;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100">
-      <header className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between">
+    <div className="h-screen flex flex-col bg-gray-900 text-gray-100">
+      <header className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between shrink-0">
         <button onClick={onBack} className="text-gray-400 hover:text-white transition-colors">← Back</button>
         <div className="text-sm text-gray-400">Question {currentIndex + 1} of {questions.length}</div>
         <div className="w-16" />
       </header>
 
-      <main className="max-w-2xl mx-auto px-6 py-8">
+      <main className="overflow-y-auto flex-1 px-6 py-8">
         <div className="bg-gray-800 rounded-xl p-6 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xs bg-indigo-600 px-2 py-0.5 rounded">Q{currentQuestion.id}</span>
@@ -148,7 +154,13 @@ export default function QuizView({ subjectId, moduleId, onBack }: Props) {
           )}
         </div>
 
-        <div className="flex justify-between">
+        <div className="flex justify-center gap-3">
+          <button
+            onClick={skipQuestion}
+            className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+          >
+            Skip
+          </button>
           <button
             onClick={nextQuestion}
             disabled={!hasAnswer}

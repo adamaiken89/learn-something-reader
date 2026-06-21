@@ -5,23 +5,7 @@ import QuizView from "./components/QuizView";
 import ReviewView from "./components/ReviewView";
 import SettingsView from "./components/SettingsView";
 import { api } from "./api";
-
-interface Subject {
-  id: string;
-  subject: string;
-  displayName: string;
-  modules: { id: number; name: string; timeHours: number; prerequisites: number[] }[];
-  timeBudgetHours: number;
-  targetLevel: string;
-  learningObjectives: string[];
-}
-
-interface ModuleMeta {
-  id: number;
-  name: string;
-  timeHours: number;
-  prerequisites: number[];
-}
+import { useViewStore, type Subject, type ModuleMeta, type View } from "./stores/viewStore";
 
 interface Bookmark {
   id: string;
@@ -31,37 +15,29 @@ interface Bookmark {
   createdAt: string;
 }
 
-type View =
-  | { type: "subjectList" }
-  | { type: "lesson"; subject: Subject; module: ModuleMeta }
-  | { type: "quiz"; subject: Subject; module: ModuleMeta }
-  | { type: "review"; subject: Subject }
-  | { type: "settings" }
-  | { type: "bookmarks" };
-
 export default function App() {
-  const [viewStack, setViewStack] = useState<View[]>([{ type: "subjectList" }]);
+  const views = useViewStore((s) => s.views);
+  const push = useViewStore((s) => s.push);
+  const pop = useViewStore((s) => s.pop);
+  const popToRoot = useViewStore((s) => s.popToRoot);
+  const replace = useViewStore((s) => s.replace);
 
-  const pushView = (view: View) => setViewStack((v) => [...v, view]);
-  const popView = () => setViewStack((v) => v.slice(0, -1));
-  const popToRoot = () => setViewStack([{ type: "subjectList" }]);
-
-  const currentView = viewStack[viewStack.length - 1];
+  const currentView = views[views.length - 1];
 
   const handleSelectSubject = async (subject: Subject) => {
-    pushView({ type: "lesson", subject, module: subject.modules[0] });
+    push({ type: "lesson", subject, module: subject.modules[0] });
   };
 
   const handleSelectModule = (subject: Subject, module: ModuleMeta) => {
-    pushView({ type: "lesson", subject, module });
+    push({ type: "lesson", subject, module });
   };
 
   const handleStartQuiz = (subject: Subject, module: ModuleMeta) => {
-    pushView({ type: "quiz", subject, module });
+    push({ type: "quiz", subject, module });
   };
 
   const handleStartReview = (subject: Subject) => {
-    pushView({ type: "review", subject });
+    push({ type: "review", subject });
   };
 
   switch (currentView.type) {
@@ -69,8 +45,8 @@ export default function App() {
       return (
         <SubjectListView
           onSelectSubject={handleSelectSubject}
-          onOpenSettings={() => pushView({ type: "settings" })}
-          onOpenBookmarks={() => pushView({ type: "bookmarks" })}
+          onOpenSettings={() => push({ type: "settings" })}
+          onOpenBookmarks={() => push({ type: "bookmarks" })}
         />
       );
 
@@ -79,7 +55,7 @@ export default function App() {
         <LessonPage
           subject={currentView.subject}
           module={currentView.module}
-          onBack={popView}
+          onBack={pop}
           onSelectModule={(m) => handleSelectModule(currentView.subject, m)}
           onStartQuiz={() => handleStartQuiz(currentView.subject, currentView.module)}
           onStartReview={() => handleStartReview(currentView.subject)}
@@ -91,7 +67,7 @@ export default function App() {
         <QuizView
           subjectId={currentView.subject.id}
           moduleId={currentView.module.id}
-          onBack={popView}
+          onBack={pop}
         />
       );
 
@@ -99,19 +75,20 @@ export default function App() {
       return (
         <ReviewView
           subjectId={currentView.subject.id}
-          onBack={popView}
+          onBack={pop}
         />
       );
 
     case "settings":
-      return <SettingsView onBack={popView} />;
+      return <SettingsView onBack={pop} />;
 
     case "bookmarks":
-      return <BookmarksView onBack={popView} onOpen={(subjectID, moduleID, subjects) => {
+      return <BookmarksView onBack={pop} onOpen={(subjectID, moduleID, subjects) => {
         const subject = subjects.find((s: Subject) => s.id === subjectID);
         const module = subject?.modules.find((m) => m.id === moduleID);
         if (subject && module) {
-          setViewStack([{ type: "subjectList" }, { type: "lesson", subject, module }]);
+          popToRoot();
+          push({ type: "lesson", subject, module });
         }
       }} />;
   }
@@ -134,7 +111,6 @@ function LessonPage({
 
   return (
     <div className="flex h-screen bg-gray-900">
-      {/* Module navigation sidebar */}
       {showNav && (
         <aside className="w-64 bg-gray-850 border-r border-gray-700 overflow-y-auto shrink-0">
           <div className="p-4 border-b border-gray-700">
@@ -148,12 +124,12 @@ function LessonPage({
                 onClick={() => { onSelectModule(m); setShowNav(false); }}
                 className={`w-full text-left p-2 rounded-lg text-sm transition-colors ${
                   m.id === module.id
-                    ? "bg-indigo-600/20 text-indigo-300"
+                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/50"
                     : "text-gray-400 hover:bg-gray-700 hover:text-gray-200"
                 }`}
               >
-                <span className="text-xs text-gray-500 mr-2">{String(i + 1).padStart(2, "0")}</span>
-                <span className="truncate">{m.name}</span>
+                <span className={`text-xs mr-2 ${m.id === module.id ? "text-indigo-200" : "text-gray-500"}`}>{String(i + 1).padStart(2, "0")}</span>
+                <span className="break-words">{m.name}</span>
               </button>
             ))}
           </div>
@@ -161,7 +137,6 @@ function LessonPage({
       )}
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Subject header bar */}
         <header className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={onBack} className="text-gray-400 hover:text-white transition-colors">← Back</button>
@@ -217,13 +192,19 @@ function BookmarksView({ onBack, onOpen }: {
     });
   });
 
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    await api.storage.deleteBookmark(id);
+    setBookmarks((prev) => prev.filter((b) => b.id !== id));
+  };
+
   if (loading) return <div className="p-8 text-center text-gray-400">Loading bookmarks...</div>;
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100">
       <header className="bg-gray-800 border-b border-gray-700 px-4 py-2 flex items-center justify-between">
         <button onClick={onBack} className="text-gray-400 hover:text-white transition-colors">← Back</button>
-        <h2 className="text-sm font-medium">Bookmarks</h2>
+        <h2 className="text-sm font-medium">Bookmarks ({bookmarks.length})</h2>
         <div className="w-16" />
       </header>
 
@@ -232,19 +213,34 @@ function BookmarksView({ onBack, onOpen }: {
           <p className="text-center text-gray-500 py-12">No bookmarks yet. Bookmark lessons while reading.</p>
         ) : (
           <div className="space-y-3">
-            {bookmarks.map((b) => (
-              <button
-                key={b.id}
-                onClick={() => onOpen(b.subjectID, b.moduleID, subjects)}
-                className="w-full text-left bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-xl p-4 transition-colors"
-              >
-                <h3 className="text-sm font-medium text-indigo-300">{b.title}</h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  Subject: {subjects.find((s) => s.id === b.subjectID)?.displayName || b.subjectID}
-                </p>
-                <p className="text-xs text-gray-600 mt-0.5">{new Date(b.createdAt).toLocaleDateString()}</p>
-              </button>
-            ))}
+            {bookmarks.map((b) => {
+              const subject = subjects.find((s: Subject) => s.id === b.subjectID);
+              return (
+                <div
+                  key={b.id}
+                  className="bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-xl transition-colors group relative"
+                >
+                  <button
+                    onClick={() => onOpen(b.subjectID, b.moduleID, subjects)}
+                    className="w-full text-left p-4 pr-10"
+                  >
+                    <h3 className="text-sm font-medium text-indigo-300">{b.title}</h3>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {subject?.displayName || b.subjectID}
+                      {b.sectionID ? " — Section" : " — Module"}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-0.5">{new Date(b.createdAt).toLocaleDateString()}</p>
+                  </button>
+                  <button
+                    onClick={(e) => handleDelete(e, b.id)}
+                    className="absolute right-4 mt-[-2.25rem] opacity-0 group-hover:opacity-100 px-2 py-0.5 text-xs bg-red-800 hover:bg-red-700 rounded transition-all"
+                    title="Delete bookmark"
+                  >
+                    Delete
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
       </main>
