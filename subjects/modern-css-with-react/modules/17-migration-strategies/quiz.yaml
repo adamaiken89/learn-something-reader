@@ -1,0 +1,119 @@
+- id: "17.1"
+  question: "What is the recommended pattern for migrating CSS approaches in a large React app?"
+  options:
+    A: "Full rewrite over one weekend"
+    B: "Strangler fig — gradual replacement during feature work"
+    C: "Rewrite all CSS first, then migrate components"
+    D: "Only migrate when the library is deprecated"
+  answer: B
+  explanation: "The strangler fig pattern grows new architecture alongside old, replacing pieces during feature work. No big-bang rewrite. Each component migrates when it's already being touched."
+  difficulty: 1
+  tags: [concept]
+
+- id: "17.2"
+  question: "A component hasn't been modified in 3 years and uses an old CSS approach. Should you migrate it?"
+  options:
+    A: "Yes — all components must use the same approach"
+    B: "No — if it works and no feature requires changes, migration has negative ROI"
+    C: "Yes — but only if it's a leaf component"
+    D: "No — old components should be deleted"
+  answer: B
+  explanation: "Never migrate a component unless touching it for a feature or bug fix. 'Style-only' migrations create work with zero user-facing value. Migrate when you add a feature."
+  difficulty: 2
+  tags: [scenario]
+
+- id: "17.3"
+  question: "What's the FIRST step in any CSS migration?"
+  options:
+    A: "Install the new CSS tool"
+    B: "Extract design tokens to CSS custom properties"
+    C: "Rewrite the first component"
+    D: "Notify all developers"
+  answer: B
+  explanation: "Extract design tokens (colors, spacing, fonts) to CSS custom properties FIRST. This decouples visual values from implementation. Both old and new approaches read from the same source. Changing a value updates both systems."
+  difficulty: 2
+  tags: [concept]
+
+- id: "17.4"
+  question: "What is the risk of creating 'CSS migration' tickets that don't include feature work?"
+  options:
+    A: "No risk — pure CSS tickets are efficient"
+    B: "They create work with zero user-facing value, reducing business buy-in"
+    C: "CSS cannot be migrated without feature changes"
+    D: "They're the only way to ensure consistency"
+  answer: B
+  explanation: "Pure CSS migration tickets have no user-visible outcome. Management sees 'two sprints, zero features.' Pair migration with feature work: 'Add search bar (and convert related component to CSS Modules).'"
+  difficulty: 2
+  tags: [scenario]
+
+- id: "17.5"
+  question: "During migration from styled-components to CSS Modules, an old component wraps a new component. How do they coexist?"
+  options:
+    A: "Convert both at the same time"
+    B: "They coexist naturally — each file uses its own approach, CSS custom properties bridge theming"
+    C: "Wrap the new component in ThemeProvider"
+    D: "Convert the parent first"
+  answer: B
+  explanation: "Old and new components coexist in the same tree. Each uses its own styling approach. CSS custom properties bridge theming. The old component reads var(--color-primary), the new component reads the same var."
+  difficulty: 2
+  tags: [concept]
+
+- id: "17.6"
+  question: "A team of 10 starts migrating 300 styled-components to CSS Modules. What's the best progress metric?"
+  options:
+    A: "Deadline-based — 'done by June'"
+    B: "Percentage-based — '70% of components converted'"
+    C: "Time-based — '3 sprints for migration'"
+    D: "No tracking — just work on it when possible"
+  answer: B
+  explanation: "Percentage of converted components is measurable and objective. 'Done by June' is a guess. Track converted/total weekly. Adjust timeline based on actual velocity, not estimates."
+  difficulty: 1
+  tags: [scenario]
+
+- id: "17.7"
+  question: "What's the first component type you should migrate in a CSS transition?"
+  options:
+    A: "The most complex component (Table)"
+    B: "A leaf component with simple styles (Button, Badge)"
+    C: "The root App component"
+    D: "Any component with !important"
+  answer: B
+  explanation: "Start with leaf components (no children, simple styles). Low risk, fast success. Confidence builds. Complex components come later when the team is comfortable with the new approach."
+  difficulty: 2
+  tags: [scenario]
+
+- id: "17.8"
+  question: "How should you prevent new components from using the old approach during migration?"
+  options:
+    A: "Verbally remind developers in standup"
+    B: "ESLint rule that warns on old approach imports in new files"
+    C: "Delete the old library immediately"
+    D: "Don't worry — it'll sort itself out"
+  answer: B
+  explanation: "ESLint rules enforce the constraint automatically. 'No new imports from styled-components after migration start date.' Combined with code review, this prevents old-approach usage in new files."
+  difficulty: 1
+  tags: [application]
+
+- id: "17.9"
+  question: "When should you remove the old approach's build pipeline?"
+  options:
+    A: "Immediately after starting migration"
+    B: "When zero imports of the old approach remain in source"
+    C: "When 50% of components are converted"
+    D: "Never — keep both forever"
+  answer: B
+  explanation: "Remove old dependencies and build config when zero imports reference them. Removing too early blocks migration. Removing too late creates confusion. Verify: zero source imports, zero CI references, zero docs."
+  difficulty: 2
+  tags: [concept]
+
+- id: "17.10"
+  question: "A team has 6 months to migrate 200 components. Their velocity is 5 components per week. What should they do?"
+  options:
+    A: "Work overtime to meet deadline"
+    B: "Prioritize: migrate highest-traffic components first, accept incomplete migration at month 6"
+    C: "Cancel all features until migration is complete"
+    D: "Hire 3 more developers for the migration"
+  answer: B
+  explanation: "At 5/week for 24 weeks = 120 components in 6 months. Realistically 80-90% completion. Prioritize high-traffic components. '90% converted, no new old-style components' is a success state. Ship features alongside migration."
+  difficulty: 3
+  tags: [scenario]

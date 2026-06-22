@@ -117,3 +117,27 @@
   explanation: "JIT scans source files as strings. It reads className='bg-blue-500' but can't evaluate bg-${color}-500. If color='blue' at runtime, the class may not exist. Use full class names or safelist."
   difficulty: 3
   tags: [application]
+
+- id: "6.11"
+  question: "When does Tailwind become a WORSE choice than CSS Modules for a component?"
+  options:
+    A: "Always — CSS Modules are better for everything"
+    B: "When a component's className string exceeds 20+ utilities with conditional logic"
+    C: "When the app has fewer than 10 pages"
+    D: "When using TypeScript"
+  answer: B
+  explanation: "At 20+ utilities in one className string, readability breaks. The component is too complex for inline Tailwind. Extract to CSS Modules or split into sub-components. Tailwind excels at simple to moderate complexity."
+  difficulty: 2
+  tags: [scenario]
+
+- id: "6.12"
+  question: "At what app size does Tailwind's single CSS file become a performance concern compared to per-page CSS Modules?"
+  options:
+    A: "5 pages"
+    B: "50+ pages (single file contains utilities from all pages)"
+    C: "Never — Tailwind always produces the smallest CSS"
+    D: "1000+ pages"
+  answer: B
+  explanation: "At 50+ pages, Tailwind generates a single file containing utilities from every page. Each page loads the full file but uses ~10%. Per-page CSS Modules would be smaller per route. Mitigation: per-route entry points."
+  difficulty: 2
+  tags: [scenario]

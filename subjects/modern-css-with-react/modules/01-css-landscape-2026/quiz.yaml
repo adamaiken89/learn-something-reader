@@ -117,3 +117,27 @@
   explanation: "Component libraries should impose zero runtime cost on consumers. Vanilla Extract extracts at build time, enforces type safety, and CSS custom properties let consumers theme without dependency on a specific JS library."
   difficulty: 3
   tags: [scenario]
+
+- id: "1.11"
+  question: "What is the recommended boundary rule for mixing CSS approaches in one app?"
+  options:
+    A: "Use all approaches in every component"
+    B: "One approach per component file — mixing happens at file import boundaries"
+    C: "Never mix — pick one approach for the whole app"
+    D: "Mix freely — build tools handle conflicts automatically"
+  answer: B
+  explanation: "Each component file uses exactly one CSS approach. Mixing happens at the architecture level: a Tailwind page imports CSS Module components. Never combine styled-components + CSS Modules + inline styles in one file."
+  difficulty: 2
+  tags: [concept]
+
+- id: "1.12"
+  question: "Your team wants to use Tailwind for layout and CSS Modules for complex widgets. Which combination pattern does this represent?"
+  options:
+    A: "Runtime + zero-runtime hybrid"
+    B: "Layer-based hybrid — each layer uses the best-fit approach"
+    C: "Single-approach dogma"
+    D: "Legacy-first architecture"
+  answer: B
+  explanation: "Layer model: global foundation (plain CSS) → layout (Tailwind) → component (CSS Modules) → override (className). Each layer's approach is chosen for its specific needs. Tailwind for speed, CSS Modules for isolation."
+  difficulty: 2
+  tags: [concept]

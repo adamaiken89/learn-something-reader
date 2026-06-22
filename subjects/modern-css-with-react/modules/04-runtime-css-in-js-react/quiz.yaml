@@ -117,3 +117,27 @@
   explanation: "Library consumers must install styled-components as a peer dependency. ThemeProvider must wrap their app. This is the main argument against runtime CSS-in-JS for shared libraries."
   difficulty: 3
   tags: [scenario]
+
+- id: "4.11"
+  question: "A team has 800 styled-components. The CTO wants to migrate to CSS Modules. What's the recommended approach?"
+  options:
+    A: "Full rewrite — convert all 800 in one sprint"
+    B: "Incremental — new components use CSS Modules, replace old components during feature work"
+    C: "Keep styled-components — migration cost outweighs benefit at 800 components"
+    D: "Convert to Tailwind instead — it's faster to write"
+  answer: B
+  explanation: "At 800 components, incremental migration is the only practical path. Stop new styled-components usage. Replace leaf components first during feature work. Extract design tokens to CSS custom properties as a bridge."
+  difficulty: 3
+  tags: [scenario]
+
+- id: "4.12"
+  question: "In which scenario is runtime CSS-in-JS the WRONG choice?"
+  options:
+    A: "Existing 500-component codebase using styled-components"
+    B: "Electron desktop app with no RSC concerns"
+    C: "New Next.js App Router app with RSC as primary architecture"
+    D: "Rapid prototype with no performance constraints"
+  answer: C
+  explanation: "Runtime CSS-in-JS forces 'use client' on every styled component, defeating RSC benefits. In a new App Router app, choose zero-runtime approaches (Tailwind, CSS Modules, Vanilla Extract)."
+  difficulty: 2
+  tags: [scenario]

@@ -134,16 +134,57 @@ const Button = styled.button`
 
 ### When Runtime CSS-in-JS Still Makes Sense in 2026
 
-- **Existing codebase** — migrating thousands of styled components costs more than the runtime tax
-- **Electron / desktop apps** — no SSR, no RSC, bundle size less critical
-- **Heavy dynamic theming** — runtime prop interpolation genuinely simpler than CSS custom properties + clsx for some teams
-- **Rapid prototyping** — no file switching, no CSS file management
+Four specific scenarios where the cost is worth paying:
 
-But for greenfield React apps in 2026, the trend away from runtime CSS-in-JS is clear.
+**1. Existing codebase (500+ styled components)**
+
+Migration cost dominates. Rewriting 500 styled components to CSS Modules saves ~14 kB runtime but costs weeks of engineering. For a mature app with no bundle size crisis, the ROI is negative. Strategy: stop using styled-components for new components (use CSS Modules/Tailwind). Replace old components opportunistically during feature work.
+
+**2. Electron / desktop apps**
+
+No SSR, no RSC, no slow networks. The runtime tax (14 kB in a 50 MB Electron bundle) is noise. Dynamic theming via prop interpolation is genuinely convenient. styled-components performs fine here.
+
+**3. Design system with extreme variant counts (100+ variants)**
+
+When a component has 100+ variant combinations (icon + size + color + state + density + border), runtime CSS-in-JS's dynamic class generation is simpler than maintaining CSS Modules with clsx chains. Evaluate Vanilla Extract recipes first — only fall back to runtime if the variant composability needs exceed what recipe() provides.
+
+**4. Rapid prototype → production path where team already owns the cost**
+
+If the prototype was built in styled-components and the team understands the tradeoffs (no RSC, SSR config needed), shipping as-is beats a rewrite. Accept the runtime cost as a known liability — document it for future migration.
+
+**Scenarios where runtime CSS-in-JS is the WRONG choice:**
+
+| Scenario | Why it fails |
+|----------|-------------|
+| New Next.js App Router app with RSC | Every styled component forces `"use client"` — defeats server components |
+| Component library for external consumers | Forces all consumers to install styled-components as peer dependency |
+| Performance-sensitive public-facing app | 14 kB runtime + CSS strings in JS bundle delays FCP on slow networks |
+| Team doesn't know CSS-in-JS | Learning curve + legacy lock-in — team will be stuck maintaining it |
+| SSR-heavy app without SSR config | FOUC on every page load until ServerStyleSheet is configured |
 
 > **Think**: The CTO says "we use styled-components company-wide." You're starting a new product. Do you use it?
 >
 > *Answer: Depends. If the product uses App Router / RSC: push back — runtime CSS-in-JS forces client components, defeating RSC benefits. If SPA with no SSR: acceptable, bundle cost is the main concern.*
+
+### Cost-Benefit Analysis for Legacy Migration
+
+When deciding whether to migrate away from runtime CSS-in-JS:
+
+| Factor | Favor migration | Favor staying |
+|--------|---------------|--------------|
+| Component count | <200 components | >500 components |
+| RSC adoption | Planning to use App Router | Staying on Pages Router |
+| Bundle size pain | CSS strings inflating JS bundle | Bundle is within budget |
+| Team size | Small team, can refactor | Large team, coordination cost high |
+| Performance budget | Sub-100kB FCP target | No strict performance budget |
+
+**Incremental migration strategy:**
+1. Stop using runtime CSS-in-JS for new components
+2. Extract design tokens → CSS custom properties
+3. Replace one leaf component at a time (leaf → parent → grandparent)
+4. Remove runtime library when zero imports remain
+
+This avoids the "big bang" rewrite while gradually eliminating the runtime cost.
 
 ### Emotion vs styled-components
 
@@ -251,7 +292,9 @@ Theming moves from ThemeProvider to CSS custom properties — same runtime cost,
 - RSC incompatible — every styled component needs `"use client"`
 - SSR requires extra configuration to prevent FOUC
 - Declining for greenfield 2026 — replaced by zero-runtime, CSS Modules, Tailwind
-- Valid for legacy codebases, electron apps, rapid prototypes
+- Valid for: legacy codebases (500+ components), electron apps, extreme variants (100+)
+- Wrong for: new RSC apps, component libraries, perf-sensitive public apps
+- Migration: incremental — new components use zero-cost approach, replace leaf components first
 
 ---
 

@@ -1,0 +1,119 @@
+- id: "16.1"
+  question: "What is the primary design principle of hybrid CSS architecture?"
+  options:
+    A: "Use all CSS approaches in every component file"
+    B: "Each file uses one approach; different files serve different layers"
+    C: "Always use the newest CSS approach for everything"
+    D: "Avoid CSS Modules entirely"
+  answer: B
+  explanation: "Hybrid architecture means different files use different approaches, each chosen for its layer. No single file mixes approaches. The hybrid is at the project architecture level."
+  difficulty: 1
+  tags: [concept]
+
+- id: "16.2"
+  question: "In the layer architecture model, which approach is recommended for global foundation (reset, fonts, CSS variables)?"
+  options:
+    A: "styled-components with ThemeProvider"
+    B: "Vanilla Extract recipes"
+    C: "Plain CSS"
+    D: "Tailwind utility classes"
+  answer: C
+  explanation: "Global foundation (reset, @font-face, CSS custom properties, keyframes) needs zero tooling. Plain CSS is the simplest, most compatible choice for this layer."
+  difficulty: 1
+  tags: [concept]
+
+- id: "16.3"
+  question: "Which combination of CSS approaches is MOST compatible and recommended?"
+  options:
+    A: "Runtime CSS-in-JS + Tailwind in the same component"
+    B: "Tailwind for layout + CSS Modules for complex components"
+    C: "Inline styles for everything + CSS Modules"
+    D: "Sass @extend across CSS Modules"
+  answer: B
+  explanation: "Tailwind for layout + CSS Modules for complex components is the most common and safest hybrid. Tailwind handles structure fast; CSS Modules isolate component complexity."
+  difficulty: 2
+  tags: [concept]
+
+- id: "16.4"
+  question: "Tailwind generates one CSS file containing all utilities used across the app. At what app size does this become a performance concern?"
+  options:
+    A: "5 pages"
+    B: "50+ pages (single CSS file grows larger than per-page CSS would be)"
+    C: "Only affects development builds"
+    D: "Never — Tailwind's output is always optimal"
+  answer: B
+  explanation: "At 50+ pages, Tailwind's single CSS file contains utilities from every page. Each page loads the full file but only uses ~10%. Per-page CSS Modules would be smaller. Solution: per-route Tailwind entry points."
+  difficulty: 2
+  tags: [scenario]
+
+- id: "16.5"
+  question: "How should design tokens (colors, spacing, fonts) be shared across a hybrid CSS stack?"
+  options:
+    A: "Each approach defines its own tokens independently"
+    B: "CSS custom properties defined once, consumed by all approaches"
+    C: "JavaScript constants exported to every styling system"
+    D: "Duplicate values in each approach's config file"
+  answer: B
+  explanation: "CSS custom properties on :root are the single source of truth. Tailwind references them via @theme. CSS Modules use var(). Vanilla Extract creates theme contracts from the same CSS vars. One source, all approaches consume."
+  difficulty: 2
+  tags: [concept]
+
+- id: "16.6"
+  question: "A SaaS dashboard uses Tailwind for layout and CSS Modules for complex widgets. A new developer asks: 'Can I use Tailwind in my Chart component too?' What's the right response?"
+  options:
+    A: "Yes — use whatever approach you prefer"
+    B: "No — Chart is a complex component with many states; CSS Modules isolate that complexity better"
+    C: "Yes — but only for hover effects"
+    D: "No — Tailwind can't be used with CSS Modules in the same app"
+  answer: B
+  explanation: "The architecture decision is intentional: layout = Tailwind (fast iteration), complex components = CSS Modules (isolation). Chart with sorting, filtering, and animations benefits from scoped CSS. Keep the boundary clean."
+  difficulty: 3
+  tags: [scenario]
+
+- id: "16.7"
+  question: "What is the total CSS cost for a hybrid app using Tailwind (12 kB) + CSS Modules (5 kB per page) + global CSS (2 kB), on a 3-page load?"
+  options:
+    A: "19 kB"
+    B: "12 kB + 5 kB (only current page's CSS Modules) + 2 kB = 19 kB for first page"
+    C: "12 kB + 15 kB + 2 kB = 29 kB"
+    D: "5 kB per page, no baseline"
+  answer: B
+  explanation: "Tailwind (12 kB) and global CSS (2 kB) load once. CSS Modules code-split per page — only current page's modules (5 kB) load. Total first page: ~19 kB. Other pages' CSS loads with their JS chunks."
+  difficulty: 2
+  tags: [calculation]
+
+- id: "16.8"
+  question: "An enterprise design system ships as an NPM package consumed by 10 apps. Which hybrid approach is most appropriate?"
+  options:
+    A: "Tailwind — all consumers must use Tailwind too"
+    B: "Vanilla Extract for components + CSS custom properties for theming"
+    C: "styled-components with ThemeProvider"
+    D: "Inline styles for everything"
+  answer: B
+  explanation: "Vanilla Extract produces zero-runtime static CSS — consumers don't need VE installed. CSS custom properties for theming don't require a JS library. Consumers can override tokens regardless of their own CSS approach."
+  difficulty: 3
+  tags: [scenario]
+
+- id: "16.9"
+  question: "How does runtime CSS-in-JS's style tag grow unbounded in a hybrid stack?"
+  options:
+    A: "It doesn't — all hybrid approaches prevent this"
+    B: "Each unique prop combination generates a new class that never garbage collects"
+    C: "It only happens during development"
+    D: "Tailwind automatically cleans it up"
+  answer: B
+  explanation: "Runtime CSS-in-JS creates new class names for unique prop combinations. These accumulate in the style tag over a session. Zero-runtime approaches (CSS Modules, Tailwind, VE) don't have this problem."
+  difficulty: 2
+  tags: [concept]
+
+- id: "16.10"
+  question: "What is the golden rule of file-level approach mixing?"
+  options:
+    A: "Always use at least two approaches per file"
+    B: "Each component file uses exactly one CSS approach"
+    C: "Put all CSS in one file for consistency"
+    D: "Use inline styles as the primary approach"
+  answer: B
+  explanation: "Each component file uses exactly one approach. The mixing happens at file/import level — a page (Tailwind) imports complex components (CSS Modules) that use shared tokens (CSS custom properties). Never mix within one file."
+  difficulty: 1
+  tags: [concept]

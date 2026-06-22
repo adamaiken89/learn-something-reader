@@ -163,8 +163,16 @@ export default function LessonView({ subjectId, module, onStartQuiz }: Props) {
   };
 
   useEffect(() => {
-    if (!contentRef.current || highlights.length === 0) return;
+    if (!contentRef.current) return;
     const container = contentRef.current;
+    container.querySelectorAll('mark[data-highlight-id]').forEach((m) => {
+      const parent = m.parentNode;
+      if (parent) {
+        parent.replaceChild(document.createTextNode(m.textContent || ''), m);
+        parent.normalize();
+      }
+    });
+    if (highlights.length === 0) return;
     const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
     const marks: { node: Text; highlight: { id: string; selectedText: string; color: string } }[] = [];
     while (walker.nextNode()) {
@@ -269,6 +277,14 @@ export default function LessonView({ subjectId, module, onStartQuiz }: Props) {
               title={name}
             />
           ))}
+          <div className="w-px h-6 bg-gray-600 mx-1" />
+          <button
+            onClick={() => { setShowHighlightPicker(false); setHighlightSelection(null); window.getSelection()?.removeAllRanges(); }}
+            className="w-6 h-6 rounded text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700 transition-colors flex items-center justify-center"
+            title="Cancel highlight"
+          >
+            ✕
+          </button>
         </div>
       )}
 

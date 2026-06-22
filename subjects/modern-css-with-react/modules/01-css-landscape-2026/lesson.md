@@ -128,6 +128,170 @@ A: `@scope` gives native CSS scoping but doesn't solve dynamic styling, bundle o
 **Q: Does Next.js or Vite recommend anything?**
 A: Next.js defaults to CSS Modules (global CSS only in `layout.tsx`). Tailwind integration is first-class. Vite has built-in CSS Modules support. Both support plain CSS. Neither recommends runtime CSS-in-JS — it requires client components.
 
+**Q: How do I decide which approach to use for each part of my app?**
+A: Use the layer model: global foundation (reset, fonts, tokens) → layout (grid, flex) → component (variants, states) → overrides (per-page adjustments). Each layer can use a different approach. Global → plain CSS. Layout → Tailwind. Component → CSS Modules or Vanilla Extract. Overrides → inline styles or className props. Module 16 covers this in depth.
+
+---
+
+### Hybrid Strategy: How to Mix Approaches Effectively
+
+A single CSS approach rarely fits every part of an app. The question isn't "which approach?" but "which approach for which layer?"
+
+**The Layer Model:**
+
+```
+┌─────────────────────────────────┐
+│  Layer 1: Global Foundation     │  ← Plain CSS / Sass
+│  (reset, fonts, CSS vars,       │     One global file
+│   keyframes, print styles)      │
+├─────────────────────────────────┤
+│  Layer 2: Layout & Structure    │  ← Tailwind utility classes
+│  (grid, flex, spacing,          │     Fast, consistent,
+│   responsive breakpoints)       │     design-constraint system
+├─────────────────────────────────┤
+│  Layer 3: Component Styles      │  ← CSS Modules / Vanilla Extract
+│  (variants, states, animations, │     Scoped, zero runtime,
+│   pseudo-elements, media qs)    │     type-safe variants
+├─────────────────────────────────┤
+│  Layer 4: Per-Instance Override │  ← className prop + twMerge
+│  (one-off adjustments,          │     or inline style for
+│   dynamic values from data)     │     truly dynamic values
+└─────────────────────────────────┘
+```
+
+Each layer has different needs:
+- **Global**: Browser reset, font-face declarations, CSS custom properties, animation keyframes — never changes per component
+- **Layout**: Responsive grids, page structure, spacing systems — benefit from utility-first speed
+- **Component**: Scoped styles with variants and states — need isolation and type safety
+- **Override**: Per-use-case tweaks — escape hatch, not primary mechanism
+
+**Concrete mixing patterns that work:**
+
+| Pattern | Approaches | When | Example |
+|---------|-----------|------|---------|
+| Tailwind + CSS Modules | Tailwind for layout, CSS Modules for complex components | App with standard pages + interactive widgets | Dashboard grid (Tailwind), drag-drop list (CSS Modules) |
+| Vanilla Extract + Tailwind | VE for component library, Tailwind for page composition | Design system consumed by Tailwind app | Button/Input library (VE), pages composing them (Tailwind) |
+| Plain CSS + CSS Modules | Global foundation + scoped components | Legacy migration, app with heavy global styles | Reset/typography (CSS), product cards (Modules) |
+| Zero-runtime + inline styles | Static styles in CSS-in-JS, dynamic values inline | Data visualization, progress bars | Chart container (VE), bar widths (inline style) |
+
+**Pattern 1: Tailwind for layout, CSS Modules for components**
+
+Most common in 2026. Tailwind handles the big structural decisions (grid columns, breakpoints, spacing). CSS Modules handle component-internal states (hover, active, disabled, variants).
+
+```tsx
+// Page layout uses Tailwind — fast, visible at a glance
+function DashboardPage() {
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 p-6">
+      <Sidebar className="lg:col-span-1" />
+      <MainContent className="lg:col-span-2" />
+    </div>
+  );
+}
+
+// Complex component uses CSS Modules — isolated, variant-rich
+// Sidebar.tsx
+import styles from './Sidebar.module.css';
+import clsx from 'clsx';
+
+function Sidebar({ className }) {
+  const [collapsed, setCollapsed] = useState(false);
+  return (
+    <aside className={twMerge(styles.sidebar, collapsed && styles.collapsed, className)}>
+      <nav>
+        {items.map(item => (
+          <a
+            key={item.href}
+            href={item.href}
+            className={clsx(styles.navItem, item.active && styles.active)}
+          >{item.label}</a>
+        ))}
+      </nav>
+    </aside>
+  );
+}
+```
+
+Why this works: layout classes are few and structural (easy to read as Tailwind). Component classes are complex and stateful (benefit from isolation).
+
+**Pattern 2: Vanilla Extract component library consumed by Tailwind app**
+
+Design system authoring in VE (typed, zero runtime, theme contracts). Page composition in Tailwind (fast, no file switching).
+
+```tsx
+// Component library — Vanilla Extract
+// Button.css.ts
+export const button = recipe({
+  base: { display: 'inline-flex', borderRadius: '6px' },
+  variants: {
+    variant: {
+      primary: { background: 'var(--color-primary)', color: 'white' },
+      outline: { background: 'transparent', border: '1px solid var(--color-primary)' },
+    },
+  },
+});
+
+// Consumer app — Tailwind
+function LandingPage() {
+  return (
+    <div className="flex flex-col items-center gap-4 p-12">
+      <h1 className="text-3xl font-bold">Welcome</h1>
+      <Button variant="primary" className="mt-4">Get Started</Button>
+    </div>
+  );
+}
+```
+
+**Pattern 3: Legacy Sass + new CSS Modules**
+
+Incremental migration for established Sass codebases. Keep existing Sass styles where they work. Use CSS Modules for all new components. Shared tokens move to CSS custom properties.
+
+```scss
+// _tokens.scss → migrated to CSS custom properties
+// Legacy: $color-primary: #0366d6;
+// New: --color-primary: #0366d6;
+```
+
+```tsx
+// Legacy component (Sass)
+import './legacy-card.scss';
+function LegacyCard({ children }) { return <div className="legacy-card">{children}</div>; }
+
+// New component (CSS Modules)
+import styles from './NewWidget.module.css';
+function NewWidget() { return <div className={styles.widget}>...</div>; }
+```
+
+**What NOT to mix:**
+
+| Bad combination | Why |
+|----------------|-----|
+| Runtime CSS-in-JS + Tailwind in same component | Two different class generation systems fighting for DOM — unpredictable specificity |
+| CSS Modules + Sass `@extend` across files | Cross-file coupling that breaks isolation |
+| Inline styles as primary styling mechanism | No media queries, no pseudo-classes, no cascade |
+| Multiple approaches in one file | Reader must parse two styling paradigms in one component |
+
+**Rule**: One approach per component file. Choose which approach fits the component's role (layout vs interactive vs presentational) and commit to it.
+
+> **Think**: Your team uses Tailwind for everything. You're building a complex data table with sortable columns, resizable headers, row selection, and inline editing. The className string would be 30+ utilities. What do you do?
+>
+> *Answer: Extract the table into CSS Modules. Keep the page layout in Tailwind. The table component's internal complexity is isolated; the page structure stays fast and visible.*
+
+---
+
+### Use Case Decision Matrix
+
+| App type | Recommended primary | Mix with | Why |
+|----------|-------------------|----------|-----|
+| SaaS dashboard (Next.js App Router) | Tailwind | CSS Modules for complex widgets | RSC-compatible, fast iteration, design consistency |
+| Component library for 5+ apps | Vanilla Extract | CSS custom properties for themes | Zero runtime cost for consumers, type-safe API |
+| Legacy Sass SPA migrating to Next.js | CSS Modules for new code | Keep Sass for migrated pages | Incremental migration, preserve existing tokens |
+| Marketing site (static, 5 pages) | Tailwind or CSS Modules | Plain CSS for reset/fonts | Small scope, zero complexity overhead |
+| Enterprise design system (50+ components) | Vanilla Extract | Sprinkles for atomic utilities | Type safety, theme contracts, zero runtime |
+| Electron desktop app | Any | styled-components OK if team prefers | No SSR, no RSC, bundle size less critical |
+| Rapid prototype / MVP | Tailwind | Inline styles for dynamic values | Speed > architecture, refactor later |
+| Open-source component library | CSS Modules or Vanilla Extract | CSS custom properties for theming | Consumers shouldn't inherit your styling dependencies |
+
 ---
 
 ## Examples
@@ -172,8 +336,10 @@ Decision process:
 - Six decision axes: runtime cost, RSC compat, DX, scoping, dynamic styling, bundle
 - Runtime CSS-in-JS declining for greenfield; RSC compatibility is the main driver
 - Tailwind dominates new projects; Vanilla Extract rising for design systems
-- Mixing approaches is fine if per-component consistent
+- Layer model: global → layout → component → override — each layer fits a different approach
+- One approach per component file; mix across layers, not within components
 - `@scope` (native scoping) is emerging but not yet replacing tooling
+- Decision matrix: map app type to recommended approach + mixing strategy
 
 ---
 
