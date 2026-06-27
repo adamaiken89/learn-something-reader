@@ -104,9 +104,9 @@ export default function LessonToolbar() {
       const bm = useBookmarksStore.getState().byModule[k] ?? [];
       const existing = bm.find((b) => !b.sectionID);
       if (existing) {
-        useBookmarksStore.getState().remove(existing.id);
+        void useBookmarksStore.getState().remove(existing.id);
       } else {
-        useBookmarksStore.getState().toggle(course.id, module.id, module.name, null);
+        void useBookmarksStore.getState().toggle(course.id, module.id, module.name, null);
       }
     },
     focusMode: toggleFocusMode,
@@ -194,9 +194,9 @@ export default function LessonToolbar() {
               const bm = useBookmarksStore.getState().byModule[k] ?? [];
               const existing = bm.find((b) => !b.sectionID);
               if (existing) {
-                useBookmarksStore.getState().remove(existing.id);
+                void useBookmarksStore.getState().remove(existing.id);
               } else {
-                useBookmarksStore.getState().toggle(course.id, module.id, module.name, null);
+                void useBookmarksStore.getState().toggle(course.id, module.id, module.name, null);
               }
             }}
             title={s(t('lesson.bookmarkModule'), 'bookmark')}

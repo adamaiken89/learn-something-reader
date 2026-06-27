@@ -17,7 +17,7 @@ export default function CardsTab({ courseId, moduleId }: CardsTabProps) {
 
   const loadCards = useCallback(() => {
     setLoading(true);
-    api.usercards
+    void api.usercards
       .list(courseId, moduleId)
       .then(setCards)
       .finally(() => setLoading(false));
@@ -50,7 +50,9 @@ export default function CardsTab({ courseId, moduleId }: CardsTabProps) {
               <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">{card.back}</p>
             </div>
             <button
-              onClick={() => handleDelete(card.id)}
+              onClick={() => {
+                void handleDelete(card.id);
+              }}
               disabled={deletingId === card.id}
               className="text-[10px] text-gray-600 hover:text-red-400 shrink-0 disabled:opacity-40"
             >

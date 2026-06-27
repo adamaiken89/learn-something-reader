@@ -46,17 +46,19 @@ export default function SearchOverlay({
       return;
     }
     setLoading(true);
-    timerRef.current = setTimeout(async () => {
-      try {
-        const res = await api.search(query, courseID);
-        setResults(res);
-        setSelectedIdx(-1);
-      } catch {
-        showToast.error('toast.loadFailed');
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
+    timerRef.current = setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await api.search(query, courseID);
+          setResults(res);
+          setSelectedIdx(-1);
+        } catch {
+          showToast.error('toast.loadFailed');
+          setResults([]);
+        } finally {
+          setLoading(false);
+        }
+      })();
     }, 300);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);

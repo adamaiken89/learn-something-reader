@@ -38,7 +38,7 @@ export default function CourseSwitcher({ currentCourseId, onSelect }: Props) {
         onClick={() => setOpen(!open)}
         className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center gap-2 min-w-[380px]"
       >
-        <span className="truncate">{current?.displayName || t('common.modules')}</span>
+        <span className="truncate">{current?.displayName ?? t('common.modules')}</span>
         <span className={`text-xs transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
       </button>
       {open && (

@@ -50,7 +50,7 @@ export function useLessonSearch(
       const target = matches[idx];
       const offset =
         target.getBoundingClientRect().top - el.getBoundingClientRect().top + el.scrollTop - 80;
-      el.scrollTop = offset;
+      el.scrollTop = offset; // eslint-disable-line react-compiler/react-compiler
     }
   }, [searchQuery, searchActive, currentMatchIndex, contentRef]);
 

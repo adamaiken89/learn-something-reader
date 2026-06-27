@@ -99,10 +99,10 @@ export default function SettingsPage({ onBack }: Props) {
   const setRepoURLStore = useSyncStore((s) => s.setRepoURL);
 
   useEffect(() => {
-    api.gemini.hasKey().then((r) => {
+    void api.gemini.hasKey().then((r) => {
       setHasApiKey(r.hasKey);
     });
-    loadSyncStatus();
+    void loadSyncStatus();
   }, [setHasApiKey, loadSyncStatus]);
 
   useEffect(() => {
@@ -151,7 +151,14 @@ export default function SettingsPage({ onBack }: Props) {
               placeholder={hasApiKey ? t('settings.apiKeySet') : t('settings.apiKeyPlaceholder')}
               className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-500"
             />
-            <Button variant="primary" size="lg" onClick={handleSaveKey} disabled={!apiKey.trim()}>
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => {
+                void handleSaveKey();
+              }}
+              disabled={!apiKey.trim()}
+            >
               {saved ? t('settings.saved') : t('common.save')}
             </Button>
           </div>
@@ -176,13 +183,15 @@ export default function SettingsPage({ onBack }: Props) {
             <Button
               variant="secondary"
               size="md"
-              onClick={async () => {
-                try {
-                  const text = await navigator.clipboard.readText();
-                  setRepoURL(text);
-                } catch {
-                  showToast.error('toast.clipboardFailed');
-                }
+              onClick={() => {
+                void (async () => {
+                  try {
+                    const text = await navigator.clipboard.readText();
+                    setRepoURL(text);
+                  } catch {
+                    showToast.error('toast.clipboardFailed');
+                  }
+                })();
               }}
               title={t('settings.pasteClipboard')}
             >
@@ -191,12 +200,14 @@ export default function SettingsPage({ onBack }: Props) {
             <Button
               variant="secondary"
               size="md"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(repoURL);
-                } catch {
-                  showToast.error('toast.clipboardFailed');
-                }
+              onClick={() => {
+                void (async () => {
+                  try {
+                    await navigator.clipboard.writeText(repoURL);
+                  } catch {
+                    showToast.error('toast.clipboardFailed');
+                  }
+                })();
               }}
               disabled={!repoURL.trim()}
               title={t('settings.copyClipboard')}
@@ -206,11 +217,13 @@ export default function SettingsPage({ onBack }: Props) {
             <Button
               variant="primary"
               size="lg"
-              onClick={async () => {
-                if (!repoURL.trim()) return;
-                await setRepoURLStore(repoURL.trim());
-                setRepoSaved(true);
-                setTimeout(() => setRepoSaved(false), 2000);
+              onClick={() => {
+                void (async () => {
+                  if (!repoURL.trim()) return;
+                  await setRepoURLStore(repoURL.trim());
+                  setRepoSaved(true);
+                  setTimeout(() => setRepoSaved(false), 2000);
+                })();
               }}
               disabled={!repoURL.trim()}
             >
@@ -221,7 +234,9 @@ export default function SettingsPage({ onBack }: Props) {
             <Button
               variant="primary"
               size="lg"
-              onClick={() => startSync()}
+              onClick={() => {
+                void startSync();
+              }}
               disabled={syncIsSyncing || !syncRemoteURL}
               loading={syncIsSyncing}
             >

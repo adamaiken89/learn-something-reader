@@ -100,7 +100,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 
   setLocale: (l) => {
     store('coursereader-locale', l);
-    i18n.changeLanguage(l);
+    void i18n.changeLanguage(l);
     set({ locale: l });
   },
 }));

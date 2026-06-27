@@ -40,7 +40,7 @@ export default function LessonFeature({
       const c = courses.find((x) => x.id === courseID);
       const m = c?.modules.find((x) => x.id === moduleID);
       if (c && m) {
-        setPendingSearchQuery(query || null);
+        setPendingSearchQuery(query ?? null);
         onSelectModule(m);
       }
     },

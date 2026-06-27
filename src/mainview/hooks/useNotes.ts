@@ -15,7 +15,7 @@ export function useNotes(courseId: string, moduleId: string | number): UseNotesR
   const loading = useNotesStore((s) => s.loading[`${courseId}:${moduleId}`] ?? false);
 
   useEffect(() => {
-    load(courseId, moduleId);
+    void load(courseId, moduleId);
   }, [courseId, moduleId, load]);
 
   const k = `${courseId}:${moduleId}`;

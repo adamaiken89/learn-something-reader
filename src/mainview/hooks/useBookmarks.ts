@@ -25,7 +25,7 @@ export function useBookmarks(
   const loading = useBookmarksStore((s) => s.loading[`${courseId}:${moduleId}`] ?? false);
 
   useEffect(() => {
-    load(courseId, moduleId);
+    void load(courseId, moduleId);
   }, [courseId, moduleId, load]);
 
   const byModule = useBookmarksStore((s) => s.byModule);

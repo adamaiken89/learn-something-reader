@@ -23,7 +23,7 @@ export function useHighlights(courseId: string, moduleId: string | number): UseH
   const loading = useHighlightsStore((s) => s.loading[`${courseId}:${moduleId}`] ?? false);
 
   useEffect(() => {
-    load(courseId, moduleId);
+    void load(courseId, moduleId);
   }, [courseId, moduleId, load]);
 
   const k = `${courseId}:${moduleId}`;

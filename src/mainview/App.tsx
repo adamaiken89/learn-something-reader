@@ -48,13 +48,13 @@ export default function App() {
   }, [loadCourses]);
 
   useEffect(() => {
-    useSyncStore
+    void useSyncStore
       .getState()
       .loadStatus()
       .then(() => {
         const syncState = useSyncStore.getState();
         if (syncState.remoteRepoURL) {
-          useSyncStore
+          void useSyncStore
             .getState()
             .startSync()
             .then(() => {
@@ -175,7 +175,7 @@ export default function App() {
               const course = courses.find((c: Course) => c.id === courseID);
               const module = course?.modules.find((m) => m.id === moduleID);
               if (course && module) {
-                replace({ type: 'lesson', course, module, sectionID: sectionID || undefined });
+                replace({ type: 'lesson', course, module, sectionID: sectionID ?? undefined });
               }
             }}
           />

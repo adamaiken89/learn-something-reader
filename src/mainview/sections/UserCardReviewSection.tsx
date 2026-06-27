@@ -109,13 +109,17 @@ export default function UserCardReviewSection({ courseId }: Props) {
                   </div>
                   <div className="flex gap-3 justify-center">
                     <button
-                      onClick={() => handleReview(false)}
+                      onClick={() => {
+                        void handleReview(false);
+                      }}
                       className="px-6 py-2 bg-red-700 hover:bg-red-600 rounded-lg transition-colors"
                     >
                       {t('review.forgot')}
                     </button>
                     <button
-                      onClick={() => handleReview(true)}
+                      onClick={() => {
+                        void handleReview(true);
+                      }}
                       className="px-6 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-lg transition-colors"
                     >
                       {t('review.remembered')}
@@ -128,14 +132,18 @@ export default function UserCardReviewSection({ courseId }: Props) {
             <div className="flex justify-center gap-2">
               {currentCard.isStarred ? (
                 <button
-                  onClick={handleToggleStar}
+                  onClick={() => {
+                    void handleToggleStar();
+                  }}
                   className="text-xs text-yellow-500 hover:text-yellow-400"
                 >
                   {t('review.unstar')}
                 </button>
               ) : (
                 <button
-                  onClick={handleToggleStar}
+                  onClick={() => {
+                    void handleToggleStar();
+                  }}
                   className="text-xs text-gray-500 hover:text-gray-400"
                 >
                   {t('review.star')}

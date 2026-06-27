@@ -112,7 +112,7 @@ export default function NotesHighlightsTab({ courseId, moduleId }: NotesHighligh
   const k = `${courseId}:${moduleId}`;
 
   useEffect(() => {
-    loadNotes(courseId, moduleId);
+    void loadNotes(courseId, moduleId);
   }, [courseId, moduleId, loadNotes]);
 
   const [newNoteContent, setNewNoteContent] = useState('');
@@ -194,7 +194,9 @@ export default function NotesHighlightsTab({ courseId, moduleId }: NotesHighligh
         className="w-full bg-gray-800 border border-gray-600 rounded text-xs p-2 text-gray-200 placeholder-gray-500 resize-none h-20 focus:outline-none focus:border-indigo-500"
       />
       <button
-        onClick={handleAddNote}
+        onClick={() => {
+          void handleAddNote();
+        }}
         disabled={!newNoteContent.trim()}
         className="w-full py-1 text-xs bg-indigo-700 hover:bg-indigo-600 rounded disabled:opacity-40"
       >
@@ -225,7 +227,7 @@ export default function NotesHighlightsTab({ courseId, moduleId }: NotesHighligh
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDeleteHighlight(item.highlight.id);
+                      void handleDeleteHighlight(item.highlight.id);
                     }}
                     className="text-[10px] text-red-400 hover:text-red-300"
                   >
@@ -262,7 +264,9 @@ export default function NotesHighlightsTab({ courseId, moduleId }: NotesHighligh
                     />
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleUpdateNote(item.note.id)}
+                        onClick={() => {
+                          void handleUpdateNote(item.note.id);
+                        }}
                         className="flex-1 py-0.5 text-[10px] bg-indigo-700 hover:bg-indigo-600 rounded"
                       >
                         {t('common.save')}
@@ -292,7 +296,9 @@ export default function NotesHighlightsTab({ courseId, moduleId }: NotesHighligh
                         {t('common.edit')}
                       </button>
                       <button
-                        onClick={() => handleDeleteNote(item.note.id)}
+                        onClick={() => {
+                          void handleDeleteNote(item.note.id);
+                        }}
                         className="text-[10px] text-red-400 hover:text-red-300"
                       >
                         {t('common.delete')}
@@ -303,7 +309,7 @@ export default function NotesHighlightsTab({ courseId, moduleId }: NotesHighligh
                 {item.note.sectionID && (
                   <p className="text-[10px] text-gray-600 mt-1">
                     {t('studyTools.section')}{' '}
-                    {sections.find((s) => s.id === item.note.sectionID)?.heading ||
+                    {sections.find((s) => s.id === item.note.sectionID)?.heading ??
                       item.note.sectionID}
                   </p>
                 )}

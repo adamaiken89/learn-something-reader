@@ -38,7 +38,9 @@ export default function AITab({ content }: AITabProps) {
         className="w-full bg-gray-800 border border-gray-600 rounded text-xs p-2 text-gray-200 placeholder-gray-500 resize-none h-20 focus:outline-none focus:border-indigo-500"
       />
       <button
-        onClick={handleAsk}
+        onClick={() => {
+          void handleAsk();
+        }}
         disabled={!question.trim() || loading}
         className="w-full py-1 text-xs bg-indigo-700 hover:bg-indigo-600 rounded disabled:opacity-40"
       >

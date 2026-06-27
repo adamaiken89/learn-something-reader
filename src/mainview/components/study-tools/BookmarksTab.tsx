@@ -41,7 +41,9 @@ export default function BookmarksTab({
               {b.sectionID ? t('studyTools.bookmarkType') : t('studyTools.moduleType')}
             </p>
             <button
-              onClick={() => handleDeleteBookmark(b.id)}
+              onClick={() => {
+                void handleDeleteBookmark(b.id);
+              }}
               className="text-[10px] text-red-400 hover:text-red-300 mt-1"
             >
               {t('common.delete')}
@@ -51,8 +53,8 @@ export default function BookmarksTab({
       )}
       <button
         onClick={() => {
-          const title = visibleSection ? `${moduleName} – ${sectionOpt || ''}` : moduleName;
-          handleToggleBookmark(title, visibleSection);
+          const title = visibleSection ? `${moduleName} – ${sectionOpt ?? ''}` : moduleName;
+          void handleToggleBookmark(title, visibleSection);
         }}
         className="w-full py-1 text-xs bg-amber-700 hover:bg-amber-600 rounded mt-2"
       >

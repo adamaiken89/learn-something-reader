@@ -152,8 +152,7 @@ export default function LessonSection({
         );
       }) ?? null
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [highlights, selectedHighlightId, selection]);
+  }, [highlights, selectedHighlightId, selection, contentRef]);
   const activeHighlightColor = activeHighlight?.color;
 
   const [popoverNote, setPopoverNote] = useState<{ note: Note; x: number; y: number } | null>(null);
@@ -204,7 +203,7 @@ export default function LessonSection({
       if (!caretRange) return;
       const textNode = caretRange.startContainer;
       if (textNode.nodeType !== Node.TEXT_NODE) return;
-      const text = textNode.textContent || '';
+      const text = textNode.textContent ?? '';
       let start = caretRange.startOffset;
       let end = caretRange.startOffset;
       while (start > 0 && /\w/.test(text[start - 1])) start--;
@@ -250,7 +249,7 @@ export default function LessonSection({
     _hasBookmark: boolean,
     heading: string,
   ) => {
-    toggleBookmark(`${module.name} – ${heading}`, sectionId);
+    void toggleBookmark(`${module.name} – ${heading}`, sectionId);
   };
 
   function getTextOffset(
@@ -301,7 +300,7 @@ export default function LessonSection({
     });
     closeToolbar();
     closeNoteEditor();
-    useHighlightsStore.getState().load(course.id, module.id);
+    void useHighlightsStore.getState().load(course.id, module.id);
   };
 
   const handleCreateCard = async (front: string, back: string) => {
@@ -340,7 +339,7 @@ export default function LessonSection({
     const handler = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'c' && selection) {
         e.preventDefault();
-        navigator.clipboard.writeText(selection.text);
+        void navigator.clipboard.writeText(selection.text);
       }
     };
     window.addEventListener('keydown', handler);
@@ -467,7 +466,9 @@ export default function LessonSection({
               {!focusMode && (
                 <div style={{ marginTop: '3rem' }}>
                   <button
-                    onClick={handleToggleCompleted}
+                    onClick={() => {
+                      void handleToggleCompleted();
+                    }}
                     className="w-full py-3 rounded-lg font-semibold text-sm transition-all duration-200"
                     style={{
                       background: isCompleted
@@ -492,14 +493,18 @@ export default function LessonSection({
           y={pickerPos.y}
           selectionTop={pickerPos.selectionTop}
           selectedText={selection.text}
-          onSelectColor={handleAddHighlight}
+          onSelectColor={(color) => {
+            void handleAddHighlight(color);
+          }}
           onOpenNote={openNoteEditor}
           onCreateCard={openCardEditor}
-          onCopy={handleCopy}
+          onCopy={(text) => {
+            void handleCopy(text);
+          }}
           onDeleteHighlight={
             activeHighlight
               ? () => {
-                  deleteHighlight(activeHighlight.id);
+                  void deleteHighlight(activeHighlight.id);
                   closeToolbar();
                 }
               : undefined
@@ -522,7 +527,9 @@ export default function LessonSection({
           selectedText={selection.text}
           x={pickerPos.x}
           y={pickerPos.y}
-          onSave={handleCreateCard}
+          onSave={(front, back) => {
+            void handleCreateCard(front, back);
+          }}
           onCancel={closeCardEditor}
         />
       )}
@@ -534,7 +541,9 @@ export default function LessonSection({
           x={pickerPos.x}
           y={pickerPos.y}
           onChange={setNoteText}
-          onSave={handleAddAnnotation}
+          onSave={() => {
+            void handleAddAnnotation();
+          }}
           onCancel={closeNoteEditor}
         />
       )}

@@ -41,7 +41,7 @@ export default function BookmarksPage({ onBack, onOpen, onSwitchCourse }: Props)
   }, [loadCourses]);
 
   useEffect(() => {
-    api.storage.bookmarks().then((bks) => {
+    void api.storage.bookmarks().then((bks) => {
       setBookmarks(bks);
       setLoading(false);
     });
@@ -81,10 +81,10 @@ export default function BookmarksPage({ onBack, onOpen, onSwitchCourse }: Props)
                   >
                     <h3 className="text-sm font-medium text-indigo-300">{b.title}</h3>
                     <p className="text-xs text-gray-400 mt-1">
-                      {course?.displayName || b.courseID}
+                      {course?.displayName ?? b.courseID}
                     </p>
                     <p className="text-[10px] text-gray-500 mt-0.5">
-                      {course?.modules.find((m) => m.id === b.moduleID)?.name || ''}
+                      {course?.modules.find((m) => m.id === b.moduleID)?.name ?? ''}
                       {b.sectionID ? t('bookmarks.sectionLabel') : t('bookmarks.moduleLabel')}
                     </p>
                     <p className="text-[10px] text-gray-600 mt-0.5">
@@ -92,7 +92,9 @@ export default function BookmarksPage({ onBack, onOpen, onSwitchCourse }: Props)
                     </p>
                   </button>
                   <button
-                    onClick={(e) => handleDelete(e, b.id)}
+                    onClick={(e) => {
+                      void handleDelete(e, b.id);
+                    }}
                     className="absolute right-4 top-4 opacity-0 group-hover:opacity-100 px-2 py-0.5 text-xs bg-red-800 hover:bg-red-700 rounded transition-all"
                     title={t('common.deleteBookmark')}
                   >

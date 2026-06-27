@@ -51,7 +51,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
     }, 1000);
     set({ status: 'running', mode, remaining, intervalId: id });
     if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-      Notification.requestPermission();
+      void Notification.requestPermission();
     }
   },
 
