@@ -56,6 +56,8 @@
     "toggleStudyTools": "Toggle study tools panel",
     "sections": "Sections",
     "toggleSectionsPanel": "Toggle sections panel",
+    "prevModule": "Previous module",
+    "nextModule": "Next module",
     "removeBookmark": "Remove bookmark",
     "completed": "✓ Completed",
     "markAsComplete": "Mark as Complete",

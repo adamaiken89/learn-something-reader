@@ -1,7 +1,33 @@
-import React from 'react';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { headingId } from '../../bun/lesson-markdown';
 import MermaidDiagram from '../components/MermaidDiagram';
+
+function CodeBlockWithCopy({ children }: { children?: React.ReactNode }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const text = extractText(children);
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  return (
+    <div className="relative group">
+      <pre>{children}</pre>
+      <button
+        onClick={() => void handleCopy()}
+        className="absolute top-8 right-2 px-2 py-1 text-xs rounded bg-gray-700/80 text-gray-300 hover:bg-gray-600 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+      >
+        {copied ? t('selection.copied') : t('lesson.copy')}
+      </button>
+    </div>
+  );
+}
 
 function extractText(children: React.ReactNode): string {
   let text = '';
@@ -35,6 +61,9 @@ export const components = {
     <div className="table-wrapper">
       <table>{children}</table>
     </div>
+  ),
+  pre: ({ children }: { children?: React.ReactNode }) => (
+    <CodeBlockWithCopy>{children}</CodeBlockWithCopy>
   ),
   code: ({ className, children }: { className?: string; children?: React.ReactNode }) => {
     if (className?.includes('language-mermaid')) {

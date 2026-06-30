@@ -312,4 +312,104 @@ describe('LessonSection', () => {
       expect(rpcCalls).toContain('toggleModuleCompleted');
     });
   });
+
+  test('auto-copies selected text after delay on mouseUp', async () => {
+    let clipboardText = '';
+    const originalWriteText = navigator.clipboard.writeText;
+    Object.assign(navigator.clipboard, {
+      writeText: mock(async (text: string) => {
+        clipboardText = text;
+      }),
+    });
+
+    const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
+    const contentDiv = getByTestId('lesson-content');
+    const mockSel = makeMockSelection('auto copied text', contentDiv);
+    const restore = installMockSelection(mockSel);
+
+    fireEvent.mouseUp(contentDiv);
+
+    await waitFor(() => {
+      expect(getByTestId('selection-toolbar')).toBeTruthy();
+    });
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 500));
+    });
+
+    expect(clipboardText).toBe('auto copied text');
+
+    Object.assign(navigator.clipboard, { writeText: originalWriteText });
+    restore();
+  });
+
+  test('auto-copy does not fire when selection is empty', async () => {
+    let clipboardText = '';
+    const originalWriteText = navigator.clipboard.writeText;
+    Object.assign(navigator.clipboard, {
+      writeText: mock(async (text: string) => {
+        clipboardText = text;
+      }),
+    });
+
+    const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
+    const contentDiv = getByTestId('lesson-content');
+
+    const collapsedSel = {
+      isCollapsed: true,
+      rangeCount: 0,
+      toString: () => '',
+    };
+    const origGetSelection = window.getSelection;
+    window.getSelection = () => collapsedSel as unknown as Selection;
+
+    fireEvent.mouseUp(contentDiv);
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 500));
+    });
+
+    expect(clipboardText).toBe('');
+
+    Object.assign(navigator.clipboard, { writeText: originalWriteText });
+    window.getSelection = origGetSelection;
+  });
+
+  test('auto-copy debounces rapid selections', async () => {
+    let copyCount = 0;
+    let lastCopied = '';
+    const originalWriteText = navigator.clipboard.writeText;
+    Object.assign(navigator.clipboard, {
+      writeText: mock(async (text: string) => {
+        copyCount++;
+        lastCopied = text;
+      }),
+    });
+
+    const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
+    const contentDiv = getByTestId('lesson-content');
+
+    const mockSel1 = makeMockSelection('first selection', contentDiv);
+    const restore1 = installMockSelection(mockSel1);
+    fireEvent.mouseUp(contentDiv);
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 100));
+    });
+
+    const mockSel2 = makeMockSelection('second selection', contentDiv);
+    restore1();
+    const restore2 = installMockSelection(mockSel2);
+    fireEvent.mouseUp(contentDiv);
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 500));
+    });
+
+    expect(copyCount).toBe(1);
+    expect(lastCopied).toBe('second selection');
+
+    Object.assign(navigator.clipboard, { writeText: originalWriteText });
+    restore2();
+  });
 });

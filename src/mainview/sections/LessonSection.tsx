@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
 import rehypeHighlight from 'rehype-highlight';
@@ -32,7 +32,6 @@ import { useHighlightsStore } from '../stores/highlightsStore';
 import { THEME_TOKENS, themeToCSSVars } from '../themes';
 import { components, getTextOffset } from './lesson-helpers';
 import LessonContext from './LessonContext';
-
 interface Props {
   course: Course;
   module: ModuleMeta;
@@ -144,6 +143,37 @@ export default function LessonSection({
 
   const notesRef = useRef(notes);
   notesRef.current = notes;
+
+  const [copied, setCopied] = useState(false);
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoCopyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setCopiedWithTimer = useCallback((v: boolean) => {
+    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
+    setCopied(v);
+    if (v) {
+      copiedTimerRef.current = setTimeout(() => setCopied(false), 700);
+    }
+  }, []);
+
+  const triggerAutoCopy = useCallback(() => {
+    if (autoCopyTimerRef.current) clearTimeout(autoCopyTimerRef.current);
+    autoCopyTimerRef.current = setTimeout(() => {
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed && sel.rangeCount) {
+        const text = sel.toString();
+        if (text.trim()) {
+          void navigator.clipboard.writeText(text);
+          setCopiedWithTimer(true);
+        }
+      }
+    }, 500);
+  }, [setCopiedWithTimer]);
+
+  const handleTextSelectionWithAutoCopy = useCallback(() => {
+    handleTextSelection();
+    triggerAutoCopy();
+  }, [handleTextSelection, triggerAutoCopy]);
 
   useEffect(() => {
     const el = contentRef.current;
@@ -294,15 +324,11 @@ export default function LessonSection({
   });
 
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'c' && selection) {
-        e.preventDefault();
-        void navigator.clipboard.writeText(selection.text);
-      }
+    return () => {
+      if (autoCopyTimerRef.current) clearTimeout(autoCopyTimerRef.current);
+      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [selection]);
+  }, []);
 
   useEffect(() => {
     const el = contentRef.current;
@@ -358,6 +384,10 @@ export default function LessonSection({
               onScrollToSection={scrollToSection}
               onToggleSectionBookmark={handleToggleSectionBookmark}
               onClose={toggleSections}
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              onPrevModule={goPrev}
+              onNextModule={goNext}
             />
           )}
 
@@ -367,7 +397,7 @@ export default function LessonSection({
             ref={contentRef}
             tabIndex={-1}
             onScroll={handleScroll}
-            onMouseUp={handleTextSelection}
+            onMouseUp={handleTextSelectionWithAutoCopy}
           >
             {searchActive && (
               <div className="sticky top-0 z-10">
@@ -470,6 +500,8 @@ export default function LessonSection({
               : undefined
           }
           activeHighlightColor={activeHighlightColor}
+          copied={copied}
+          onCopiedChange={setCopiedWithTimer}
         />
       )}
 

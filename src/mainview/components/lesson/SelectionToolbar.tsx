@@ -15,6 +15,8 @@ interface SelectionToolbarProps {
   onCopy: (text: string) => void;
   onDeleteHighlight?: () => void;
   activeHighlightColor?: string;
+  copied?: boolean;
+  onCopiedChange?: (v: boolean) => void;
 }
 
 function SelectionToolbar({
@@ -28,17 +30,17 @@ function SelectionToolbar({
   onCopy,
   onDeleteHighlight,
   activeHighlightColor,
+  copied = false,
+  onCopiedChange,
 }: SelectionToolbarProps) {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
-  const [copied, setCopied] = useState(false);
   const [position, setPosition] = useState({ x, y });
 
   const handleCopy = () => {
     if (!selectedText) return;
     onCopy(selectedText);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1000);
+    onCopiedChange?.(true);
   };
 
   useEffect(() => {

@@ -48,10 +48,18 @@ describe('SelectionToolbar', () => {
     expect(onCopy).toHaveBeenCalledWith('selected text');
   });
 
-  test('copy button shows copied state', async () => {
-    const { getByText } = render(<SelectionToolbar {...defaultProps} />);
-    await user.click(getByText('Copy'));
+  test('copy button shows copied state via prop', () => {
+    const { getByText } = render(<SelectionToolbar {...defaultProps} copied={true} />);
     expect(getByText('Copied!')).toBeInTheDocument();
+  });
+
+  test('copy button calls onCopiedChange on click', async () => {
+    const onCopiedChange = mock(() => {});
+    const { getByText } = render(
+      <SelectionToolbar {...defaultProps} onCopiedChange={onCopiedChange} />,
+    );
+    await user.click(getByText('Copy'));
+    expect(onCopiedChange).toHaveBeenCalledWith(true);
   });
 
   test('copy button does nothing without selectedText', async () => {

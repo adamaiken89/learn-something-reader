@@ -181,6 +181,9 @@ g.NodeFilter = {
   FILTER_SKIP: 3,
 };
 
+// Initialize real i18n so useTranslation() returns actual English values in tests
+import './mainview/i18n';
+
 afterEach(() => {
   cleanup();
   document.body.innerHTML = '';
