@@ -26,6 +26,7 @@ const mockResults = [
 ];
 
 import { useCourseStore } from '../stores/courseStore';
+import { useViewStore } from '../stores/viewStore';
 import { clearMocks, mockResponse, setupRPC } from '../testUtils';
 import SearchOverlay from './SearchOverlay';
 
@@ -40,7 +41,13 @@ const baseCourse = {
   modules: [],
 };
 
-const mathCourse = { ...baseCourse, id: 'math', course: 'math', displayName: 'Mathematics' };
+const mathCourse = {
+  ...baseCourse,
+  id: 'math',
+  course: 'math',
+  displayName: 'Mathematics',
+  modules: [{ id: '01', name: 'Algebra', timeHours: 5, prerequisites: [], topics: [] }],
+};
 const physCourse = { ...baseCourse, id: 'phys', course: 'phys', displayName: 'Physics' };
 
 beforeEach(() => {
@@ -57,38 +64,30 @@ describe('SearchOverlay', () => {
   const user = userEvent.setup();
 
   test('renders search input and ESC button', () => {
-    const { getByPlaceholderText, getByText } = render(
-      <SearchOverlay onClose={() => {}} onNavigate={() => {}} />,
-    );
+    const { getByPlaceholderText, getByText } = render(<SearchOverlay onClose={() => {}} />);
     expect(getByPlaceholderText('Search across courses...')).toBeInTheDocument();
     expect(getByText('ESC')).toBeInTheDocument();
   });
 
   test('shows all courses hint when no filters', () => {
-    const { getByText } = render(<SearchOverlay onClose={() => {}} onNavigate={() => {}} />);
+    const { getByText } = render(<SearchOverlay onClose={() => {}} />);
     expect(getByText('No course filter — searching all courses')).toBeInTheDocument();
   });
 
   test('typing triggers search and shows results', async () => {
-    const { getByPlaceholderText, findByText } = render(
-      <SearchOverlay onClose={() => {}} onNavigate={() => {}} />,
-    );
+    const { getByPlaceholderText, findByText } = render(<SearchOverlay onClose={() => {}} />);
     await user.type(getByPlaceholderText('Search across courses...'), 'test');
     expect(await findByText('x + y = z', {}, { timeout: 1000 })).toBeInTheDocument();
   });
 
   test('shows results count', async () => {
-    const { getByPlaceholderText, findByText } = render(
-      <SearchOverlay onClose={() => {}} onNavigate={() => {}} />,
-    );
+    const { getByPlaceholderText, findByText } = render(<SearchOverlay onClose={() => {}} />);
     await user.type(getByPlaceholderText('Search across courses...'), 'test');
     expect(await findByText('Results (2)', {}, { timeout: 1000 })).toBeInTheDocument();
   });
 
   test('shows grouped course headers', async () => {
-    const { getByPlaceholderText, findByText } = render(
-      <SearchOverlay onClose={() => {}} onNavigate={() => {}} />,
-    );
+    const { getByPlaceholderText, findByText } = render(<SearchOverlay onClose={() => {}} />);
     await user.type(getByPlaceholderText('Search across courses...'), 'test');
     expect(await findByText('Mathematics', {}, { timeout: 1000 })).toBeInTheDocument();
     expect(await findByText('Physics', {}, { timeout: 1000 })).toBeInTheDocument();
@@ -96,7 +95,7 @@ describe('SearchOverlay', () => {
 
   test('adds course filter chip', async () => {
     const { getByText, findByPlaceholderText, queryByText, container } = render(
-      <SearchOverlay onClose={() => {}} onNavigate={() => {}} />,
+      <SearchOverlay onClose={() => {}} />,
     );
     expect(getByText('No course filter — searching all courses')).toBeInTheDocument();
 
@@ -116,13 +115,11 @@ describe('SearchOverlay', () => {
     expect(chips[0].textContent).toContain('Mathematics');
   });
 
-  test('keyboard navigation selects result and navigates on enter', async () => {
-    const onNavigate = mock(() => {});
+  test('keyboard navigation selects result and pushes lesson view', async () => {
     const onClose = mock(() => {});
+    useViewStore.setState({ views: [] });
 
-    const { getByPlaceholderText, findByText } = render(
-      <SearchOverlay onClose={onClose} onNavigate={onNavigate} />,
-    );
+    const { getByPlaceholderText, findByText } = render(<SearchOverlay onClose={onClose} />);
 
     const input = getByPlaceholderText('Search across courses...');
     await user.type(input, 'test');
@@ -132,21 +129,21 @@ describe('SearchOverlay', () => {
     await user.keyboard('{ArrowDown}');
     await user.keyboard('{Enter}');
 
-    expect(onNavigate).toHaveBeenCalledWith('math', '01', 'test', null);
+    const views = useViewStore.getState().views;
+    expect(views).toHaveLength(1);
+    const v = views[0];
+    expect(v.type).toBe('lesson');
+    if (v.type === 'lesson') {
+      expect(v.course.id).toBe('math');
+      expect(v.module.id).toBe('01');
+    }
 
     await new Promise((r) => setTimeout(r, 250));
     expect(onClose).toHaveBeenCalled();
   });
 
   test('removes course filter chip', async () => {
-    const { getByText } = render(
-      <SearchOverlay
-        initialCourseIDs={['math']}
-        initialCourseNames={['Mathematics']}
-        onClose={() => {}}
-        onNavigate={() => {}}
-      />,
-    );
+    const { getByText } = render(<SearchOverlay initialCourseIDs={['math']} onClose={() => {}} />);
 
     expect(getByText('Mathematics')).toBeInTheDocument();
     const closeBtn = getByText('✕');

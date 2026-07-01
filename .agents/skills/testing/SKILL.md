@@ -10,7 +10,7 @@ description: Use when writing tests for CourseReader code. Nature-based: unit, p
 | Nature | File Pattern | Mock Policy | Assertions |
 |--------|-------------|-------------|------------|
 | Unit | `<Name>.test.ts` | None | `toEqual`/`toBe`, `test.each`, full input coverage |
-| Page snapshot | `<Name>.page.test.tsx` | `__setRPC` for API; `mock.module` for leaf layouts only | `toMatchSnapshot()` |
+| Page snapshot | `<Name>.page.test.tsx` | `__setRPC` for API; real components + store state | `toMatchSnapshot()` |
 | Component | `<Name>.component.test.tsx` | `__setRPC` for API; Zustand `setState()` for stores | `userEvent` → `toBeInTheDocument()`, optional snapshot |
 | Hook | `<Name>.hook.test.ts` | `__setRPC` Proxy for API; Zustand `setState()` for stores | State transitions, `expect.soft()` |
 | Store | `<Name>.store.test.ts` | `__setRPC` Proxy for API | State transitions, `expect.soft()` |
@@ -66,11 +66,11 @@ describe('fn', () => {
 
 **Rules:**
 - Mock API via `__setRPC` Proxy pattern — never `mock.module('../api')`.
-- Mock layouts as simple divs with `data-testid` attributes via `mock.module` (safe — leaf modules).
+- Use real page components (PageLayout, PageHeader, PageContent). Control visibility via `useSettingsStore.setState({ focusMode: false })`.
 - Use `render()` from `@testing-library/react`.
 - Wait for async: `await waitFor(() => { expect(...).toBeInTheDocument() })` — never `Bun.sleep(N)` (flaky).
 - `toMatchSnapshot()` to capture full layout structure.
-- Reset mocks in `beforeEach`.
+- Reset mocks in `beforeEach`. Reset store state (especially `focusMode: false`).
 
 **Template:**
 
@@ -80,17 +80,14 @@ import { beforeEach, describe, expect, mock, test } from 'bun:test';
 import { setupRPC, mockResponse, clearMocks } from '../test-utils';
 
 setupRPC();
-// mock.module for leaf layouts only (see Anti-pollution Rules)
-void mock.module('../layouts/PageLayout', () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="page-layout">{children}</div>
-  ),
-}));
 
 import Page from './Page';
 
 describe('Page', () => {
-  beforeEach(clearMocks);
+  beforeEach(() => {
+    clearMocks();
+    useSettingsStore.setState({ focusMode: false });
+  });
 
   test('snapshot — loading', () => {
     mockResponse('someMethod', new Promise(() => {}));
@@ -116,7 +113,7 @@ describe('Page', () => {
 **Rules:**
 - Mock API via `__setRPC` Proxy — never `mock.module('../api')`.
 - Control Zustand stores via `store.setState()` in `beforeEach`.
-- Keep component internals real — do not mock hooks or sub-components unless they are leaf modules imported by no other test.
+- Keep component internals real — do not mock hooks or sub-components. Use `spyOn` on module namespaces if needed (requires prod code to use `import * as NS`).
 - Use `userEvent` (not `fireEvent`) for realistic interaction — dispatches hover/focus/blur chains.
 - Assert with `toBeInTheDocument()` / `not.toBeInTheDocument()` (from `@testing-library/jest-dom`) — stronger than `toBeTruthy()`/`toBeNull()`.
 - Use `screen.getBy*` over destructuring from `render()` (resilient to refactors).
@@ -376,24 +373,31 @@ function makeDeck(cards: SRSCard[]): SRSDeck {
 |---------|----------|----------------|---------|
 | `__setRPC` Proxy | API mocking in any test | None — runtime DI | `__setRPC({ request: new Proxy(...) })` |
 | `store.setState()` | Reset Zustand state | None — direct state | `useXStore.setState({ ...defaults })` |
-| `mock.module(path, factory)` | Leaf components/layouts only | **Permanent** — no cleanup | `mock.module('../layouts/PageLayout', ...)` |
-| `mock(() => ...)` | Mock individual functions | None — local scope | `const fn = mock(() => Promise.resolve(null))` |
+| `mock()` from bun:test | Mock individual functions | None — local scope | `const fn = mock(() => Promise.resolve(null))` |
+| `spyOn()` on module namespace | Mock internal module exports | None — per-instance | `spyOn(utilsModule, 'findSubjectsDir').mockImplementation(...)` |
 | Factory helpers | Build test data with defaults | None — pure functions | `makeCard({ id: 'a', isStarred: true })` |
 
 ## Anti-pollution Rules
 
-Bun's `mock.module()` is process-global and irrevocable. No cleanup.
+No `mock.module` in test files. Only `src/setup.tsx` uses `mock.module` for external libs (fs, mermaid, electrobun, sonner, react-markdown, child_process).
 
-**Rules:**
-1. **Never `mock.module` shared modules** — cascading failures on import order change
-2. **Use `__setRPC` for API mocking** — runtime DI, no module pollution
-3. **Use `store.setState()` for store reset** — direct Zustand, never mock store module
-4. **`mock.module` safe only for leaf modules** — imported by exactly one test file (layouts, StatCard, MermaidDiagram)
-5. **Reset global singletons in `afterEach`** — i18n, console, timers. Not restored by Zustand.
+**Use instead:**
+1. **`__setRPC` for API mocking** — runtime DI, no module pollution
+2. **`store.setState()` for store reset** — direct Zustand, never mock store module
+3. **`spyOn` on `import * as NS`** for internal modules — requires prod code to use `import * as` namespace pattern
+4. **Real component rendering + store state** — control visibility via `useSettingsStore.setState({ focusMode: false })`
+5. **Never `mock.restore()`** — destroys setup.tsx's global mocks process-wide
+6. **Always call `setupRPC()`** at module level in any test file that uses RPC
 
-**Safe targets** (single-consumer): `PageLayout/Header/Content`, `StudyTools`, `MermaidDiagram`, `NoteEditor`, `react-markdown`
+**`mock.module` ONLY in `src/setup.tsx`** for these external libs:
+- `fs` — file system operations
+- `mermaid` — diagram rendering  
+- `electrobun/view` — desktop app IPC
+- `sonner` — toast notifications
+- `react-markdown` — markdown rendering (renders `<div data-testid="markdown">`)
+- `child_process` — backend exec (delegates to `mockExecSyncImpl.fn`)
 
-**Dangerous targets** (shared): `../api`, `../hooks/*`, `../components/ui`, any Zustand store
+Shared test state: `src/testFsShared.ts` contains `fsMockImpl`, `mermaidMockImpl`, `toastCallState`, `mockExecSyncImpl` — mutable stubs that setup.tsx's global mocks delegate to.
 
 ## act() Wrapping Rule
 
@@ -432,30 +436,25 @@ Prefer Tier 1-2. Split Tier 3 code.
 **Target:** `src/bun/*.ts`
 
 **Rules:**
-- Use `await import('./module')` + `mock.module()` for fs mocking.
+- fs is globally mocked in `src/setup.tsx`. Mutate `fsMockImpl` in `beforeEach` for per-test setup.
+- For internal module mocking: refactor prod code to `import * as NS` pattern, then `spyOn(NS, 'fn').mockImplementation(...)`.
 - Mutable stubs: `mock(() => ...)` + `mockImplementation` in `beforeEach`.
-- For fs: use `test-fs-shared.ts` (`createTestFs`, `createFsFromMap`).
 - For `globalThis.fetch`: save/restore `beforeEach/afterEach`.
+- Share child_process mock via `mockExecSyncImpl.fn` from `src/testFsShared.ts`.
+- Never `mock.restore()` — destroys setup.tsx's global mocks.
 - Error paths: `mockErrorResponse()` or `deleteMock()`.
 
-**Example:**
+**Example (spyOn pattern for internal modules):**
 
 ```typescript
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
-const mockReadFile = mock(() => Promise.resolve(''));
-void mock.module('node:fs/promises', () => ({
-  readFile: mockReadFile,
-  writeFile: mock(() => Promise.resolve(undefined)),
-}));
-const { parseCourse } = await import('./course-loader');
+import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
+import * as utilsModule from './utils';
 
-describe('parseCourse', () => {
-  beforeEach(() => { mockReadFile.mockImplementation(() => Promise.resolve('')); });
-  test('valid YAML', async () => {
-    mockReadFile.mockImplementation(() => Promise.resolve('title: Test'));
-    expect((await parseCourse('test-dir')).title).toBe('Test');
-  });
+beforeEach(() => {
+  spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => '/tmp/subjects');
 });
+
+// No afterEach with mock.restore() — would destroy setup.tsx's global mocks
 ```
 
 - **Framework:** `bun:test` (zero config, `bun test` to run)

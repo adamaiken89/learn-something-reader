@@ -1,41 +1,29 @@
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import { beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
+
+import * as storageModule from './storage';
 
 let mockKey: string | null = null;
 
-mock.module('./storage', () => ({
-  getGeminiKey: () => mockKey,
-  setGeminiKey: (key: string) => {
-    mockKey = key;
-  },
-}));
-
-mock.module('./logger', () => ({
-  logger: {
-    info: mock(() => {}),
-    error: mock(() => {}),
-    warn: mock(() => {}),
-    debug: mock(() => {}),
-  },
-}));
-
 const originalFetch = globalThis.fetch;
 
-type Gemini = typeof import('./gemini');
-let gemini: Gemini;
+let gemini: typeof import('./gemini');
 
 beforeEach(() => {
-  mockKey = null;
   globalThis.fetch = originalFetch;
+  mockKey = null;
 });
 
+// NOTE: no mock.restore() — would destroy setup.tsx's global mocks
 describe('hasAPIKey', () => {
   test('returns false when no key set', async () => {
+    spyOn(storageModule, 'getGeminiKey').mockImplementation(() => null);
     gemini = await import('./gemini');
     expect(gemini.hasAPIKey()).toBe(false);
   });
 
   test('returns true when key set', async () => {
     mockKey = 'test-key';
+    spyOn(storageModule, 'getGeminiKey').mockImplementation(() => mockKey);
     gemini = await import('./gemini');
     expect(gemini.hasAPIKey()).toBe(true);
   });
@@ -43,6 +31,10 @@ describe('hasAPIKey', () => {
 
 describe('setAPIKey', () => {
   test('saves key via storage', async () => {
+    spyOn(storageModule, 'getGeminiKey').mockImplementation(() => null);
+    spyOn(storageModule, 'setGeminiKey').mockImplementation((key: string) => {
+      mockKey = key;
+    });
     gemini = await import('./gemini');
     gemini.setAPIKey('my-key');
     expect(mockKey).toBe('my-key');
@@ -51,12 +43,14 @@ describe('setAPIKey', () => {
 
 describe('askGemini', () => {
   test('throws when no API key set', async () => {
+    spyOn(storageModule, 'getGeminiKey').mockImplementation(() => null);
     gemini = await import('./gemini');
     expect(gemini.askGemini('question', 'context')).rejects.toThrow('No API key set');
   });
 
   test('returns text on successful API call', async () => {
     mockKey = 'valid-key';
+    spyOn(storageModule, 'getGeminiKey').mockImplementation(() => mockKey);
     globalThis.fetch = mock(() =>
       Promise.resolve({
         ok: true,
@@ -74,6 +68,7 @@ describe('askGemini', () => {
 
   test('throws on API error response', async () => {
     mockKey = 'valid-key';
+    spyOn(storageModule, 'getGeminiKey').mockImplementation(() => mockKey);
     globalThis.fetch = mock(() =>
       Promise.resolve({
         ok: false,
@@ -88,6 +83,7 @@ describe('askGemini', () => {
 
   test('throws on empty response', async () => {
     mockKey = 'valid-key';
+    spyOn(storageModule, 'getGeminiKey').mockImplementation(() => mockKey);
     globalThis.fetch = mock(() =>
       Promise.resolve({
         ok: true,
@@ -101,6 +97,7 @@ describe('askGemini', () => {
 
   test('throws on missing text in response', async () => {
     mockKey = 'valid-key';
+    spyOn(storageModule, 'getGeminiKey').mockImplementation(() => mockKey);
     globalThis.fetch = mock(() =>
       Promise.resolve({
         ok: true,
@@ -117,6 +114,7 @@ describe('askGemini', () => {
 
   test('throws on network failure', async () => {
     mockKey = 'valid-key';
+    spyOn(storageModule, 'getGeminiKey').mockImplementation(() => mockKey);
     globalThis.fetch = mock(() =>
       Promise.reject(new Error('Network error')),
     ) as unknown as typeof globalThis.fetch;

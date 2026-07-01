@@ -1,35 +1,19 @@
 import { act, render, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import { beforeEach, describe, expect, test } from 'bun:test';
 
 import i18n from '../i18n';
+import { useSettingsStore } from '../stores/settingsStore';
 import { clearMocks, mockResponse, setupRPC } from '../testUtils';
 
 setupRPC();
 
-void mock.module('../layouts/PageLayout', () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="page-layout">{children}</div>
-  ),
-}));
-void mock.module('../layouts/PageHeader', () => ({
-  default: ({ onBack, title }: { onBack?: () => void; title?: string }) => (
-    <header data-testid="page-header">
-      {title && <h1>{title}</h1>}
-      {onBack && <button onClick={onBack}>← Back</button>}
-    </header>
-  ),
-}));
-void mock.module('../layouts/PageContent', () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <main data-testid="page-content">{children}</main>
-  ),
-}));
 import DashboardPage from './DashboardPage';
 
 describe('DashboardPage', () => {
   beforeEach(() => {
     void i18n.changeLanguage('en-US');
     clearMocks();
+    useSettingsStore.setState({ focusMode: false });
   });
 
   test('shows loading state initially', () => {

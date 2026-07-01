@@ -8,14 +8,15 @@ import PageContent from '../layouts/PageContent';
 import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
 import { useCourseStore } from '../stores/courseStore';
+import { useViewStore } from '../stores/viewStore';
 
 interface Props {
   onBack: () => void;
   onOpen: (courseID: string, moduleID: string, sectionID: string | null, courses: Course[]) => void;
-  onSwitchCourse: (course: Course) => void;
 }
 
-export default function BookmarksPage({ onBack, onOpen, onSwitchCourse }: Props) {
+export default function BookmarksPage({ onBack, onOpen }: Props) {
+  const replace = useViewStore((s) => s.replace);
   const { t } = useTranslation();
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,7 +47,7 @@ export default function BookmarksPage({ onBack, onOpen, onSwitchCourse }: Props)
     <PageLayout>
       <PageHeader
         onBack={onBack}
-        center={<CourseSwitcher onSelect={onSwitchCourse} />}
+        center={<CourseSwitcher onSelect={(course) => replace({ type: 'moduleList', course })} />}
         hideHeaderActions
       />
       <PageContent className="max-w-2xl mx-auto px-6 py-8">

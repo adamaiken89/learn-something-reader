@@ -3,7 +3,14 @@ import { cleanup } from '@testing-library/react';
 import { afterEach, expect, mock } from 'bun:test';
 import { Window } from 'happy-dom';
 
-import { fsMockImpl, fsMockState, mermaidMockImpl, mermaidMockState } from './testFsShared';
+import {
+  execSyncState,
+  fsMockImpl,
+  fsMockState,
+  mermaidMockImpl,
+  mermaidMockState,
+  toastMockState,
+} from './testFsShared';
 
 expect.extend(jestDomMatchers);
 
@@ -41,15 +48,17 @@ class MockElectroview {
 }
 void mock.module('electrobun/view', () => ({ Electroview: MockElectroview }));
 
-const _warn = console.warn;
-const _error = console.error;
-const _log = console.log;
-console.warn = () => {};
-console.error = () => {};
-console.log = () => {};
-console.warn = _warn;
-console.error = _error;
-console.log = _log;
+// sonner — intercept toast calls globally
+void mock.module('sonner', () => toastMockState);
+
+void mock.module('react-markdown', () => ({
+  default: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="markdown">{children}</div>
+  ),
+}));
+
+void mock.module('child_process', () => execSyncState);
+
 interface TestGlobals {
   IS_REACT_ACT_ENVIRONMENT: boolean;
   window: Window & typeof globalThis;
@@ -122,8 +131,11 @@ g.IntersectionObserver = class {
   unobserve() {}
   disconnect() {}
 };
-g.requestAnimationFrame = (cb: FrameRequestCallback) => setTimeout(cb, 16);
-g.cancelAnimationFrame = (id: number) => clearTimeout(id);
+g.requestAnimationFrame = (cb: FrameRequestCallback) => {
+  cb(0);
+  return 0;
+};
+g.cancelAnimationFrame = (_id: number) => {};
 g.fetch = async () => new Promise(() => {});
 class MockRange {
   commonAncestorContainer: HTMLElement;
@@ -188,6 +200,7 @@ import './mainview/i18n';
 afterEach(() => {
   cleanup();
   document.body.innerHTML = '';
+  localStorage.clear();
   Object.assign(fsMockImpl, {
     existsSync: () => false,
     readFileSync: (_path: string) => '',

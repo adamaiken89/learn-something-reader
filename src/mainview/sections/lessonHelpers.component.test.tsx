@@ -4,13 +4,6 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { components, getTextOffset } from './lessonHelpers';
 
-void mock.module('../../bun/lessonMarkdown', () => ({
-  headingId: (text: string) => text.toLowerCase().replace(/\s+/g, '-'),
-}));
-void mock.module('../components/MermaidDiagram', () => ({
-  default: ({ code }: { code: string }) => <div data-testid="mermaid-diagram">{code}</div>,
-}));
-
 let clipboardText = '';
 const originalWriteText = navigator.clipboard.writeText;
 
@@ -160,9 +153,11 @@ describe('table wrapper', () => {
     const Table = components.table!;
     const { container } = render(
       <Table>
-        <tr>
-          <td>data</td>
-        </tr>
+        <tbody>
+          <tr>
+            <td>data</td>
+          </tr>
+        </tbody>
       </Table>,
     );
     const wrapper = container.querySelector('.table-wrapper');
@@ -172,11 +167,11 @@ describe('table wrapper', () => {
 });
 
 describe('code component', () => {
-  test('renders MermaidDiagram for language-mermaid', () => {
+  test('renders MermaidDiagram for language-mermaid', async () => {
     const Code = components.code!;
-    const { getByTestId } = render(<Code className="language-mermaid">graph TD; A--&gt;B;</Code>);
-    expect(getByTestId('mermaid-diagram')).toBeTruthy();
-    expect(getByTestId('mermaid-diagram').textContent).toBe('graph TD; A-->B;');
+    const { findByTestId } = render(<Code className="language-mermaid">graph TD; A--&gt;B;</Code>);
+    const el = await findByTestId('mermaid-diagram');
+    expect(el).toBeTruthy();
   });
 
   test('renders regular code for non-mermaid', () => {

@@ -3,7 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 
 import type { Course, ModuleMeta } from '../../bun/types';
 import { countCompleted, useCompletionStore } from '../stores/completionStore';
-import { useLessonStore } from '../stores/lessonStore';
+import { useLessonUIStore } from '../stores/lessonUIStore';
 import { useSettingsStore } from '../stores/settingsStore';
 
 export function useLessonSection(course: Course, module: ModuleMeta) {
@@ -11,11 +11,15 @@ export function useLessonSection(course: Course, module: ModuleMeta) {
   const isCompleted = useCompletionStore((s) => s.completed[storeKey] ?? false);
   const completedCount = useCompletionStore((s) => countCompleted(s.completed, course.id));
   const totalModules = useCompletionStore((s) => s.totalModules[course.id] ?? 0);
-  const { toggle, load: loadCompletion, loadCourse: loadCourseCompletion } = useCompletionStore(
+  const {
+    toggle,
+    load: loadCompletion,
+    loadCourse: loadCourseCompletion,
+  } = useCompletionStore(
     useShallow((s) => ({ toggle: s.toggle, load: s.load, loadCourse: s.loadCourse })),
   );
 
-  const { showTools, showPomodoro, toggleTools, setSearchCourseOpen } = useLessonStore(
+  const { showTools, showPomodoro, toggleTools, setSearchCourseOpen } = useLessonUIStore(
     useShallow((s) => ({
       showTools: s.showTools,
       showPomodoro: s.showPomodoro,
@@ -24,14 +28,13 @@ export function useLessonSection(course: Course, module: ModuleMeta) {
     })),
   );
 
-  const { focusMode, showSections, toggleSections } =
-    useSettingsStore(
-      useShallow((s) => ({
-        focusMode: s.focusMode,
-        showSections: s.showSections,
-        toggleSections: s.toggleSections,
-      })),
-    );
+  const { focusMode, showSections, toggleSections } = useSettingsStore(
+    useShallow((s) => ({
+      focusMode: s.focusMode,
+      showSections: s.showSections,
+      toggleSections: s.toggleSections,
+    })),
+  );
 
   useEffect(() => {
     void loadCompletion(course.id, module.id);

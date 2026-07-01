@@ -1,22 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import type { Course, ModuleMeta } from '../../bun/types';
 import LessonToolbar from '../components/lesson/LessonToolbar';
 import ModuleSwitcher from '../components/ModuleSwitcher';
 import SearchOverlay from '../components/SearchOverlay';
+import { useLessonToolbarShortcuts } from '../hooks/useLessonToolbarShortcuts';
 import PageContent from '../layouts/PageContent';
 import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
 import LessonSection from '../sections/LessonSection';
-import { useCourseStore } from '../stores/courseStore';
-import { useLessonStore } from '../stores/lessonStore';
+import { useLessonUIStore } from '../stores/lessonUIStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useViewStore } from '../stores/viewStore';
+
 interface LessonFeatureProps {
   course: Course;
   module: ModuleMeta;
   initialSectionID?: string;
   onBack: () => void;
-  onSelectModule: (m: ModuleMeta, sectionID?: string) => void;
 }
 
 export default function LessonPage({
@@ -24,13 +25,14 @@ export default function LessonPage({
   module,
   initialSectionID,
   onBack,
-  onSelectModule,
 }: LessonFeatureProps) {
-  const courses = useCourseStore((s) => s.courses);
-  const searchCourseOpen = useLessonStore((s) => s.searchCourseOpen);
-  const setSearchCourseOpen = useLessonStore((s) => s.setSearchCourseOpen);
+  const searchCourseOpen = useLessonUIStore((s) => s.searchCourseOpen);
+  const setSearchCourseOpen = useLessonUIStore((s) => s.setSearchCourseOpen);
+  const push = useViewStore((s) => s.push);
   const transitionStyle = useSettingsStore((s) => s.transitionStyle);
-  const [pendingSearchQuery, setPendingSearchQuery] = useState<string | null>(null);
+
+  useLessonToolbarShortcuts(course, module);
+
   const [animClass, setAnimClass] = useState('');
   const [contentKey, setContentKey] = useState(0);
   const prevModuleRef = useRef(module);
@@ -59,22 +61,6 @@ export default function LessonPage({
     return () => clearTimeout(timer);
   }, [module, course.modules, transitionStyle]);
 
-  useEffect(() => {
-    setPendingSearchQuery(null);
-  }, [module.id]);
-
-  const handleSearchNavigate = useCallback(
-    (courseID: string, moduleID: string, query?: string, sectionID?: string) => {
-      const c = courses.find((x) => x.id === courseID);
-      const m = c?.modules.find((x) => x.id === moduleID);
-      if (c && m) {
-        setPendingSearchQuery(query ?? null);
-        onSelectModule(m, sectionID);
-      }
-    },
-    [courses, onSelectModule],
-  );
-
   return (
     <PageLayout>
       <PageHeader
@@ -84,28 +70,18 @@ export default function LessonPage({
           <ModuleSwitcher
             modules={course.modules}
             currentModuleId={module.id}
-            onSelect={onSelectModule}
+            onSelect={(m) => push({ type: 'lesson', course, module: m })}
           />
         }
         toolbar={<LessonToolbar />}
       />
       <PageContent className="px-0 py-0">
         <div key={contentKey} className={`flex flex-col ${animClass || ''}`}>
-          <LessonSection
-            course={course}
-            module={module}
-            initialSectionID={initialSectionID}
-            initialSearchQuery={pendingSearchQuery}
-          />
+          <LessonSection course={course} module={module} initialSectionID={initialSectionID} />
         </div>
       </PageContent>
       {searchCourseOpen && (
-        <SearchOverlay
-          initialCourseIDs={[course.id]}
-          initialCourseNames={[course.displayName]}
-          onClose={() => setSearchCourseOpen(false)}
-          onNavigate={handleSearchNavigate}
-        />
+        <SearchOverlay initialCourseIDs={[course.id]} onClose={() => setSearchCourseOpen(false)} />
       )}
     </PageLayout>
   );

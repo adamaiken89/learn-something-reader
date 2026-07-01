@@ -1,27 +1,15 @@
 import { useTranslation } from 'react-i18next';
 
-import type { Course } from '../../bun/types';
-import { Button } from '../components/ui';
 import { countCompleted, useCourseListPage } from '../hooks/useCourseListPage';
 import PageContent from '../layouts/PageContent';
 import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
+import { useViewStore } from '../stores/viewStore';
 
-interface Props {
-  onSelectCourse: (course: Course) => void;
-  onOpenSettings: () => void;
-  onOpenBookmarks: () => void;
-  onOpenDashboard: () => void;
-}
-
-export default function CourseListPage({
-  onSelectCourse,
-  onOpenSettings,
-  onOpenBookmarks,
-  onOpenDashboard,
-}: Props) {
+export default function CourseListPage() {
   const { t } = useTranslation();
   const { courses, completed, loading, error } = useCourseListPage();
+  const push = useViewStore((s) => s.push);
 
   if (loading)
     return <div className="p-8 text-center text-gray-400">{t('courseList.loadingCourses')}</div>;
@@ -34,26 +22,7 @@ export default function CourseListPage({
 
   return (
     <PageLayout>
-      <PageHeader
-        actions={
-          <>
-            <Button
-              variant="secondary"
-              size="md"
-              onClick={onOpenDashboard}
-              title={t('dashboard.title')}
-            >
-              {t('icons.stats')}
-            </Button>
-            <Button variant="secondary" size="md" onClick={onOpenBookmarks}>
-              {t('common.bookmarks')}
-            </Button>
-            <Button variant="secondary" size="md" onClick={onOpenSettings}>
-              {t('common.settings')}
-            </Button>
-          </>
-        }
-      />
+      <PageHeader />
       <PageContent>
         {courses.length === 0 && (
           <div className="text-center py-12 text-gray-500">{t('courseList.noCourses')}</div>
@@ -63,7 +32,7 @@ export default function CourseListPage({
           {courses.map((course) => (
             <button
               key={course.id}
-              onClick={() => onSelectCourse(course)}
+              onClick={() => push({ type: 'moduleList', course })}
               className="text-left bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-xl p-5 transition-colors group cursor-pointer"
             >
               <div className="flex items-start justify-between">

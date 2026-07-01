@@ -1,5 +1,4 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import { forwardRef } from 'react';
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
@@ -28,25 +27,33 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+  ref?: React.Ref<HTMLButtonElement>;
   loading?: boolean;
 }
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, loading, children, disabled, ...props }, ref) => {
-    return (
-      <button
-        ref={ref}
-        className={buttonVariants({ variant, size, className })}
-        disabled={disabled || loading}
-        {...props}
-      >
-        {loading ? (
-          <span className="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
-        ) : null}
-        {children}
-      </button>
-    );
-  },
-);
+export const Button = ({
+  ref,
+  className,
+  variant,
+  size,
+  loading,
+  children,
+  disabled,
+  ...props
+}: ButtonProps) => {
+  return (
+    <button
+      ref={ref}
+      className={buttonVariants({ variant, size, className })}
+      disabled={disabled || loading}
+      {...props}
+    >
+      {loading ? (
+        <span className="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+      ) : null}
+      {children}
+    </button>
+  );
+};
 
 Button.displayName = 'Button';

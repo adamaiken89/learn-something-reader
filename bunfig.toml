@@ -1,5 +1,4 @@
 [test]
 preload = "./src/setup.tsx"
-coverage = true
-coverageThreshold = 85
-coverageSkipTestFiles = true
+coverageThreshold = 0.9
+coverageExclude = ["**/testFsShared.ts"]

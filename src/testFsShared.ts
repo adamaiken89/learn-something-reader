@@ -39,3 +39,51 @@ export const mermaidMockState = {
     render: (...args: unknown[]) => mermaidMockImpl.render(...args),
   },
 };
+
+export const toastCallState = {
+  method: '',
+  args: [] as unknown[],
+};
+
+export const toastMockState = {
+  toast: {
+    success: (...args: unknown[]) => {
+      toastCallState.method = 'success';
+      toastCallState.args = args;
+      return 'toast-id';
+    },
+    error: (...args: unknown[]) => {
+      toastCallState.method = 'error';
+      toastCallState.args = args;
+      return 'toast-id';
+    },
+    info: (...args: unknown[]) => {
+      toastCallState.method = 'info';
+      toastCallState.args = args;
+      return 'toast-id';
+    },
+    warning: (...args: unknown[]) => {
+      toastCallState.method = 'warning';
+      toastCallState.args = args;
+      return 'toast-id';
+    },
+    promise: <T>(
+      _promise: Promise<T>,
+      msgs: { loading: string; success: string; error: string | (() => string) },
+    ) => {
+      toastCallState.method = 'promise';
+      toastCallState.args = [msgs];
+      return 'toast-id';
+    },
+  },
+  Toaster: () => null,
+};
+
+export const mockExecSyncImpl = {
+  fn: (_cmd: string) => Buffer.from(''),
+};
+
+export const execSyncState = {
+  execSync: (...args: unknown[]) =>
+    (mockExecSyncImpl.fn as (...a: unknown[]) => unknown)(...(args as [string])),
+};

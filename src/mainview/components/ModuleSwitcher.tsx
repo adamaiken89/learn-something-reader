@@ -28,7 +28,12 @@ export default function ModuleSwitcher({ modules, currentModuleId, onSelect }: P
   const showDropdown = useDelayedUnmount(open, 150);
 
   return (
-    <div ref={ref} className="relative">
+    <div
+      ref={ref}
+      className="relative"
+      data-testid="module-switcher"
+      data-current-module-id={currentModuleId}
+    >
       <button
         onClick={() => setOpen(!open)}
         className="px-4 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center gap-2 min-w-[460px]"

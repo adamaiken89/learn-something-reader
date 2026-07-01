@@ -1,15 +1,15 @@
 import { logger } from './logger';
-import { getGeminiKey, setGeminiKey } from './storage';
+import * as storageModule from './storage';
 
 const BASE_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 function getAPIKey(): string | null {
-  return getGeminiKey();
+  return storageModule.getGeminiKey();
 }
 
 function saveAPIKey(key: string): void {
-  setGeminiKey(key);
+  storageModule.setGeminiKey(key);
 }
 
 export function hasAPIKey(): boolean {

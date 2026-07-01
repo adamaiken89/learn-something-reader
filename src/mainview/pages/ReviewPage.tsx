@@ -1,22 +1,27 @@
-import type { Course } from '../../bun/types';
 import CourseSwitcher from '../components/CourseSwitcher';
 import PageContent from '../layouts/PageContent';
 import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
 import ReviewSection from '../sections/ReviewSection';
+import { useViewStore } from '../stores/viewStore';
 
 interface ReviewPageProps {
   courseId: string;
   onBack: () => void;
-  onSwitchCourse: (course: Course) => void;
 }
 
-export default function ReviewPage({ courseId, onBack, onSwitchCourse }: ReviewPageProps) {
+export default function ReviewPage({ courseId, onBack }: ReviewPageProps) {
+  const replace = useViewStore((s) => s.replace);
   return (
     <PageLayout>
       <PageHeader
         onBack={onBack}
-        center={<CourseSwitcher currentCourseId={courseId} onSelect={onSwitchCourse} />}
+        center={
+          <CourseSwitcher
+            currentCourseId={courseId}
+            onSelect={(course) => replace({ type: 'moduleList', course })}
+          />
+        }
       />
       <PageContent>
         <ReviewSection courseId={courseId} />

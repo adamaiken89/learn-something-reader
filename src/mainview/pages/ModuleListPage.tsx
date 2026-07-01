@@ -1,31 +1,21 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Course, ModuleMeta } from '../../bun/types';
+import type { Course } from '../../bun/types';
 import CourseSwitcher from '../components/CourseSwitcher';
 import PageContent from '../layouts/PageContent';
 import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
 import { useCompletionStore } from '../stores/completionStore';
+import { useViewStore } from '../stores/viewStore';
 
 interface Props {
   course: Course;
-  onSelectModule: (module: ModuleMeta) => void;
-  onSelectCourse: (course: Course) => void;
-  onOpenSettings: () => void;
-  onOpenBookmarks: () => void;
-  onOpenDashboard: () => void;
 }
 
-export default function ModuleListPage({
-  course,
-  onSelectModule,
-  onSelectCourse,
-  onOpenSettings,
-  onOpenBookmarks,
-  onOpenDashboard,
-}: Props) {
+export default function ModuleListPage({ course }: Props) {
   const { t } = useTranslation();
+  const push = useViewStore((s) => s.push);
   const loadModules = useCompletionStore((s) => s.loadModules);
 
   useEffect(() => {
@@ -37,29 +27,11 @@ export default function ModuleListPage({
   return (
     <PageLayout>
       <PageHeader
-        center={<CourseSwitcher currentCourseId={course.id} onSelect={onSelectCourse} />}
-        actions={
-          <>
-            <button
-              onClick={onOpenDashboard}
-              className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-              title={t('dashboard.title')}
-            >
-              {t('icons.stats')}
-            </button>
-            <button
-              onClick={onOpenBookmarks}
-              className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-            >
-              {t('common.bookmarks')}
-            </button>
-            <button
-              onClick={onOpenSettings}
-              className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-            >
-              {t('common.settings')}
-            </button>
-          </>
+        center={
+          <CourseSwitcher
+            currentCourseId={course.id}
+            onSelect={(c) => push({ type: 'moduleList', course: c })}
+          />
         }
       />
 
@@ -70,7 +42,7 @@ export default function ModuleListPage({
             return (
               <button
                 key={mod.id}
-                onClick={() => onSelectModule(mod)}
+                onClick={() => push({ type: 'lesson', course, module: mod })}
                 className={`text-left bg-gray-800 hover:bg-gray-750 border rounded-xl p-5 transition-colors group cursor-pointer ${
                   isCompleted
                     ? 'border-emerald-700 hover:border-emerald-600'

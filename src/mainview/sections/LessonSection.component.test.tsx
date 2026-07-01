@@ -5,38 +5,14 @@ import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
 import type { Course, ModuleMeta } from '../../bun/types';
 import { useCompletionStore } from '../stores/completionStore';
 import { useHighlightsStore } from '../stores/highlightsStore';
-import { useLessonStore } from '../stores/lessonStore';
+import { useLessonUIStore } from '../stores/lessonUIStore';
 import { useNotesStore } from '../stores/notesStore';
 import { useSelectionStore } from '../stores/selectionStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { clearMocks, deleteMock, mockResponse, mockRPC, setupRPC } from '../testUtils';
-
-const rpcCalls: string[] = [];
-const trackedMockRPC = {
-  request: new Proxy(mockRPC.request, {
-    get(target, method: string) {
-      const original = Reflect.get(target, method) as (...a: unknown[]) => Promise<unknown>;
-      return (...args: unknown[]) => {
-        rpcCalls.push(method);
-        return original(...args);
-      };
-    },
-  }),
-};
-
-beforeEach(() => {
-  rpcCalls.length = 0;
-});
-
-setupRPC(trackedMockRPC);
-
-void mock.module('react-markdown', () => ({
-  default: ({ children }: { children?: string }) => (
-    <div data-testid="markdown">{String(children)}</div>
-  ),
-}));
-
+import { clearMocks, deleteMock, mockResponse, setupRPC } from '../testUtils';
 import LessonSection from './LessonSection';
+
+setupRPC();
 
 const mockCourse: Course = {
   id: 'cs101',
@@ -84,9 +60,8 @@ function setupDefaultMocks() {
 
 beforeEach(() => {
   clearMocks();
-  rpcCalls.length = 0;
   setupDefaultMocks();
-  useLessonStore.setState(defaultLessonUI);
+  useLessonUIStore.setState(defaultLessonUI);
   useSettingsStore.setState(defaultSettings);
   useHighlightsStore.setState({ byModule: {}, loading: {} });
   useCompletionStore.setState({ completed: {}, totalModules: {}, loading: {}, loaded: false });
@@ -135,11 +110,6 @@ function installMockSelection(mockSel: ReturnType<typeof makeMockSelection>) {
   };
 }
 
-globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => {
-  cb(0);
-  return 0;
-};
-
 async function renderAndSettle(ui: React.ReactElement) {
   let result!: ReturnType<typeof render>;
   await act(async () => {
@@ -185,19 +155,19 @@ describe('LessonSection', () => {
   });
 
   test('renders pomodoro timer when enabled', async () => {
-    useLessonStore.setState({ showPomodoro: true });
+    useLessonUIStore.setState({ showPomodoro: true });
     const { container } = await renderAndSettle(<LessonSection {...props} />);
     expect(container.textContent).toContain('Focus');
   });
 
   test('renders study tools when showTools is true and not focusing', async () => {
-    useLessonStore.setState({ showTools: true });
+    useLessonUIStore.setState({ showTools: true });
     const { container } = await renderAndSettle(<LessonSection {...props} />);
     expect(container.textContent).toContain('Study Tools');
   });
 
   test('hides study tools when focus mode is on', async () => {
-    useLessonStore.setState({ showTools: true });
+    useLessonUIStore.setState({ showTools: true });
     useSettingsStore.setState({ focusMode: true });
     const { container } = await renderAndSettle(<LessonSection {...props} />);
     expect(container.textContent).toContain('Test Heading');
@@ -231,7 +201,7 @@ describe('LessonSection', () => {
     const mockSel = makeMockSelection('some selectable text', contentDiv);
     const restore = installMockSelection(mockSel);
 
-    fireEvent.mouseUp(contentDiv);
+    await act(async () => fireEvent.mouseUp(contentDiv));
 
     await waitFor(() => {
       expect(getByTestId('selection-toolbar')).toBeTruthy();
@@ -246,7 +216,7 @@ describe('LessonSection', () => {
     const mockSel = makeMockSelection('note-worthy text', contentDiv);
     const restore = installMockSelection(mockSel);
 
-    fireEvent.mouseUp(contentDiv);
+    await act(async () => fireEvent.mouseUp(contentDiv));
 
     await waitFor(() => {
       expect(getByTestId('selection-toolbar')).toBeTruthy();
@@ -267,7 +237,7 @@ describe('LessonSection', () => {
     const mockSel = makeMockSelection('card-worthy text', contentDiv);
     const restore = installMockSelection(mockSel);
 
-    fireEvent.mouseUp(contentDiv);
+    await act(async () => fireEvent.mouseUp(contentDiv));
 
     await waitFor(() => {
       expect(getByTestId('selection-toolbar')).toBeTruthy();
@@ -287,7 +257,7 @@ describe('LessonSection', () => {
   });
 
   test('calls handleToggleCompleted when completion button clicked', async () => {
-    mockResponse('toggleModuleCompleted', undefined);
+    mockResponse('toggleModuleCompleted', true);
     mockResponse('logSession', undefined);
 
     const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
@@ -295,7 +265,7 @@ describe('LessonSection', () => {
     await user.click(getByTestId('complete-btn'));
 
     await waitFor(() => {
-      expect(rpcCalls).toContain('toggleModuleCompleted');
+      expect(useCompletionStore.getState().completed).toHaveProperty('cs101:mod-01', true);
     });
   });
 
@@ -313,7 +283,7 @@ describe('LessonSection', () => {
     const mockSel = makeMockSelection('auto copied text', contentDiv);
     const restore = installMockSelection(mockSel);
 
-    fireEvent.mouseUp(contentDiv);
+    await act(async () => fireEvent.mouseUp(contentDiv));
 
     await waitFor(() => {
       expect(getByTestId('selection-toolbar')).toBeTruthy();
@@ -349,7 +319,7 @@ describe('LessonSection', () => {
     const origGetSelection = window.getSelection;
     window.getSelection = () => collapsedSel as unknown as Selection;
 
-    fireEvent.mouseUp(contentDiv);
+    await act(async () => fireEvent.mouseUp(contentDiv));
 
     await act(async () => {
       await new Promise((r) => setTimeout(r, 500));
@@ -377,7 +347,7 @@ describe('LessonSection', () => {
 
     const mockSel1 = makeMockSelection('first selection', contentDiv);
     const restore1 = installMockSelection(mockSel1);
-    fireEvent.mouseUp(contentDiv);
+    await act(async () => fireEvent.mouseUp(contentDiv));
 
     await act(async () => {
       await new Promise((r) => setTimeout(r, 100));
@@ -386,7 +356,7 @@ describe('LessonSection', () => {
     const mockSel2 = makeMockSelection('second selection', contentDiv);
     restore1();
     const restore2 = installMockSelection(mockSel2);
-    fireEvent.mouseUp(contentDiv);
+    await act(async () => fireEvent.mouseUp(contentDiv));
 
     await act(async () => {
       await new Promise((r) => setTimeout(r, 500));

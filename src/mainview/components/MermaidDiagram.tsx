@@ -26,7 +26,24 @@ export default function MermaidDiagram({ code }: { code: string }) {
     };
   }, [code]);
 
-  if (error) return <pre className="mermaid-error">{error}</pre>;
-  if (!svg) return <div className="mermaid-loading">Loading diagram...</div>;
-  return <div ref={ref} className="mermaid-diagram" dangerouslySetInnerHTML={{ __html: svg }} />;
+  if (error)
+    return (
+      <pre className="mermaid-error" data-testid="mermaid-error">
+        {error}
+      </pre>
+    );
+  if (!svg)
+    return (
+      <div className="mermaid-loading" data-testid="mermaid-loading">
+        Loading diagram...
+      </div>
+    );
+  return (
+    <div
+      ref={ref}
+      className="mermaid-diagram"
+      data-testid="mermaid-diagram"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  );
 }

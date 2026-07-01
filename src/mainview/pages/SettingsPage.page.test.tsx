@@ -1,32 +1,11 @@
 import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import { beforeEach, describe, expect, test } from 'bun:test';
 
 import i18n from '../i18n';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useSyncStore } from '../stores/syncStore';
 import { clearMocks, mockResponse, setupRPC } from '../testUtils';
-
-void mock.module('../layouts/PageLayout', () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="page-layout">{children}</div>
-  ),
-}));
-void mock.module('../layouts/PageHeader', () => ({
-  default: ({ onBack, title }: { onBack?: () => void; title?: string }) => (
-    <header data-testid="page-header">
-      {title && <h1>{title}</h1>}
-      {onBack && <button onClick={onBack}>← Back</button>}
-    </header>
-  ),
-}));
-void mock.module('../layouts/PageContent', () => ({
-  default: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <main data-testid="page-content" className={className}>
-      {children}
-    </main>
-  ),
-}));
 
 setupRPC();
 
@@ -47,6 +26,7 @@ describe('SettingsPage', () => {
     });
     useSettingsStore.setState({
       hasApiKey: false,
+      focusMode: false,
       fontSize: 16,
       theme: 'dark',
       contentWidth: 'standard',
@@ -130,7 +110,7 @@ describe('SettingsPage', () => {
       );
       await new Promise((r) => setTimeout(r, 0));
     });
-    renderResult.getByText('← Back').click();
+    act(() => renderResult.getByText('← Back').click());
     expect(called).toBe(true);
   });
 

@@ -36,7 +36,7 @@ export default function CourseSwitcher({ currentCourseId, onSelect }: Props) {
   const showDropdown = useDelayedUnmount(open, 150);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" data-course-id={currentCourseId}>
       <button
         onClick={() => setOpen(!open)}
         className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center gap-2 min-w-[380px]"

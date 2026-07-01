@@ -1,29 +1,48 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
 
-interface CardEditorProps {
-  selectedText: string;
-  x: number;
-  y: number;
-  onSave: (front: string, back: string) => void;
-  onCancel: () => void;
-}
+import { api } from '../../api';
+import { useFloatingPosition } from '../../hooks/useFloatingPosition';
+import { useLessonViewStore } from '../../stores/lessonViewStore';
+import { useSelectionStore } from '../../stores/selectionStore';
 
-export default function CardEditor({ selectedText, x, y, onSave, onCancel }: CardEditorProps) {
+export default function CardEditor() {
   const { t } = useTranslation();
-  const [front, setFront] = useState(selectedText);
+
+  const store = useSelectionStore(
+    useShallow((s) => ({
+      selection: s.selection,
+      pickerPos: s.pickerPos,
+      showCardEditor: s.showCardEditor,
+      closeCardEditor: s.closeCardEditor,
+    })),
+  );
+  const courseId = useLessonViewStore((s) => s.courseId);
+  const moduleId = useLessonViewStore((s) => s.moduleId);
+
+  const [front, setFront] = useState('');
   const [back, setBack] = useState('');
+  const editorY = store.pickerPos.y - 120;
+  const { menuRef, position } = useFloatingPosition(store.pickerPos.x, editorY, editorY);
+  const prevShowRef = useRef(false);
+
+  useEffect(() => {
+    if (store.showCardEditor && !prevShowRef.current && store.selection) {
+      setFront(store.selection.text);
+      setBack('');
+    }
+    prevShowRef.current = store.showCardEditor;
+  }, [store.showCardEditor, store.selection]);
+
+  if (!store.showCardEditor || !store.selection) return null;
 
   return (
     <div
+      ref={menuRef}
       data-testid="card-editor"
       className="fixed z-50 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-xl"
-      style={{
-        left: x,
-        top: y - 120,
-        transform: 'translate(-50%, 0)',
-        width: '300px',
-      }}
+      style={{ left: position.x, top: position.y, transform: 'translate(-50%, 0)', width: '300px' }}
     >
       <p className="text-[10px] text-gray-500 mb-2 font-semibold uppercase tracking-wider">
         {t('lesson.createCard')}
@@ -45,13 +64,20 @@ export default function CardEditor({ selectedText, x, y, onSave, onCancel }: Car
       />
       <div className="flex gap-2 mt-1.5">
         <button
-          onClick={() => onSave(front, back)}
+          onClick={() => {
+            if (!front.trim() || !back.trim()) return;
+            void api.usercards.create(courseId, moduleId, front, back);
+            store.closeCardEditor();
+          }}
           disabled={!front.trim() || !back.trim()}
           className="flex-1 py-1 text-[10px] bg-indigo-700 hover:bg-indigo-600 rounded disabled:opacity-40"
         >
           {t('common.save')}
         </button>
-        <button onClick={onCancel} className="py-1 text-[10px] text-gray-400 hover:text-gray-200">
+        <button
+          onClick={store.closeCardEditor}
+          className="py-1 text-[10px] text-gray-400 hover:text-gray-200"
+        >
           {t('common.cancel')}
         </button>
       </div>

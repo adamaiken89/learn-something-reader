@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 
 import type { UserCard } from '../../bun/types';
 import { api } from '../api';
-import { filterVariants } from '../components/ui';
+import FilterBar from '../components/userCards/FilterBar';
+import ReviewCardDisplay from '../components/userCards/ReviewCardDisplay';
 import type { FilterMode } from '../hooks/useCardReviewState';
 import { useCardReviewState } from '../hooks/useCardReviewState';
 
@@ -54,17 +55,7 @@ export default function UserCardReviewSection({ courseId }: Props) {
 
   return (
     <div className="max-w-xl mx-auto">
-      <div className="flex items-center justify-center gap-2 mb-6">
-        {(['all', 'due', 'starred'] as const).map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={filterVariants({ active: filter === f })}
-          >
-            {f === 'all' ? t('review.all') : f === 'due' ? t('review.due') : t('review.starred')}
-          </button>
-        ))}
-      </div>
+      <FilterBar filter={filter} onFilter={setFilter} />
       {cards.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-400 mb-4">
@@ -78,84 +69,15 @@ export default function UserCardReviewSection({ courseId }: Props) {
         </div>
       ) : (
         currentCard && (
-          <div>
-            <div className="text-xs text-gray-500 mb-2 text-center">
-              {t('userCardReview.cardCounter', { current: currentIndex + 1, total: cards.length })}
-              {currentCard.isStarred && (
-                <span className="ml-2 text-yellow-500">{t('icons.starFilled')}</span>
-              )}
-            </div>
-
-            <div className="bg-gray-800 rounded-xl p-8 min-h-[200px] flex flex-col items-center justify-center text-center mb-6">
-              {!showAnswer ? (
-                <div>
-                  <h3 className="text-lg font-medium mb-6">{currentCard.front}</h3>
-                  <button
-                    onClick={() => setShowAnswer(true)}
-                    data-testid="show-answer"
-                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors"
-                  >
-                    {t('review.showAnswer')}
-                  </button>
-                </div>
-              ) : (
-                <div className="w-full">
-                  <div className="mb-4 pb-4 border-b border-gray-700">
-                    <p className="text-sm text-gray-400 mb-1">{t('userCardReview.front')}</p>
-                    <p className="text-lg font-medium">{currentCard.front}</p>
-                  </div>
-                  <div className="mb-6">
-                    <p className="text-sm text-gray-400 mb-1">{t('userCardReview.back')}</p>
-                    <p className="text-lg">{currentCard.back}</p>
-                  </div>
-                  <div className="flex gap-3 justify-center">
-                    <button
-                      onClick={() => {
-                        void handleReview(false);
-                      }}
-                      data-testid="btn-forgot"
-                      className="px-6 py-2 bg-red-700 hover:bg-red-600 rounded-lg transition-colors"
-                    >
-                      {t('review.forgot')}
-                    </button>
-                    <button
-                      onClick={() => {
-                        void handleReview(true);
-                      }}
-                      data-testid="btn-remembered"
-                      className="px-6 py-2 bg-emerald-700 hover:bg-emerald-600 rounded-lg transition-colors"
-                    >
-                      {t('review.remembered')}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-center gap-2">
-              {currentCard.isStarred ? (
-                <button
-                  onClick={() => {
-                    void handleToggleStar();
-                  }}
-                  data-testid="btn-star"
-                  className="text-xs text-yellow-500 hover:text-yellow-400"
-                >
-                  {t('review.unstar')}
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    void handleToggleStar();
-                  }}
-                  data-testid="btn-star"
-                  className="text-xs text-gray-500 hover:text-gray-400"
-                >
-                  {t('review.star')}
-                </button>
-              )}
-            </div>
-          </div>
+          <ReviewCardDisplay
+            card={currentCard}
+            currentIndex={currentIndex}
+            totalCards={cards.length}
+            showAnswer={showAnswer}
+            onShowAnswer={() => setShowAnswer(true)}
+            onReview={handleReview}
+            onToggleStar={handleToggleStar}
+          />
         )
       )}
     </div>

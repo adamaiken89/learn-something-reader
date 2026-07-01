@@ -91,3 +91,10 @@ The real scrollbar lives on `contentRef` only when `PageContent` is a flex conta
 - `index.css`: Tailwind directives + `.book-content` + highlight.js styles
 - **Desktop-only app** (Electrobun). All I/O local. Skip lazy loading, code splitting, chunking, network optimizations. Import eagerly. Bundle once.
 - **Selection overlays**: `LessonSelectionOverlays` (selection toolbar, note/card editors) appear when text selected in content viewer. Driven by `selectionchange` listener in `useSelection` + `onMouseUp` on `LessonContentViewer`.
+
+## Test conventions
+
+- **NO `mock.module` in test files**. All external lib mocks in `src/setup.tsx` (sonner, react-markdown, child_process, fs, mermaid, electrobun). Internal modules: use `spyOn` on `import * as NS` (refactor prod code if needed) or rely on real impl + store state control.
+- **`mock.restore()` DESTROYS setup.tsx's global mocks**. Never call `mock.restore()` in individual test files — it undoes sonner/react-markdown/child_process/fs/mermaid/electrobun mocks process-wide.
+- **Page/test files must call `setupRPC()`** at module level. Without it, RPC handler defaults to `Promise.resolve(null)` (works only if another test file happened to call it first — fragile ordering dependence).
+- **Store state pollution across test files**: zustand stores persist in-memory. `localStorage.clear()` in setup.tsx afterEach prevents persistent state leakage. Some tests need explicit `useXxxStore.setState({ ... })` in beforeEach.

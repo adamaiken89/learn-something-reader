@@ -12,7 +12,7 @@ import { join } from 'path';
 
 import { logger } from './logger';
 import { getSyncConfig, saveSyncConfig } from './storage';
-import { findSubjectsDir } from './utils';
+import * as utilsModule from './utils';
 
 const TMP_DIR = join(process.env.HOME || '', '.coursereader', 'tmp-sync');
 
@@ -94,7 +94,7 @@ export async function syncCourses(): Promise<{
       };
     }
 
-    const coursesDir = findSubjectsDir();
+    const coursesDir = utilsModule.findSubjectsDir();
     if (!coursesDir) {
       return { success: false, commitHash: '', message: 'Courses directory not found' };
     }

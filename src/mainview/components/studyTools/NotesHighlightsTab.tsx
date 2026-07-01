@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Highlight,Section  } from '../../../bun/types';
+import type { Highlight } from '../../../bun/types';
 import { useHighlightsStore } from '../../stores/highlightsStore';
-import { useLessonStore } from '../../stores/lessonStore';
+import { useLessonUIStore } from '../../stores/lessonUIStore';
+import { useLessonViewStore } from '../../stores/lessonViewStore';
 import { useNotesStore } from '../../stores/notesStore';
+import { useViewStore } from '../../stores/viewStore';
 import { showToast } from '../../toast';
-import { findSectionIdForHighlight, scrollToHighlightEl } from './notesHelpers';
+import HighlightItem from './HighlightItem';
+import NoteEditor from './NoteEditor';
+import NoteItem from './NoteItem';
+import { scrollToHighlightEl } from './notesHelpers';
 
 type MergedItem =
   | { kind: 'highlight'; highlight: Highlight }
@@ -22,23 +27,16 @@ type MergedItem =
       linkedHighlight?: Highlight;
     };
 
-interface NotesHighlightsTabProps {
-  courseId: string;
-  moduleId: string;
-  contentRef: React.RefObject<HTMLDivElement | null>;
-  scrollToSection: (sectionId: string) => void;
-  sections: Section[];
-}
-
-export default function NotesHighlightsTab({
-  courseId,
-  moduleId,
-  contentRef,
-  scrollToSection,
-  sections,
-}: NotesHighlightsTabProps) {
+export default function NotesHighlightsTab() {
   const { t } = useTranslation();
-  const visibleSection = useLessonStore((s) => s.visibleSection);
+  const visibleSection = useLessonUIStore((s) => s.visibleSection);
+
+  const views = useViewStore((s) => s.views);
+  const lastView = views[views.length - 1];
+  const courseId = lastView?.type === 'lesson' ? lastView.course.id : '';
+  const moduleId = lastView?.type === 'lesson' ? lastView.module.id : '';
+
+  const { contentRef, scrollToSection, sections } = useLessonViewStore();
 
   const loadNotes = useNotesStore((s) => s.load);
   const addNote = useNotesStore((s) => s.add);
@@ -53,12 +51,10 @@ export default function NotesHighlightsTab({
   const k = `${courseId}:${moduleId}`;
 
   useEffect(() => {
-    void loadNotes(courseId, moduleId);
+    if (courseId && moduleId) void loadNotes(courseId, moduleId);
   }, [courseId, moduleId, loadNotes]);
 
   const [newNoteContent, setNewNoteContent] = useState('');
-  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
-  const [editingContent, setEditingContent] = useState('');
 
   const handleAddNote = async () => {
     if (!newNoteContent.trim()) return;
@@ -72,11 +68,8 @@ export default function NotesHighlightsTab({
     showToast.success('toast.saved');
   };
 
-  const handleUpdateNote = async (id: string) => {
-    if (!editingContent.trim()) return;
-    await updateNote(id, editingContent.trim());
-    setEditingNoteId(null);
-    setEditingContent('');
+  const handleUpdateNote = async (id: string, content: string) => {
+    await updateNote(id, content);
     showToast.success('toast.saved');
   };
 
@@ -97,9 +90,7 @@ export default function NotesHighlightsTab({
     const notes = notesByModule[k] ?? [];
     const highlights = highlightsByModule[k] ?? [];
     const items: MergedItem[] = [];
-    for (const h of highlights) {
-      items.push({ kind: 'highlight', highlight: h });
-    }
+    for (const h of highlights) items.push({ kind: 'highlight', highlight: h });
     for (const n of notes) {
       const linkedH = n.highlightID ? highlights.find((h) => h.id === n.highlightID) : undefined;
       items.push({ kind: 'note', note: n, linkedHighlight: linkedH });
@@ -120,29 +111,13 @@ export default function NotesHighlightsTab({
         const scrolled = scrollToHighlightEl(contentRef, item.linkedHighlight.id);
         if (scrolled) return;
       }
-      if (item.note.sectionID) {
-        scrollToSection(item.note.sectionID);
-      }
+      if (item.note.sectionID) scrollToSection(item.note.sectionID);
     }
   };
 
   return (
     <div className="space-y-3">
-      <textarea
-        value={newNoteContent}
-        onChange={(e) => setNewNoteContent(e.target.value)}
-        placeholder={t('studyTools.addNote')}
-        className="w-full bg-gray-800 border border-gray-600 rounded text-xs p-2 text-gray-200 placeholder-gray-500 resize-none h-20 focus:outline-none focus:border-indigo-500"
-      />
-      <button
-        onClick={() => {
-          void handleAddNote();
-        }}
-        disabled={!newNoteContent.trim()}
-        className="w-full py-1 text-xs bg-indigo-700 hover:bg-indigo-600 rounded disabled:opacity-40"
-      >
-        {t('studyTools.saveNote')}
-      </button>
+      <NoteEditor value={newNoteContent} onChange={setNewNoteContent} onSave={handleAddNote} />
       {notesLoading ? (
         <p className="text-xs text-gray-500">{t('studyTools.loadingNotes')}</p>
       ) : mergedItems.length === 0 ? (
@@ -155,106 +130,20 @@ export default function NotesHighlightsTab({
             onClick={() => handleNavigate(item)}
           >
             {item.kind === 'highlight' ? (
-              <>
-                <p className="text-xs text-gray-300 line-clamp-2">{item.highlight.selectedText}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: item.highlight.color }}
-                  />
-                  <span className="text-[10px] text-gray-500">
-                    {item.highlight.startOffset}–{item.highlight.endOffset}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      void handleDeleteHighlight(item.highlight.id);
-                    }}
-                    className="text-[10px] text-red-400 hover:text-red-300"
-                  >
-                    {t('common.delete')}
-                  </button>
-                </div>
-                {(() => {
-                  const sec = findSectionIdForHighlight(contentRef, item.highlight.id, sections);
-                  return sec ? (
-                    <p className="text-[10px] text-gray-600 mt-1">
-                      {t('studyTools.section')} {sec.heading}
-                    </p>
-                  ) : null;
-                })()}
-              </>
+              <HighlightItem
+                highlight={item.highlight}
+                contentRef={contentRef}
+                sections={sections}
+                onDelete={handleDeleteHighlight}
+              />
             ) : (
-              <>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="w-3 h-3 rounded-full border-2 border-red-500 bg-white shrink-0" />
-                  <span className="text-[10px] text-gray-400">{t('studyTools.notes')}</span>
-                </div>
-                {item.linkedHighlight && (
-                  <p className="text-[10px] text-gray-600 italic mb-1 truncate border-l-2 border-gray-600 pl-1.5">
-                    &ldquo;{item.linkedHighlight.selectedText.slice(0, 60)}
-                    {item.linkedHighlight.selectedText.length > 60 ? '...' : ''}&rdquo;
-                  </p>
-                )}
-                {editingNoteId === item.note.id ? (
-                  <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
-                    <textarea
-                      value={editingContent}
-                      onChange={(e) => setEditingContent(e.target.value)}
-                      className="w-full bg-gray-700 border border-gray-600 rounded text-xs p-1.5 text-gray-200 resize-none h-16 focus:outline-none focus:border-indigo-500"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          void handleUpdateNote(item.note.id);
-                        }}
-                        className="flex-1 py-0.5 text-[10px] bg-indigo-700 hover:bg-indigo-600 rounded"
-                      >
-                        {t('common.save')}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditingNoteId(null);
-                          setEditingContent('');
-                        }}
-                        className="py-0.5 text-[10px] text-gray-400 hover:text-gray-200"
-                      >
-                        {t('common.cancel')}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <p className="text-xs text-gray-300 whitespace-pre-wrap">{item.note.content}</p>
-                    <div className="flex gap-2 mt-1.5" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => {
-                          setEditingNoteId(item.note.id);
-                          setEditingContent(item.note.content);
-                        }}
-                        className="text-[10px] text-indigo-400 hover:text-indigo-300"
-                      >
-                        {t('common.edit')}
-                      </button>
-                      <button
-                        onClick={() => {
-                          void handleDeleteNote(item.note.id);
-                        }}
-                        className="text-[10px] text-red-400 hover:text-red-300"
-                      >
-                        {t('common.delete')}
-                      </button>
-                    </div>
-                  </>
-                )}
-                {item.note.sectionID && (
-                  <p className="text-[10px] text-gray-600 mt-1">
-                    {t('studyTools.section')}{' '}
-                    {sections.find((s) => s.id === item.note.sectionID)?.heading ??
-                      item.note.sectionID}
-                  </p>
-                )}
-              </>
+              <NoteItem
+                note={item.note}
+                linkedHighlight={item.linkedHighlight}
+                sections={sections}
+                onUpdate={handleUpdateNote}
+                onDelete={handleDeleteNote}
+              />
             )}
           </div>
         ))

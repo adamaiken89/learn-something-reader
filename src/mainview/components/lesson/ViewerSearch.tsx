@@ -1,25 +1,13 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { UseLessonSearchReturn } from '../../hooks/useLessonSearch';
+
 interface ViewerSearchProps {
-  query: string;
-  totalMatches: number;
-  currentMatch: number;
-  onQueryChange: (q: string) => void;
-  onPrev: () => void;
-  onNext: () => void;
-  onClose: () => void;
+  search: UseLessonSearchReturn;
 }
 
-export default function ViewerSearch({
-  query,
-  totalMatches,
-  currentMatch,
-  onQueryChange,
-  onPrev,
-  onNext,
-  onClose,
-}: ViewerSearchProps) {
+export default function ViewerSearch({ search }: ViewerSearchProps) {
   const { t } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -36,17 +24,17 @@ export default function ViewerSearch({
       }
       if (e.key === 'Enter') {
         e.preventDefault();
-        if (e.shiftKey) onPrev();
-        else onNext();
+        if (e.shiftKey) search.handleSearchPrev();
+        else search.handleSearchNext();
         return;
       }
       if (e.key === 'Escape') {
         e.preventDefault();
-        onClose();
+        search.handleSearchClose();
         return;
       }
     },
-    [onNext, onPrev, onClose],
+    [search],
   );
 
   return (
@@ -58,30 +46,33 @@ export default function ViewerSearch({
       <input
         ref={inputRef}
         type="text"
-        value={query}
-        onChange={(e) => onQueryChange(e.target.value)}
+        value={search.searchQuery}
+        onChange={(e) => search.handleSearchQueryChange(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={t('viewerSearch.placeholder')}
         className="flex-1 bg-transparent text-sm text-gray-200 placeholder-gray-500 outline-none min-w-0"
       />
-      {query && (
+      {search.searchQuery && (
         <span className="text-gray-500 tabular-nums whitespace-nowrap">
-          {totalMatches > 0
-            ? t('viewerSearch.matchCount', { current: currentMatch + 1, total: totalMatches })
+          {search.totalMatches > 0
+            ? t('viewerSearch.matchCount', {
+                current: search.currentMatchIndex + 1,
+                total: search.totalMatches,
+              })
             : t('viewerSearch.noMatches')}
         </span>
       )}
-      {query && totalMatches > 0 && (
+      {search.searchQuery && search.totalMatches > 0 && (
         <>
           <button
-            onClick={onPrev}
+            onClick={search.handleSearchPrev}
             className="text-gray-400 hover:text-white px-1 py-0.5 rounded transition-colors"
             title={t('viewerSearch.prev')}
           >
             ↑
           </button>
           <button
-            onClick={onNext}
+            onClick={search.handleSearchNext}
             className="text-gray-400 hover:text-white px-1 py-0.5 rounded transition-colors"
             title={t('viewerSearch.next')}
           >
@@ -90,7 +81,7 @@ export default function ViewerSearch({
         </>
       )}
       <button
-        onClick={onClose}
+        onClick={search.handleSearchClose}
         className="text-gray-500 hover:text-gray-300 px-1.5 py-0.5 rounded transition-colors"
         title={t('icons.close')}
       >

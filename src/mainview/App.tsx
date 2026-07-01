@@ -1,39 +1,33 @@
-import { lazy, Suspense, useCallback, useEffect, useState, useTransition } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Course, ModuleMeta } from '../bun/types';
+import type { Course } from '../bun/types';
+import SearchFab from './components/SearchFab';
 import SearchOverlay from './components/SearchOverlay';
+import { useAppInit } from './hooks/useAppInit';
 import { useShortcuts } from './hooks/useShortcuts';
-import { useCompletionStore } from './stores/completionStore';
-import { useCourseStore } from './stores/courseStore';
-import { useSettingsStore } from './stores/settingsStore';
-import { useSyncStore } from './stores/syncStore';
+import BookmarksPage from './pages/BookmarksPage';
+import CourseListPage from './pages/CourseListPage';
+import DashboardPage from './pages/DashboardPage';
+import LessonPage from './pages/LessonPage';
+import ModuleListPage from './pages/ModuleListPage';
+import QuizPage from './pages/QuizPage';
+import ReviewPage from './pages/ReviewPage';
+import SettingsPage from './pages/SettingsPage';
+import UserCardReviewPage from './pages/UserCardReviewPage';
 import { useViewStore } from './stores/viewStore';
-
-const BookmarksPage = lazy(() => import('./pages/BookmarksPage'));
-const CourseListPage = lazy(() => import('./pages/CourseListPage'));
-const DashboardPage = lazy(() => import('./pages/DashboardPage'));
-const ModuleListPage = lazy(() => import('./pages/ModuleListPage'));
-const SettingsPage = lazy(() => import('./pages/SettingsPage'));
-const LessonPage = lazy(() => import('./pages/LessonPage'));
-const QuizPage = lazy(() => import('./pages/QuizPage'));
-const ReviewPage = lazy(() => import('./pages/ReviewPage'));
-const UserCardReviewPage = lazy(() => import('./pages/UserCardReviewPage'));
 
 export default function App() {
   const { t } = useTranslation();
   const views = useViewStore((s) => s.views);
-  const push = useViewStore((s) => s.push);
   const pop = useViewStore((s) => s.pop);
   const replace = useViewStore((s) => s.replace);
-  const [, startTransition] = useTransition();
   const currentView = views[views.length - 1];
-  const courses = useCourseStore((s) => s.courses);
-  const loadCourses = useCourseStore((s) => s.load);
-  const focusMode = useSettingsStore((s) => s.focusMode);
 
   const [loading, setLoading] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
+
+  useAppInit();
 
   useEffect(() => {
     if (currentView) {
@@ -44,61 +38,9 @@ export default function App() {
     setLoading(false);
   }, [currentView, replace]);
 
-  useEffect(() => {
-    void loadCourses().then((courses) => {
-      void useCompletionStore.getState().loadAll(courses.map((c) => c.id));
-    });
-  }, [loadCourses]);
-
-  useEffect(() => {
-    void useSyncStore
-      .getState()
-      .loadStatus()
-      .then(() => {
-        const syncState = useSyncStore.getState();
-        if (syncState.remoteRepoURL) {
-          void useSyncStore
-            .getState()
-            .startSync()
-            .then(() => {
-              useCourseStore.getState().reset();
-              void useCourseStore
-                .getState()
-                .load()
-                .then((courses) => {
-                  void useCompletionStore.getState().loadAll(courses.map((c) => c.id));
-                });
-            });
-        }
-      });
-  }, []);
-
   useShortcuts('global', {
     search: () => setSearchOpen(true),
   });
-
-  const handleSearchNavigate = useCallback(
-    (courseID: string, moduleID: string, _query?: string, sectionID?: string) => {
-      const course = courses.find((c) => c.id === courseID);
-      const mod = course?.modules.find((m) => m.id === moduleID);
-      if (course && mod) {
-        startTransition(() => push({ type: 'lesson', course, module: mod, sectionID }));
-      }
-    },
-    [courses, push, startTransition],
-  );
-
-  const handleSelectModule = (course: Course, module: ModuleMeta, sectionID?: string) => {
-    startTransition(() => push({ type: 'lesson', course, module, sectionID }));
-  };
-
-  const handleSwitchCourse = (course: Course) => {
-    startTransition(() => replace({ type: 'lesson', course, module: course.modules[0] }));
-  };
-
-  const handleSelectCourse = (course: Course) => {
-    startTransition(() => push({ type: 'moduleList', course }));
-  };
 
   if (loading || !currentView) {
     return (
@@ -111,26 +53,10 @@ export default function App() {
   const viewContent = (() => {
     switch (currentView.type) {
       case 'courseList':
-        return (
-          <CourseListPage
-            onSelectCourse={handleSelectCourse}
-            onOpenSettings={() => push({ type: 'settings' })}
-            onOpenBookmarks={() => push({ type: 'bookmarks' })}
-            onOpenDashboard={() => push({ type: 'dashboard' })}
-          />
-        );
+        return <CourseListPage />;
 
       case 'moduleList':
-        return (
-          <ModuleListPage
-            course={currentView.course}
-            onSelectModule={(m) => handleSelectModule(currentView.course, m)}
-            onSelectCourse={handleSelectCourse}
-            onOpenSettings={() => push({ type: 'settings' })}
-            onOpenBookmarks={() => push({ type: 'bookmarks' })}
-            onOpenDashboard={() => push({ type: 'dashboard' })}
-          />
-        );
+        return <ModuleListPage course={currentView.course} />;
 
       case 'lesson':
         return (
@@ -139,7 +65,6 @@ export default function App() {
             module={currentView.module}
             initialSectionID={currentView.sectionID}
             onBack={() => replace({ type: 'moduleList', course: currentView.course })}
-            onSelectModule={(m, sectionID) => handleSelectModule(currentView.course, m, sectionID)}
           />
         );
 
@@ -149,27 +74,14 @@ export default function App() {
             courseId={currentView.course.id}
             moduleId={currentView.module.id}
             onBack={pop}
-            onSwitchCourse={handleSwitchCourse}
           />
         );
 
       case 'review':
-        return (
-          <ReviewPage
-            courseId={currentView.course.id}
-            onBack={pop}
-            onSwitchCourse={handleSwitchCourse}
-          />
-        );
+        return <ReviewPage courseId={currentView.course.id} onBack={pop} />;
 
       case 'userCardReview':
-        return (
-          <UserCardReviewPage
-            courseId={currentView.course.id}
-            onBack={pop}
-            onSwitchCourse={handleSwitchCourse}
-          />
-        );
+        return <UserCardReviewPage courseId={currentView.course.id} onBack={pop} />;
 
       case 'settings':
         return <SettingsPage onBack={pop} />;
@@ -178,7 +90,6 @@ export default function App() {
         return (
           <BookmarksPage
             onBack={pop}
-            onSwitchCourse={handleSwitchCourse}
             onOpen={(courseID, moduleID, sectionID, courses) => {
               const course = courses.find((c: Course) => c.id === courseID);
               const module = course?.modules.find((m) => m.id === moduleID);
@@ -196,27 +107,9 @@ export default function App() {
 
   return (
     <>
-      <Suspense
-        fallback={
-          <div className="min-h-screen bg-gray-900 text-gray-400 flex items-center justify-center">
-            {t('common.loading')}
-          </div>
-        }
-      >
-        {viewContent}
-      </Suspense>
-      {!focusMode && (
-        <button
-          onClick={() => setSearchOpen(true)}
-          className="fixed bottom-4 left-4 z-50 w-10 h-10 rounded-full bg-indigo-600 hover:bg-indigo-500 shadow-lg flex items-center justify-center text-white transition-colors"
-          title={t('app.search')}
-        >
-          {t('icons.search')}
-        </button>
-      )}
-      {searchOpen && (
-        <SearchOverlay onClose={() => setSearchOpen(false)} onNavigate={handleSearchNavigate} />
-      )}
+      {viewContent}
+      <SearchFab onClick={() => setSearchOpen(true)} />
+      {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
     </>
   );
 }

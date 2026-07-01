@@ -22,6 +22,7 @@ interface CompletionState {
   totalModules: Record<string, number>;
   loading: Record<string, boolean>;
   loaded: boolean;
+  optimisticCompleted: Record<string, boolean>;
   load(courseId: string, moduleId: string): Promise<void>;
   loadCourse(courseId: string): Promise<void>;
   loadModules(courseId: string): Promise<void>;
@@ -29,6 +30,9 @@ interface CompletionState {
   toggle(courseId: string, moduleId: string): Promise<void>;
   get(courseId: string, moduleId: string): boolean;
   getProgress(courseId: string): { completed: number; total: number };
+  setOptimisticCompleted(courseId: string, moduleId: string, value: boolean): void;
+  clearOptimisticCompleted(courseId: string, moduleId: string): void;
+  getEffectiveCompleted(courseId: string, moduleId: string): boolean;
 }
 
 export const useCompletionStore = create<CompletionState>((set, get) => ({
@@ -36,6 +40,7 @@ export const useCompletionStore = create<CompletionState>((set, get) => ({
   totalModules: {},
   loading: {},
   loaded: false,
+  optimisticCompleted: {},
 
   load: async (courseId, moduleId) => {
     const k = key(courseId, moduleId);
@@ -138,5 +143,26 @@ export const useCompletionStore = create<CompletionState>((set, get) => ({
       completed: countCompleted(get().completed, courseId),
       total: get().totalModules[courseId] ?? 0,
     };
+  },
+
+  setOptimisticCompleted: (courseId, moduleId, value) => {
+    const k = key(courseId, moduleId);
+    set((s) => ({ optimisticCompleted: { ...s.optimisticCompleted, [k]: value } }));
+  },
+
+  clearOptimisticCompleted: (courseId, moduleId) => {
+    const k = key(courseId, moduleId);
+    set((s) => {
+      const next = { ...s.optimisticCompleted };
+      delete next[k];
+      return { optimisticCompleted: next };
+    });
+  },
+
+  getEffectiveCompleted: (courseId, moduleId) => {
+    const k = key(courseId, moduleId);
+    const s = get();
+    if (k in s.optimisticCompleted) return s.optimisticCompleted[k];
+    return s.completed[k] ?? false;
   },
 }));

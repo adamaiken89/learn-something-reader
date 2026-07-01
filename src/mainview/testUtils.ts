@@ -1,3 +1,4 @@
+import { act, render } from '@testing-library/react';
 import { beforeAll } from 'bun:test';
 
 import { __setRPC } from './api';
@@ -35,4 +36,13 @@ export function hasMock(method: string): boolean {
 
 export function setupRPC(rpc?: { request: Record<string, (p: unknown) => Promise<unknown>> }) {
   beforeAll(() => __setRPC(rpc ?? mockRPC));
+}
+
+export async function renderAndSettle(ui: React.ReactElement) {
+  let result!: ReturnType<typeof render>;
+  await act(async () => {
+    result = render(ui);
+    await new Promise((r) => setTimeout(r, 0));
+  });
+  return result;
 }

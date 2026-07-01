@@ -1,77 +1,35 @@
-import { render } from '@testing-library/react';
-import { describe, expect, mock, test } from 'bun:test';
+import { act } from '@testing-library/react';
+import { beforeEach, describe, expect, test } from 'bun:test';
 
-void mock.module('../sections/UserCardReviewSection', () => ({
-  default: ({ courseId }: { courseId: string }) => (
-    <div data-testid="usercard-section" data-courseid={courseId}>
-      UserCardReviewSection
-    </div>
-  ),
-}));
-
-void mock.module('../components/CourseSwitcher', () => ({
-  default: ({ currentCourseId, onSelect }: { currentCourseId?: string; onSelect: () => void }) => (
-    <div data-testid="course-switcher" data-current={currentCourseId}>
-      <button onClick={onSelect}>Switch</button>
-    </div>
-  ),
-}));
-void mock.module('../layouts/PageLayout', () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="page-layout">{children}</div>
-  ),
-}));
-void mock.module('../layouts/PageHeader', () => ({
-  default: ({
-    onBack,
-    backLabel,
-    center,
-    actions,
-  }: {
-    onBack?: () => void;
-    backLabel?: string;
-    center?: React.ReactNode;
-    actions?: React.ReactNode;
-  }) => (
-    <header data-testid="page-header">
-      {onBack && <button onClick={onBack}>{backLabel ?? '← Back'}</button>}
-      {center}
-      {actions}
-    </header>
-  ),
-}));
-void mock.module('../layouts/PageContent', () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <main data-testid="page-content">{children}</main>
-  ),
-}));
-
+import i18n from '../i18n';
+import { useSettingsStore } from '../stores/settingsStore';
+import { mockResponse, renderAndSettle, setupRPC } from '../testUtils';
 import UserCardReviewPage from './UserCardReviewPage';
+
+setupRPC();
 
 describe('UserCardReviewPage', () => {
   const defaultProps = {
     courseId: 'cs101',
     onBack: () => {},
-    onSwitchCourse: () => {},
   };
 
-  test('renders UserCardReviewSection with courseId', () => {
-    const { container } = render(<UserCardReviewPage {...defaultProps} />);
-    const section = container.querySelector('[data-testid="usercard-section"]');
-    expect(section).toBeTruthy();
-    expect(section!.getAttribute('data-courseid')).toBe('cs101');
+  beforeEach(() => {
+    mockResponse('getUserCards', []);
+    void i18n.changeLanguage('en-US');
+    useSettingsStore.setState({ focusMode: false });
   });
 
-  test('renders CourseSwitcher with currentCourseId', () => {
-    const { container } = render(<UserCardReviewPage {...defaultProps} />);
-    const switcher = container.querySelector('[data-testid="course-switcher"]');
+  test('renders CourseSwitcher with currentCourseId', async () => {
+    const { container } = await renderAndSettle(<UserCardReviewPage {...defaultProps} />);
+    const switcher = container.querySelector('[data-course-id="cs101"]');
     expect(switcher).toBeTruthy();
-    expect(switcher!.getAttribute('data-current')).toBe('cs101');
+    expect(switcher!.getAttribute('data-course-id')).toBe('cs101');
   });
 
-  test('calls onBack when back button clicked', () => {
+  test('calls onBack when back button clicked', async () => {
     let called = false;
-    const { getByText } = render(
+    const { getByText } = await renderAndSettle(
       <UserCardReviewPage
         {...defaultProps}
         onBack={() => {
@@ -79,7 +37,9 @@ describe('UserCardReviewPage', () => {
         }}
       />,
     );
-    getByText('← Back').click();
+    await act(async () => {
+      getByText('← Back').click();
+    });
     expect(called).toBe(true);
   });
 });

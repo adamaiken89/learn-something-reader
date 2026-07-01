@@ -1,8 +1,8 @@
-import { describe, expect, mock, test, beforeEach } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
-import { fsMockImpl } from '../testFsShared';
+import { fsMockImpl, mockExecSyncImpl } from '../testFsShared';
+import * as utilsModule from './utils';
 
-const mockExecSync = mock<(cmd: string) => void>();
 const mockExistsSync = mock<(p: string) => boolean>();
 const mockMkdirSync = mock<(p: string, opts?: unknown) => void>();
 const mockReadFileSync = mock<(p: string, enc?: string) => string>();
@@ -12,27 +12,8 @@ const mockReaddirSync =
 const mockRmSync = mock<(p: string, opts?: unknown) => void>();
 const mockCpSync = mock<(src: string, dest: string, opts?: unknown) => void>();
 
-mock.module('child_process', () => ({
-  execSync: mockExecSync,
-}));
-
 let storageData: Record<string, unknown> = {};
-
 let mockSubjectsDir: string | null = null;
-
-mock.module('./utils', () => ({
-  findSubjectsDir: () => mockSubjectsDir,
-  normalizeModuleId: (id: string | number) => String(id).padStart(2, '0'),
-}));
-
-mock.module('./logger', () => ({
-  logger: {
-    info: mock(() => {}),
-    error: mock(() => {}),
-    warn: mock(() => {}),
-    debug: mock(() => {}),
-  },
-}));
 
 type Sync = typeof import('./sync');
 let sync: Sync;
@@ -40,7 +21,9 @@ let sync: Sync;
 beforeEach(() => {
   storageData = {};
   mockSubjectsDir = null;
-  mockExecSync.mockReset();
+
+  mockExecSyncImpl.fn = mock((_cmd: string) => Buffer.from(''));
+
   mockExistsSync.mockReset();
   mockMkdirSync.mockReset();
   mockReadFileSync.mockReset();
@@ -67,8 +50,14 @@ beforeEach(() => {
   mockMkdirSync.mockImplementation(() => {});
 });
 
+afterEach(() => {
+  // NOTE: no mock.restore() — would destroy setup.tsx's global mocks
+  mockExecSyncImpl.fn = (_cmd: string) => Buffer.from('');
+});
+
 describe('isSyncing', () => {
   test('returns false initially', async () => {
+    spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => null);
     sync = await import('./sync');
     expect(sync.isSyncing()).toBe(false);
   });
@@ -76,6 +65,7 @@ describe('isSyncing', () => {
 
 describe('syncCourses', () => {
   test('returns error when no repo configured', async () => {
+    spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => null);
     sync = await import('./sync');
     const result = await sync.syncCourses();
     expect(result.success).toBe(false);
@@ -94,6 +84,7 @@ describe('syncCourses', () => {
       } as Response),
     ) as unknown as typeof globalThis.fetch;
 
+    spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => mockSubjectsDir);
     sync = await import('./sync');
     const result = await sync.syncCourses();
     expect(result.success).toBe(true);
@@ -107,6 +98,7 @@ describe('syncCourses', () => {
     storageData = { remoteRepoURL: 'https://gitlab.com/owner/repo' };
     mockSubjectsDir = '/tmp/subjects';
 
+    spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => mockSubjectsDir);
     sync = await import('./sync');
     const result = await sync.syncCourses();
     expect(result.success).toBe(false);
@@ -125,6 +117,7 @@ describe('syncCourses', () => {
       } as Response),
     ) as unknown as typeof globalThis.fetch;
 
+    spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => mockSubjectsDir);
     sync = await import('./sync');
     const result = await sync.syncCourses();
     expect(result.success).toBe(false);
@@ -148,6 +141,7 @@ describe('syncCourses', () => {
     mockExistsSync.mockReturnValue(true);
     mockReaddirSync.mockReturnValueOnce([]).mockReturnValueOnce([]);
 
+    spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => mockSubjectsDir);
     sync = await import('./sync');
     const result = await sync.syncCourses();
     expect(result.success).toBe(false);
@@ -167,6 +161,7 @@ describe('syncCourses', () => {
       } as Response),
     ) as unknown as typeof globalThis.fetch;
 
+    spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => mockSubjectsDir);
     sync = await import('./sync');
     const result = await sync.syncCourses();
     expect(result.success).toBe(false);
@@ -199,9 +194,10 @@ describe('syncCourses', () => {
         { name: 'physics', isDirectory: () => true },
       ])
       .mockReturnValueOnce([]);
-    mockExecSync.mockImplementation(() => {});
+    mockExecSyncImpl.fn = mock((_cmd: string) => Buffer.from(''));
     mockCpSync.mockImplementation(() => {});
 
+    spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => mockSubjectsDir);
     sync = await import('./sync');
     const result = await sync.syncCourses();
     expect(result.success).toBe(true);
@@ -236,9 +232,10 @@ describe('syncCourses', () => {
       .mockReturnValueOnce([{ name: 'math', isDirectory: () => true }])
       .mockReturnValueOnce([{ name: 'math', isDirectory: () => true }])
       .mockReturnValueOnce([]);
-    mockExecSync.mockImplementation(() => {});
+    mockExecSyncImpl.fn = mock((_cmd: string) => Buffer.from(''));
     mockCpSync.mockImplementation(() => {});
 
+    spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => mockSubjectsDir);
     sync = await import('./sync');
     const result = await sync.syncCourses();
     expect(result.success).toBe(true);
@@ -264,8 +261,9 @@ describe('syncCourses', () => {
 
     mockExistsSync.mockImplementation((p: string) => p.includes('data.json'));
     mockReaddirSync.mockReturnValue([]);
-    mockExecSync.mockImplementation(() => {});
+    mockExecSyncImpl.fn = mock((_cmd: string) => Buffer.from(''));
 
+    spyOn(utilsModule, 'findSubjectsDir').mockImplementation(() => mockSubjectsDir);
     sync = await import('./sync');
     const result = await sync.syncCourses();
     expect(result.success).toBe(true);

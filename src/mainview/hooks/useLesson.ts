@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { MetaField } from '../../bun/lessonMarkdown';
 import type { Section } from '../../bun/types';
 import { api } from '../api';
 import { logger } from '../logger';
-import { useLessonStore } from '../stores/lessonStore';
+import { useLessonUIStore } from '../stores/lessonUIStore';
+import { useLessonViewStore } from '../stores/lessonViewStore';
 import { showToast } from '../toast';
 
 type DivRef = React.RefObject<HTMLDivElement>;
@@ -32,46 +32,26 @@ export function findVisibleHeading(container: HTMLElement, sections: Section[]):
 }
 
 interface UseLessonReturn {
-  content: string;
-  h1: string;
-  meta: MetaField[];
-  bodyContent: string;
   loading: boolean;
-  sections: Section[];
-  isCompleted: boolean;
-  totalModules: number;
-  completedCount: number;
   contentRef: DivRef;
   scrollToSection: (sectionId: string) => void;
   handleScroll: () => void;
-  handleToggleCompleted: () => Promise<void>;
 }
 
 interface UseLessonCompletion {
-  isCompleted: boolean;
-  completedCount: number;
-  totalModules: number;
   toggle: (courseId: string, moduleId: string) => Promise<void>;
 }
 
 export function useLesson(
   courseId: string,
   moduleId: string,
-  completion: UseLessonCompletion,
+  _completion: UseLessonCompletion,
   initialSectionID?: string,
 ): UseLessonReturn {
-  const { isCompleted: initialCompleted, toggle, totalModules, completedCount } = completion;
-  const [content, setContent] = useState('');
-  const [h1, setH1] = useState('');
-  const [meta, setMeta] = useState<MetaField[]>([]);
-  const [bodyContent, setBodyContent] = useState('');
   const [loading, setLoading] = useState(true);
-  const [sections, setSections] = useState<Section[]>([]);
 
   const contentRef = useRef<HTMLDivElement>(null) as DivRef;
   const sectionsRef = useRef<Section[]>([]);
-
-  sectionsRef.current = sections;
 
   const scrollToSection = useCallback((sectionId: string) => {
     const container = contentRef.current;
@@ -99,24 +79,9 @@ export function useLesson(
     const el = contentRef.current;
     if (!el) return;
     const id = findVisibleHeading(el, sectionsRef.current);
-    useLessonStore.getState().setVisibleSection(id);
+    useLessonUIStore.getState().setVisibleSection(id);
     logger.debug({ id, sectionsCount: sectionsRef.current.length }, 'handleScroll');
   }, []);
-
-  const [optimistic, setOptimistic] = useState(initialCompleted);
-
-  useEffect(() => {
-    setOptimistic(initialCompleted);
-  }, [initialCompleted]);
-
-  const handleToggleCompleted = useCallback(async () => {
-    setOptimistic((p) => !p);
-    try {
-      await toggle(courseId, moduleId);
-    } catch {
-      setOptimistic((p) => !p);
-    }
-  }, [toggle, courseId, moduleId]);
 
   useEffect(() => {
     setLoading(true);
@@ -124,11 +89,18 @@ export function useLesson(
     api.courses
       .lesson(courseId, moduleId)
       .then((lesson) => {
-        setContent(lesson.content);
-        setH1(lesson.h1);
-        setMeta(lesson.meta);
-        setBodyContent(lesson.bodyContent);
-        setSections(lesson.sections);
+        sectionsRef.current = lesson.sections;
+        const vs = useLessonViewStore.getState();
+        vs.setContent(lesson.content);
+        vs.setH1(lesson.h1);
+        vs.setMeta(lesson.meta);
+        vs.setBodyContent(lesson.bodyContent);
+        vs.setSections(lesson.sections);
+        vs.setContentRef(contentRef);
+        vs.setScrollToSection(scrollToSection);
+        vs.setCourseId(courseId);
+        vs.setModuleId(moduleId);
+        vs.setLoading(false);
         setLoading(false);
         requestAnimationFrame(() => {
           contentRef.current?.focus();
@@ -138,31 +110,36 @@ export function useLesson(
       .catch((err) => {
         logger.warn({ err }, 'Failed to load lesson');
         showToast.error('toast.loadFailed');
+        useLessonViewStore.getState().setLoading(false);
         setLoading(false);
       });
-  }, [courseId, moduleId, handleScroll]);
+  }, [courseId, moduleId, handleScroll, scrollToSection]);
 
   useEffect(() => {
-    if (initialSectionID && content) {
-      requestAnimationFrame(() => {
-        scrollToSection(initialSectionID);
+    if (initialSectionID) {
+      const unsubscribe = useLessonViewStore.subscribe((state) => {
+        if (state.content) {
+          requestAnimationFrame(() => {
+            scrollToSection(initialSectionID);
+          });
+          unsubscribe();
+        }
       });
+      // If content already loaded, scroll immediately
+      if (useLessonViewStore.getState().content) {
+        requestAnimationFrame(() => {
+          scrollToSection(initialSectionID);
+        });
+        unsubscribe();
+      }
+      return () => unsubscribe();
     }
-  }, [initialSectionID, content, scrollToSection]);
+  }, [initialSectionID, scrollToSection]);
 
   return {
-    content,
-    h1,
-    meta,
-    bodyContent,
     loading,
-    sections,
-    isCompleted: optimistic,
-    totalModules,
-    completedCount,
     contentRef,
     scrollToSection,
     handleScroll,
-    handleToggleCompleted,
   };
 }

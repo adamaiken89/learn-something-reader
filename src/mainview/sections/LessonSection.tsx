@@ -1,23 +1,18 @@
-import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import rehypeHighlight from 'rehype-highlight';
-import type { PluggableList } from 'unified';
 
 import type { Course, ModuleMeta } from '../../bun/types';
 import LessonContentViewer from '../components/lesson/LessonContentViewer';
 import SectionsPanel from '../components/lesson/SectionsPanel';
 import PomodoroTimer from '../components/PomodoroTimer';
-import { rehypeHighlightText } from '../components/rehypeHighlightText';
-import { rehypeSearchText } from '../components/rehypeSearchText';
 import StudyTools from '../components/StudyTools';
 import { useBookmarks } from '../hooks/useBookmarks';
-import { useHighlights } from '../hooks/useHighlights';
 import { useLesson } from '../hooks/useLesson';
 import { useLessonAnimations } from '../hooks/useLessonAnimations';
+import { useLessonKeyboardShortcuts } from '../hooks/useLessonKeyboardShortcuts';
 import { useLessonNav } from '../hooks/useLessonNav';
-import { useLessonSearch } from '../hooks/useLessonSearch';
 import { useLessonSection } from '../hooks/useLessonSection';
-import { useShortcuts } from '../hooks/useShortcuts';
+import { useWheelNavigation } from '../hooks/useWheelNavigation';
+import { useLessonViewStore } from '../stores/lessonViewStore';
 import { useSelectionStore } from '../stores/selectionStore';
 
 interface Props {
@@ -36,9 +31,6 @@ export default function LessonSection({
   const { t } = useTranslation();
 
   const {
-    isCompleted,
-    completedCount,
-    totalModules,
     toggle,
     showTools,
     showPomodoro,
@@ -49,30 +41,17 @@ export default function LessonSection({
     toggleSections,
   } = useLessonSection(course, module);
 
-  const {
-    content,
-    h1,
-    meta,
-    bodyContent,
-    loading,
-    sections,
-    isCompleted: optimisticIsCompleted,
-    contentRef,
-    scrollToSection,
-    handleScroll,
-    handleToggleCompleted,
-  } = useLesson(
+  const { loading, contentRef, scrollToSection } = useLesson(
     course.id,
     module.id,
-    { isCompleted, completedCount, totalModules, toggle },
+    { toggle },
     initialSectionID,
   );
 
-  useBookmarks(course.id, module.id, null);
-  const { highlights } = useHighlights(course.id, module.id);
-  const nav = useLessonNav(course, module);
+  const sections = useLessonViewStore((s) => s.sections);
 
-  const search = useLessonSearch(contentRef, module.id, initialSearchQuery);
+  useBookmarks(course.id, module.id, null);
+  const nav = useLessonNav(course, module);
 
   const { showStudyTools, showSectionsPanel, showPomodoroTimer } = useLessonAnimations({
     showTools,
@@ -81,65 +60,20 @@ export default function LessonSection({
     showPomodoro,
   });
 
-  const handleRefreshHighlights = useCallback(() => {
-    const hs = import('../stores/highlightsStore');
-    void hs.then((m) => m.useHighlightsStore.getState().load(course.id, module.id));
-  }, [course.id, module.id]);
-
   const showToolbar = useSelectionStore((s) => s.showToolbar);
 
-  useShortcuts('lesson', {
-    prevModule: () => {
-      if (showToolbar) return;
-      if (nav.hasPrev) nav.goPrev();
-    },
-    nextModule: () => {
-      if (showToolbar) return;
-      if (nav.hasNext) nav.goNext();
-    },
-    scrollUp: () => {
-      if (showToolbar) return;
-      contentRef.current?.scrollBy({ top: -80, behavior: 'smooth' });
-    },
-    scrollDown: () => {
-      if (showToolbar) return;
-      contentRef.current?.scrollBy({ top: 80, behavior: 'smooth' });
-    },
-    toggleSections: () => {
-      if (showToolbar) return;
-      toggleSections();
-    },
-    findInPage: () => search.setSearchActive(true),
-    courseSearch: () => setSearchCourseOpen(true),
+  useLessonKeyboardShortcuts({
+    hasPrev: nav.hasPrev,
+    hasNext: nav.hasNext,
+    goPrev: nav.goPrev,
+    goNext: nav.goNext,
+    contentRef,
+    showToolbar,
+    toggleSections,
+    setSearchCourseOpen,
   });
 
-  useEffect(() => {
-    const el = contentRef.current;
-    if (!el) return;
-    const handler = (e: WheelEvent) => {
-      const absX = Math.abs(e.deltaX);
-      const absY = Math.abs(e.deltaY);
-      if (absX > 40 && absX > absY * 1.5) {
-        e.preventDefault();
-        if (e.deltaX > 0 && nav.hasNext) nav.goNext();
-        else if (e.deltaX < 0 && nav.hasPrev) nav.goPrev();
-      }
-    };
-    el.addEventListener('wheel', handler, { passive: false });
-    return () => el.removeEventListener('wheel', handler);
-  }, [nav, contentRef]);
-
-  const rehypePlugins = useMemo(
-    () =>
-      [
-        rehypeHighlight,
-        [rehypeHighlightText, highlights],
-        ...(search.searchActive && search.searchQuery
-          ? [[rehypeSearchText, search.searchQuery]]
-          : []),
-      ] as PluggableList,
-    [highlights, search.searchActive, search.searchQuery],
-  );
+  useWheelNavigation({ contentRef, nav });
 
   if (loading)
     return <div className="p-8 text-center text-gray-400">{t('lesson.loadingLesson')}</div>;
@@ -152,15 +86,7 @@ export default function LessonSection({
             showTools && !focusMode ? 'anim-panel-slide-left' : 'anim-panel-slide-left-exit'
           }
         >
-          <StudyTools
-            courseId={course.id}
-            moduleId={module.id}
-            content={content}
-            sections={sections}
-            contentRef={contentRef}
-            scrollToSection={scrollToSection}
-            onClose={() => toggleTools()}
-          />
+          <StudyTools onClose={() => toggleTools()} />
         </div>
       )}
 
@@ -186,7 +112,9 @@ export default function LessonSection({
           <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 overflow-visible">
             <div
               className={
-                showSections && !focusMode ? 'anim-panel-slide-right' : 'anim-panel-slide-right-exit'
+                showSections && !focusMode
+                  ? 'anim-panel-slide-right'
+                  : 'anim-panel-slide-right-exit'
               }
             >
               <SectionsPanel
@@ -205,27 +133,7 @@ export default function LessonSection({
           </div>
         )}
 
-        <LessonContentViewer
-          courseId={course.id}
-          moduleId={module.id}
-          onRefreshHighlights={handleRefreshHighlights}
-          contentRef={contentRef}
-          h1={h1}
-          meta={meta}
-          bodyContent={bodyContent}
-          handleScroll={handleScroll}
-          isCompleted={optimisticIsCompleted}
-          toggleCompleted={() => { void handleToggleCompleted(); }}
-          rehypePlugins={rehypePlugins}
-          searchActive={search.searchActive}
-          searchQuery={search.searchQuery}
-          searchTotalMatches={search.totalMatches}
-          searchCurrentMatch={search.currentMatchIndex}
-          onSearchQueryChange={search.handleSearchQueryChange}
-          onSearchPrev={search.handleSearchPrev}
-          onSearchNext={search.handleSearchNext}
-          onSearchClose={search.handleSearchClose}
-        />
+        <LessonContentViewer initialSearchQuery={initialSearchQuery} />
       </div>
     </div>
   );

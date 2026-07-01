@@ -1,35 +1,12 @@
 import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { Bookmark } from '../../bun/types';
 import i18n from '../i18n';
 import { useCourseStore } from '../stores/courseStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { clearMocks, hasMock, mockResponse, setupRPC } from '../testUtils';
-
-void mock.module('../components/CourseSwitcher', () => ({
-  default: ({ currentCourseId, onSelect }: { currentCourseId?: string; onSelect: () => void }) => (
-    <div data-testid="course-switcher" data-current={currentCourseId}>
-      <button onClick={onSelect}>Switch</button>
-    </div>
-  ),
-}));
-void mock.module('../layouts/PageLayout', () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="page-layout">{children}</div>
-  ),
-}));
-void mock.module('../layouts/PageHeader', () => ({
-  default: ({ onBack }: { onBack?: () => void }) => (
-    <header data-testid="page-header">{onBack && <button onClick={onBack}>← Back</button>}</header>
-  ),
-}));
-void mock.module('../layouts/PageContent', () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <main data-testid="page-content">{children}</main>
-  ),
-}));
-
 setupRPC();
 
 import BookmarksPage from './BookmarksPage';
@@ -49,6 +26,7 @@ describe('BookmarksPage', () => {
   beforeEach(() => {
     void i18n.changeLanguage('en-US');
     clearMocks();
+    useSettingsStore.setState({ focusMode: false });
     mockResponse('getAllBookmarks', [mockBookmark]);
     mockResponse('courses', []);
     useCourseStore.setState({ courses: [], loading: false, error: null, loaded: true });
@@ -56,26 +34,20 @@ describe('BookmarksPage', () => {
 
   test('shows loading state initially', () => {
     mockResponse('getAllBookmarks', new Promise(() => {}));
-    const { container } = render(
-      <BookmarksPage onBack={() => {}} onOpen={() => {}} onSwitchCourse={() => {}} />,
-    );
+    const { container } = render(<BookmarksPage onBack={() => {}} onOpen={() => {}} />);
     expect(container.textContent).toContain('Loading bookmarks');
   });
 
   test('shows empty message when no bookmarks', async () => {
     mockResponse('getAllBookmarks', []);
-    const { container } = render(
-      <BookmarksPage onBack={() => {}} onOpen={() => {}} onSwitchCourse={() => {}} />,
-    );
+    const { container } = render(<BookmarksPage onBack={() => {}} onOpen={() => {}} />);
     await waitFor(() => {
       expect(container.textContent).toContain('No bookmarks');
     });
   });
 
   test('renders bookmarks list', async () => {
-    const { container } = render(
-      <BookmarksPage onBack={() => {}} onOpen={() => {}} onSwitchCourse={() => {}} />,
-    );
+    const { container } = render(<BookmarksPage onBack={() => {}} onOpen={() => {}} />);
     await waitFor(() => {
       expect(container.textContent).toContain('Test Bookmark');
     });
@@ -89,7 +61,6 @@ describe('BookmarksPage', () => {
         onOpen={(cid, mid) => {
           opened = { courseID: cid, moduleID: mid };
         }}
-        onSwitchCourse={() => {}}
       />,
     );
     await waitFor(() => {
@@ -104,9 +75,7 @@ describe('BookmarksPage', () => {
 
   test('deletes bookmark when delete clicked', async () => {
     mockResponse('deleteBookmark', { ok: true });
-    const { container } = render(
-      <BookmarksPage onBack={() => {}} onOpen={() => {}} onSwitchCourse={() => {}} />,
-    );
+    const { container } = render(<BookmarksPage onBack={() => {}} onOpen={() => {}} />);
     await waitFor(() => {
       expect(container.textContent).toContain('Test Bookmark');
     });
@@ -126,7 +95,6 @@ describe('BookmarksPage', () => {
           called = true;
         }}
         onOpen={() => {}}
-        onSwitchCourse={() => {}}
       />,
     );
     await waitFor(() => {

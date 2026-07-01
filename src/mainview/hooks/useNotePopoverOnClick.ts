@@ -24,7 +24,9 @@ export function useNotePopoverOnClick(
           const found = notesRef.current.find((n) => n.highlightID === highlightId);
           if (found) {
             const rect = target.getBoundingClientRect();
-            useSelectionStore.getState().setPopoverNote({ note: found, x: rect.left + rect.width / 2, y: rect.top });
+            useSelectionStore
+              .getState()
+              .setPopoverNote({ note: found, x: rect.left + rect.width / 2, y: rect.top });
           }
           return;
         }

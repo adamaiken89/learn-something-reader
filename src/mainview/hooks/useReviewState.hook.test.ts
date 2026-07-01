@@ -94,7 +94,7 @@ describe('useReviewState', () => {
     mockResponse('getSRSDeck', { cards: { c1: cards[0] } });
     act(() => result.current.setFilter('starred'));
     await waitFor(() => expect(result.current.filter).toBe('starred'));
-    expect(result.current.cards).toHaveLength(1);
+    await waitFor(() => expect(result.current.cards).toHaveLength(1));
     expect(result.current.currentCard?.id).toBe('c1');
   });
 
