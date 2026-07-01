@@ -64,7 +64,6 @@ function SelectionToolbar({
 
     setPosition({ x: left, y: top });
   }, [x, y, selectionTop]);
-
   return (
     <div
       ref={menuRef}

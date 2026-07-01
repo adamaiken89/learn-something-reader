@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
 
 import type { Bookmark } from '../../../bun/types';
 import {
@@ -13,7 +14,7 @@ import { shortcutKey } from '../../shortcuts';
 import { useBookmarksStore } from '../../stores/bookmarksStore';
 import { countCompleted, useCompletionStore } from '../../stores/completionStore';
 import { useCourseStore } from '../../stores/courseStore';
-import { useLessonUIStore } from '../../stores/lessonUIStore';
+import { useLessonStore } from '../../stores/lessonStore';
 import type { TransitionStyle } from '../../stores/settingsStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useViewStore } from '../../stores/viewStore';
@@ -81,23 +82,44 @@ export default function LessonToolbar() {
   const bookmarks = k ? (byModule[k] ?? EMPTY_BOOKMARKS) : EMPTY_BOOKMARKS;
   const hasActiveBookmark = bookmarks.some((b) => !b.sectionID);
 
-  const showTools = useLessonUIStore((s) => s.showTools);
-  const showPomodoro = useLessonUIStore((s) => s.showPomodoro);
-  const toggleTools = useLessonUIStore((s) => s.toggleTools);
-  const togglePomodoro = useLessonUIStore((s) => s.togglePomodoro);
-  const setSearchCourseOpen = useLessonUIStore((s) => s.setSearchCourseOpen);
+  const { showTools, showPomodoro, toggleTools, togglePomodoro, setSearchCourseOpen } =
+    useLessonStore(
+      useShallow((s) => ({
+        showTools: s.showTools,
+        showPomodoro: s.showPomodoro,
+        toggleTools: s.toggleTools,
+        togglePomodoro: s.togglePomodoro,
+        setSearchCourseOpen: s.setSearchCourseOpen,
+      })),
+    );
 
-  const focusMode = useSettingsStore((s) => s.focusMode);
-  const fontSize = useSettingsStore((s) => s.fontSize);
-  const incFontSize = useSettingsStore((s) => s.incFontSize);
-  const decFontSize = useSettingsStore((s) => s.decFontSize);
-  const cycleTheme = useSettingsStore((s) => s.cycleTheme);
-  const theme = useSettingsStore((s) => s.theme);
-  const contentWidth = useSettingsStore((s) => s.contentWidth);
-  const setContentWidth = useSettingsStore((s) => s.setContentWidth);
-  const toggleFocusMode = useSettingsStore((s) => s.toggleFocusMode);
-  const transitionStyle = useSettingsStore((s) => s.transitionStyle);
-  const setTransitionStyle = useSettingsStore((s) => s.setTransitionStyle);
+  const {
+    focusMode,
+    fontSize,
+    incFontSize,
+    decFontSize,
+    cycleTheme,
+    theme,
+    contentWidth,
+    setContentWidth,
+    toggleFocusMode,
+    transitionStyle,
+    setTransitionStyle,
+  } = useSettingsStore(
+    useShallow((s) => ({
+      focusMode: s.focusMode,
+      fontSize: s.fontSize,
+      incFontSize: s.incFontSize,
+      decFontSize: s.decFontSize,
+      cycleTheme: s.cycleTheme,
+      theme: s.theme,
+      contentWidth: s.contentWidth,
+      setContentWidth: s.setContentWidth,
+      toggleFocusMode: s.toggleFocusMode,
+      transitionStyle: s.transitionStyle,
+      setTransitionStyle: s.setTransitionStyle,
+    })),
+  );
 
   const cycleTransition = useCallback(() => {
     const order: TransitionStyle[] = ['none', 'flip', 'slide', 'fade'];

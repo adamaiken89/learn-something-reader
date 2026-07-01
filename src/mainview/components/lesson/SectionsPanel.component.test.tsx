@@ -1,8 +1,9 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, mock, test } from 'bun:test';
+import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import type { Bookmark, Section } from '../../../bun/types';
+import type { Section } from '../../../bun/types';
+import { useBookmarksStore } from '../../stores/bookmarksStore';
 import SectionsPanel from './SectionsPanel';
 
 function makeSection(id: string, heading: string, level: number): Section {
@@ -15,127 +16,56 @@ const defaultSections: Section[] = [
   makeSection('conclusion', 'Conclusion', 1),
 ];
 
-const defaultBookmarks: Bookmark[] = [
-  {
-    id: 'bm1',
-    courseID: 'c1',
-    moduleID: '01',
-    sectionID: 'body',
-    title: 'Body Content',
-    scrollPosition: 0,
-    createdAt: '2024-01-01',
-  },
-];
+const defaultCourseId = 'c1';
+const defaultModuleId = '01';
+
+beforeEach(() => {
+  useBookmarksStore.setState({ byModule: {}, loading: {} });
+});
 
 describe('SectionsPanel', () => {
   const user = userEvent.setup();
+
   test('renders section headings', () => {
-    const { getByText } = render(
-      <SectionsPanel
-        sections={defaultSections}
-        visibleSection={null}
-        bookmarks={[]}
-        onScrollToSection={() => {}}
-        onToggleSectionBookmark={() => {}}
-        onClose={() => {}}
-      />,
-    );
+    const { getByText } = render(<SectionsPanel sections={defaultSections} courseId={defaultCourseId} moduleId={defaultModuleId} moduleName="Test Module" hasPrev={false} hasNext={false} onGoPrev={() => {}} onGoNext={() => {}} onScrollToSection={() => {}} onClose={() => {}} />);
     expect(getByText('Introduction')).toBeInTheDocument();
     expect(getByText('Body Content')).toBeInTheDocument();
     expect(getByText('Conclusion')).toBeInTheDocument();
   });
 
   test('highlights active section', () => {
-    const { getByText } = render(
-      <SectionsPanel
-        sections={defaultSections}
-        visibleSection="body"
-        bookmarks={[]}
-        onScrollToSection={() => {}}
-        onToggleSectionBookmark={() => {}}
-        onClose={() => {}}
-      />,
-    );
+    const { getByText } = render(<SectionsPanel sections={defaultSections} courseId={defaultCourseId} moduleId={defaultModuleId} moduleName="Test Module" hasPrev={false} hasNext={false} onGoPrev={() => {}} onGoNext={() => {}} onScrollToSection={() => {}} onClose={() => {}} />);
     const bodyBtn = getByText('Body Content').closest('button');
     expect(bodyBtn).toBeTruthy();
   });
 
-  test('shows bookmark star for bookmarked sections', () => {
-    const { getAllByText } = render(
-      <SectionsPanel
-        sections={defaultSections}
-        visibleSection={null}
-        bookmarks={defaultBookmarks}
-        onScrollToSection={() => {}}
-        onToggleSectionBookmark={() => {}}
-        onClose={() => {}}
-      />,
-    );
-    const starIcons = getAllByText('★');
-    expect(starIcons.length).toBe(1);
-  });
-
-  test('clicking section calls onScrollToSection', async () => {
-    const onScroll = mock(() => {});
-    const { getByText } = render(
-      <SectionsPanel
-        sections={defaultSections}
-        visibleSection={null}
-        bookmarks={[]}
-        onScrollToSection={onScroll}
-        onToggleSectionBookmark={() => {}}
-        onClose={() => {}}
-      />,
-    );
+  test('clicking section calls scrollToSection', async () => {
+    const scrollToSection = mock(() => {});
+    const { getByText } = render(<SectionsPanel sections={defaultSections} courseId={defaultCourseId} moduleId={defaultModuleId} moduleName="Test Module" hasPrev={false} hasNext={false} onGoPrev={() => {}} onGoNext={() => {}} onScrollToSection={scrollToSection} onClose={() => {}} />);
     await user.click(getByText('Introduction'));
-    expect(onScroll).toHaveBeenCalledTimes(1);
-    expect(onScroll).toHaveBeenCalledWith('intro');
+    expect(scrollToSection).toHaveBeenCalledTimes(1);
+    expect(scrollToSection).toHaveBeenCalledWith('intro');
   });
 
   test('clicking bookmark toggles bookmark', async () => {
-    const onToggle = mock(() => {});
-    const { getByText } = render(
-      <SectionsPanel
-        sections={defaultSections}
-        visibleSection={null}
-        bookmarks={defaultBookmarks}
-        onScrollToSection={() => {}}
-        onToggleSectionBookmark={onToggle}
-        onClose={() => {}}
-      />,
-    );
-    await user.click(getByText('★'));
-    expect(onToggle).toHaveBeenCalledTimes(1);
-    expect(onToggle).toHaveBeenCalledWith('body', true, 'Body Content');
+    const toggle = mock(() => Promise.resolve());
+    useBookmarksStore.setState({ toggle } as Partial<typeof useBookmarksStore extends { getState: infer S } ? S extends () => infer T ? T : never : never>);
+    const { getAllByText } = render(<SectionsPanel sections={defaultSections} courseId={defaultCourseId} moduleId={defaultModuleId} moduleName="Test Module" hasPrev={false} hasNext={false} onGoPrev={() => {}} onGoNext={() => {}} onScrollToSection={() => {}} onClose={() => {}} />);
+    const stars = getAllByText('☆');
+    await user.click(stars[1]);
+    expect(toggle).toHaveBeenCalledTimes(1);
+    expect(toggle).toHaveBeenCalledWith(defaultCourseId, defaultModuleId, 'Test Module – Body Content', 'body');
   });
 
   test('clicking close calls onClose', async () => {
     const onClose = mock(() => {});
-    const { getByText } = render(
-      <SectionsPanel
-        sections={defaultSections}
-        visibleSection={null}
-        bookmarks={[]}
-        onScrollToSection={() => {}}
-        onToggleSectionBookmark={() => {}}
-        onClose={onClose}
-      />,
-    );
+    const { getByText } = render(<SectionsPanel sections={defaultSections} courseId={defaultCourseId} moduleId={defaultModuleId} moduleName="Test Module" hasPrev={false} hasNext={false} onGoPrev={() => {}} onGoNext={() => {}} onScrollToSection={() => {}} onClose={onClose} />);
     await user.click(getByText('→'));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   test('shows empty state when no sections', () => {
-    const { container } = render(
-      <SectionsPanel
-        sections={[]}
-        visibleSection={null}
-        bookmarks={[]}
-        onScrollToSection={() => {}}
-        onToggleSectionBookmark={() => {}}
-        onClose={() => {}}
-      />,
-    );
+    const { container } = render(<SectionsPanel sections={[]} courseId={defaultCourseId} moduleId={defaultModuleId} moduleName="Test Module" hasPrev={false} hasNext={false} onGoPrev={() => {}} onGoNext={() => {}} onScrollToSection={() => {}} onClose={() => {}} />);
     expect(container.querySelector('[data-section-id]')).toBeNull();
   });
 });

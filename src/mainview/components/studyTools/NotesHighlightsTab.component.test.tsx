@@ -2,21 +2,16 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import LessonContext from '../../sections/LessonContext';
 import { useHighlightsStore } from '../../stores/highlightsStore';
 import { useNotesStore } from '../../stores/notesStore';
 import NotesHighlightsTab from './NotesHighlightsTab';
 
-const ctxValue = {
-  contentRef: { current: null } as React.RefObject<HTMLDivElement | null>,
-  scrollToSection: () => {},
-  sections: [],
-  visibleSection: null,
-  content: '',
-};
+const contentRef = { current: null } as React.RefObject<HTMLDivElement | null>;
+const scrollToSection = () => {};
+const sections: { id: string; heading: string; level: number; parentID: string }[] = [];
 
-function renderWithCtx(component: React.ReactElement) {
-  return render(<LessonContext.Provider value={ctxValue}>{component}</LessonContext.Provider>);
+function renderWithStore(component: React.ReactElement) {
+  return render(component);
 }
 
 const mockHighlight = {
@@ -71,7 +66,7 @@ describe('NotesHighlightsTab', () => {
   });
 
   test('renders empty state', async () => {
-    const { findByText } = renderWithCtx(<NotesHighlightsTab courseId="math" moduleId="01" />);
+    const { findByText } = renderWithStore(<NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />);
     expect(
       await findByText('No annotations yet. Select text to highlight or add a note.'),
     ).toBeInTheDocument();
@@ -79,14 +74,14 @@ describe('NotesHighlightsTab', () => {
 
   test('renders loading state', () => {
     useNotesStore.setState({ loading: { 'math:01': true } });
-    const { getByText } = renderWithCtx(<NotesHighlightsTab courseId="math" moduleId="01" />);
+    const { getByText } = renderWithStore(<NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />);
     expect(getByText('Loading notes...')).toBeInTheDocument();
   });
 
   test('renders highlights from store', async () => {
     useHighlightsStore.setState({ byModule: { 'math:01': [mockHighlight] } });
-    const { findByText, getByText } = renderWithCtx(
-      <NotesHighlightsTab courseId="math" moduleId="01" />,
+    const { findByText, getByText } = renderWithStore(
+      <NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />,
     );
     expect(await findByText('important concept')).toBeInTheDocument();
     expect(getByText('10\u201328')).toBeInTheDocument();
@@ -94,14 +89,14 @@ describe('NotesHighlightsTab', () => {
 
   test('renders notes from store', async () => {
     useNotesStore.setState({ byModule: { 'math:01': [mockNote] } });
-    const { findByText } = renderWithCtx(<NotesHighlightsTab courseId="math" moduleId="01" />);
+    const { findByText } = renderWithStore(<NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />);
     expect(await findByText('my note content')).toBeInTheDocument();
   });
 
   test('renders note with linked highlight', async () => {
     useHighlightsStore.setState({ byModule: { 'math:01': [mockHighlight] } });
     useNotesStore.setState({ byModule: { 'math:01': [mockNoteLinked] } });
-    const { findAllByText } = renderWithCtx(<NotesHighlightsTab courseId="math" moduleId="01" />);
+    const { findAllByText } = renderWithStore(<NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />);
     const matches = await findAllByText(/important concept/);
     expect(matches.length).toBeGreaterThanOrEqual(1);
   });
@@ -109,8 +104,8 @@ describe('NotesHighlightsTab', () => {
   test('adds note when save clicked', async () => {
     const add = mock(() => Promise.resolve());
     useNotesStore.setState({ add });
-    const { container, findByText } = renderWithCtx(
-      <NotesHighlightsTab courseId="math" moduleId="01" />,
+    const { container, findByText } = renderWithStore(
+      <NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />,
     );
     const textarea = container.querySelector('textarea')!;
     await user.type(textarea, 'new test note');
@@ -124,15 +119,15 @@ describe('NotesHighlightsTab', () => {
   });
 
   test('save note button disabled when textarea empty', () => {
-    const { getByText } = renderWithCtx(<NotesHighlightsTab courseId="math" moduleId="01" />);
+    const { getByText } = renderWithStore(<NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />);
     expect(getByText('Save Note')).toBeDisabled();
   });
 
   test('deletes highlight', async () => {
     const remove = mock(() => Promise.resolve());
     useHighlightsStore.setState({ byModule: { 'math:01': [mockHighlight] }, remove });
-    const { findByText, getByText } = renderWithCtx(
-      <NotesHighlightsTab courseId="math" moduleId="01" />,
+    const { findByText, getByText } = renderWithStore(
+      <NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />,
     );
     expect(await findByText('important concept')).toBeInTheDocument();
     await user.click(getByText('Delete'));
@@ -142,8 +137,8 @@ describe('NotesHighlightsTab', () => {
   test('deletes note', async () => {
     const remove = mock(() => Promise.resolve());
     useNotesStore.setState({ byModule: { 'math:01': [mockNote] }, remove });
-    const { findByText, getByText } = renderWithCtx(
-      <NotesHighlightsTab courseId="math" moduleId="01" />,
+    const { findByText, getByText } = renderWithStore(
+      <NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />,
     );
     expect(await findByText('my note content')).toBeInTheDocument();
     await user.click(getByText('Delete'));
@@ -153,8 +148,8 @@ describe('NotesHighlightsTab', () => {
   test('edits a note', async () => {
     const update = mock(() => Promise.resolve());
     useNotesStore.setState({ byModule: { 'math:01': [mockNote] }, update });
-    const { findByText, getByText, container } = renderWithCtx(
-      <NotesHighlightsTab courseId="math" moduleId="01" />,
+    const { findByText, getByText, container } = renderWithStore(
+      <NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />,
     );
     expect(await findByText('my note content')).toBeInTheDocument();
     await user.click(getByText('Edit'));
@@ -168,8 +163,8 @@ describe('NotesHighlightsTab', () => {
   test('save edit updates note', async () => {
     const update = mock(() => Promise.resolve());
     useNotesStore.setState({ byModule: { 'math:01': [mockNote] }, update });
-    const { findByText, container } = renderWithCtx(
-      <NotesHighlightsTab courseId="math" moduleId="01" />,
+    const { findByText, container } = renderWithStore(
+      <NotesHighlightsTab courseId="math" moduleId="01" contentRef={contentRef} scrollToSection={scrollToSection} sections={sections} />,
     );
     expect(await findByText('my note content')).toBeInTheDocument();
     await user.click(await findByText('Edit'));

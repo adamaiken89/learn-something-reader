@@ -1,9 +1,10 @@
-import { startTransition, useCallback, useEffect, useOptimistic, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { MetaField } from '../../bun/lessonMarkdown';
 import type { Section } from '../../bun/types';
 import { api } from '../api';
 import { logger } from '../logger';
+import { useLessonStore } from '../stores/lessonStore';
 import { showToast } from '../toast';
 
 type DivRef = React.RefObject<HTMLDivElement>;
@@ -37,12 +38,10 @@ interface UseLessonReturn {
   bodyContent: string;
   loading: boolean;
   sections: Section[];
-  visibleSection: string | null;
   isCompleted: boolean;
   totalModules: number;
   completedCount: number;
   contentRef: DivRef;
-  setVisibleSection: (id: string | null) => void;
   scrollToSection: (sectionId: string) => void;
   handleScroll: () => void;
   handleToggleCompleted: () => Promise<void>;
@@ -61,18 +60,13 @@ export function useLesson(
   completion: UseLessonCompletion,
   initialSectionID?: string,
 ): UseLessonReturn {
+  const { isCompleted: initialCompleted, toggle, totalModules, completedCount } = completion;
   const [content, setContent] = useState('');
   const [h1, setH1] = useState('');
   const [meta, setMeta] = useState<MetaField[]>([]);
   const [bodyContent, setBodyContent] = useState('');
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<Section[]>([]);
-  const [visibleSection, setVisibleSection] = useState<string | null>(initialSectionID ?? null);
-
-  const [optimisticIsCompleted, toggleOptimistic] = useOptimistic<boolean, 1>(
-    completion.isCompleted,
-    (state) => !state,
-  );
 
   const contentRef = useRef<HTMLDivElement>(null) as DivRef;
   const sectionsRef = useRef<Section[]>([]);
@@ -105,18 +99,24 @@ export function useLesson(
     const el = contentRef.current;
     if (!el) return;
     const id = findVisibleHeading(el, sectionsRef.current);
-    setVisibleSection(id);
+    useLessonStore.getState().setVisibleSection(id);
     logger.debug({ id, sectionsCount: sectionsRef.current.length }, 'handleScroll');
   }, []);
 
-  const { toggle } = completion;
+  const [optimistic, setOptimistic] = useState(initialCompleted);
+
+  useEffect(() => {
+    setOptimistic(initialCompleted);
+  }, [initialCompleted]);
 
   const handleToggleCompleted = useCallback(async () => {
-    startTransition(() => {
-      toggleOptimistic(1);
-    });
-    await toggle(courseId, moduleId);
-  }, [courseId, moduleId, toggle, toggleOptimistic]);
+    setOptimistic((p) => !p);
+    try {
+      await toggle(courseId, moduleId);
+    } catch {
+      setOptimistic((p) => !p);
+    }
+  }, [toggle, courseId, moduleId]);
 
   useEffect(() => {
     setLoading(true);
@@ -157,12 +157,10 @@ export function useLesson(
     bodyContent,
     loading,
     sections,
-    visibleSection,
-    isCompleted: optimisticIsCompleted,
-    totalModules: completion.totalModules,
-    completedCount: completion.completedCount,
+    isCompleted: optimistic,
+    totalModules,
+    completedCount,
     contentRef,
-    setVisibleSection,
     scrollToSection,
     handleScroll,
     handleToggleCompleted,
