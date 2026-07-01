@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Highlight } from '../../../bun/types';
-import { useLessonContext } from '../../sections/LessonContext';
+import type { Highlight,Section  } from '../../../bun/types';
 import { useHighlightsStore } from '../../stores/highlightsStore';
+import { useLessonStore } from '../../stores/lessonStore';
 import { useNotesStore } from '../../stores/notesStore';
 import { showToast } from '../../toast';
 import { findSectionIdForHighlight, scrollToHighlightEl } from './notesHelpers';
@@ -25,11 +25,20 @@ type MergedItem =
 interface NotesHighlightsTabProps {
   courseId: string;
   moduleId: string;
+  contentRef: React.RefObject<HTMLDivElement | null>;
+  scrollToSection: (sectionId: string) => void;
+  sections: Section[];
 }
 
-export default function NotesHighlightsTab({ courseId, moduleId }: NotesHighlightsTabProps) {
+export default function NotesHighlightsTab({
+  courseId,
+  moduleId,
+  contentRef,
+  scrollToSection,
+  sections,
+}: NotesHighlightsTabProps) {
   const { t } = useTranslation();
-  const { contentRef, scrollToSection, sections, visibleSection } = useLessonContext();
+  const visibleSection = useLessonStore((s) => s.visibleSection);
 
   const loadNotes = useNotesStore((s) => s.load);
   const addNote = useNotesStore((s) => s.add);

@@ -9,9 +9,8 @@ import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
 import LessonSection from '../sections/LessonSection';
 import { useCourseStore } from '../stores/courseStore';
-import { useLessonUIStore } from '../stores/lessonUIStore';
+import { useLessonStore } from '../stores/lessonStore';
 import { useSettingsStore } from '../stores/settingsStore';
-
 interface LessonFeatureProps {
   course: Course;
   module: ModuleMeta;
@@ -20,7 +19,7 @@ interface LessonFeatureProps {
   onSelectModule: (m: ModuleMeta, sectionID?: string) => void;
 }
 
-export default function LessonFeature({
+export default function LessonPage({
   course,
   module,
   initialSectionID,
@@ -28,8 +27,8 @@ export default function LessonFeature({
   onSelectModule,
 }: LessonFeatureProps) {
   const courses = useCourseStore((s) => s.courses);
-  const searchCourseOpen = useLessonUIStore((s) => s.searchCourseOpen);
-  const setSearchCourseOpen = useLessonUIStore((s) => s.setSearchCourseOpen);
+  const searchCourseOpen = useLessonStore((s) => s.searchCourseOpen);
+  const setSearchCourseOpen = useLessonStore((s) => s.setSearchCourseOpen);
   const transitionStyle = useSettingsStore((s) => s.transitionStyle);
   const [pendingSearchQuery, setPendingSearchQuery] = useState<string | null>(null);
   const [animClass, setAnimClass] = useState('');
