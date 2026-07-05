@@ -48,6 +48,17 @@ function createMockEvent(overrides: {
   } as unknown as KeyboardEvent;
 }
 
+function setActiveElement(el: Element | null) {
+  Object.defineProperty(document, 'activeElement', {
+    get: () => el,
+    configurable: true,
+  });
+}
+
+function restoreActiveElement() {
+  delete (document as { activeElement?: unknown }).activeElement;
+}
+
 describe('useShortcuts', () => {
   const handlers: Record<string, () => void> = {};
   let addEventSpy: ReturnType<typeof mock>;
@@ -133,49 +144,126 @@ describe('useShortcuts', () => {
     expect(handlers.decFontSize).not.toHaveBeenCalled();
   });
 
-  test('skips handler when focused on input element', () => {
-    let capturedListener: EventListener | null = null;
-    window.addEventListener = mock((_type: string, listener: EventListener) => {
-      capturedListener = listener;
-    }) as typeof window.addEventListener;
+  describe('input focus prevention', () => {
+    test('skips handler when focused on input element', () => {
+      let capturedListener: EventListener | null = null;
+      window.addEventListener = mock((_type: string, listener: EventListener) => {
+        capturedListener = listener;
+      }) as typeof window.addEventListener;
 
-    renderHook(() => useShortcuts('lessonToolbar', handlers));
+      renderHook(() => useShortcuts('lessonToolbar', handlers));
 
-    const input = document.createElement('input');
-    const event = createMockEvent({ key: '-', target: input });
-    capturedListener!(event);
+      const input = document.createElement('input');
+      setActiveElement(input);
+      const event = createMockEvent({ key: '-' });
+      capturedListener!(event);
+      restoreActiveElement();
 
-    expect(handlers.decFontSize).not.toHaveBeenCalled();
-  });
+      expect(handlers.decFontSize).not.toHaveBeenCalled();
+    });
 
-  test('skips handler when focused on textarea element', () => {
-    let capturedListener: EventListener | null = null;
-    window.addEventListener = mock((_type: string, listener: EventListener) => {
-      capturedListener = listener;
-    }) as typeof window.addEventListener;
+    test('skips handler when focused on textarea element', () => {
+      let capturedListener: EventListener | null = null;
+      window.addEventListener = mock((_type: string, listener: EventListener) => {
+        capturedListener = listener;
+      }) as typeof window.addEventListener;
 
-    renderHook(() => useShortcuts('lessonToolbar', handlers));
+      renderHook(() => useShortcuts('lessonToolbar', handlers));
 
-    const textarea = document.createElement('textarea');
-    const event = createMockEvent({ key: '-', target: textarea });
-    capturedListener!(event);
+      const textarea = document.createElement('textarea');
+      setActiveElement(textarea);
+      const event = createMockEvent({ key: '-' });
+      capturedListener!(event);
+      restoreActiveElement();
 
-    expect(handlers.decFontSize).not.toHaveBeenCalled();
-  });
+      expect(handlers.decFontSize).not.toHaveBeenCalled();
+    });
 
-  test('skips handler when focused on contentEditable element', () => {
-    let capturedListener: EventListener | null = null;
-    window.addEventListener = mock((_type: string, listener: EventListener) => {
-      capturedListener = listener;
-    }) as typeof window.addEventListener;
+    test('skips handler when focused on contentEditable element', () => {
+      let capturedListener: EventListener | null = null;
+      window.addEventListener = mock((_type: string, listener: EventListener) => {
+        capturedListener = listener;
+      }) as typeof window.addEventListener;
 
-    renderHook(() => useShortcuts('lessonToolbar', handlers));
+      renderHook(() => useShortcuts('lessonToolbar', handlers));
 
-    const editable = document.createElement('div');
-    editable.contentEditable = 'true';
-    const event = createMockEvent({ key: '-', target: editable });
-    capturedListener!(event);
+      const editable = document.createElement('div');
+      editable.contentEditable = 'true';
+      setActiveElement(editable);
+      const event = createMockEvent({ key: '-' });
+      capturedListener!(event);
+      restoreActiveElement();
 
-    expect(handlers.decFontSize).not.toHaveBeenCalled();
+      expect(handlers.decFontSize).not.toHaveBeenCalled();
+    });
+
+    test('skips handler when focused on select element', () => {
+      let capturedListener: EventListener | null = null;
+      window.addEventListener = mock((_type: string, listener: EventListener) => {
+        capturedListener = listener;
+      }) as typeof window.addEventListener;
+
+      renderHook(() => useShortcuts('lessonToolbar', handlers));
+
+      const select = document.createElement('select');
+      setActiveElement(select);
+      const event = createMockEvent({ key: '-' });
+      capturedListener!(event);
+      restoreActiveElement();
+
+      expect(handlers.decFontSize).not.toHaveBeenCalled();
+    });
+
+    test('skips handler when focused on role=textbox element', () => {
+      let capturedListener: EventListener | null = null;
+      window.addEventListener = mock((_type: string, listener: EventListener) => {
+        capturedListener = listener;
+      }) as typeof window.addEventListener;
+
+      renderHook(() => useShortcuts('lessonToolbar', handlers));
+
+      const textbox = document.createElement('div');
+      textbox.setAttribute('role', 'textbox');
+      setActiveElement(textbox);
+      const event = createMockEvent({ key: '-' });
+      capturedListener!(event);
+      restoreActiveElement();
+
+      expect(handlers.decFontSize).not.toHaveBeenCalled();
+    });
+
+    test('mod+key shortcut still fires when input focused', () => {
+      let capturedListener: EventListener | null = null;
+      window.addEventListener = mock((_type: string, listener: EventListener) => {
+        capturedListener = listener;
+      }) as typeof window.addEventListener;
+
+      renderHook(() => useShortcuts('global', handlers));
+
+      const input = document.createElement('input');
+      setActiveElement(input);
+      const event = createMockEvent({ key: 'k', metaKey: true });
+      capturedListener!(event);
+      restoreActiveElement();
+
+      expect(handlers.search).toHaveBeenCalledTimes(1);
+    });
+
+    test('fires handler when focused on non-input element', () => {
+      let capturedListener: EventListener | null = null;
+      window.addEventListener = mock((_type: string, listener: EventListener) => {
+        capturedListener = listener;
+      }) as typeof window.addEventListener;
+
+      renderHook(() => useShortcuts('lessonToolbar', handlers));
+
+      const div = document.createElement('div');
+      setActiveElement(div);
+      const event = createMockEvent({ key: '-' });
+      capturedListener!(event);
+      restoreActiveElement();
+
+      expect(handlers.decFontSize).toHaveBeenCalledTimes(1);
+    });
   });
 });

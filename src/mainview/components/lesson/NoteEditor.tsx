@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
 import { api } from '../../api';
-import { useFloatingPosition } from '../../hooks/useFloatingPosition';
 import { getTextOffset } from '../../sections/lessonHelpers';
 import { useHighlightsStore } from '../../stores/highlightsStore';
 import { useLessonViewStore } from '../../stores/lessonViewStore';
@@ -14,7 +13,6 @@ export default function NoteEditor() {
   const store = useSelectionStore(
     useShallow((s) => ({
       selection: s.selection,
-      pickerPos: s.pickerPos,
       showNoteEditor: s.showNoteEditor,
       noteText: s.noteText,
       setNoteText: s.setNoteText,
@@ -27,18 +25,11 @@ export default function NoteEditor() {
   const contentRef = useLessonViewStore((s) => s.contentRef);
 
   const selectedText = store.selection?.text ?? '';
-  const editorY = store.pickerPos.y - 120;
-  const { menuRef, position } = useFloatingPosition(store.pickerPos.x, editorY, editorY);
 
   if (!store.showNoteEditor || !store.selection) return null;
 
   return (
-    <div
-      ref={menuRef}
-      data-testid="note-editor"
-      className="fixed z-50 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-xl"
-      style={{ left: position.x, top: position.y, transform: 'translate(-50%, 0)', width: '280px' }}
-    >
+    <div data-testid="note-editor" className="border-t border-gray-600 p-3">
       <p className="text-[10px] text-gray-500 mb-1.5 truncate">
         &ldquo;{selectedText.slice(0, 80)}
         {selectedText.length > 80 ? '...' : ''}&rdquo;

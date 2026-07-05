@@ -197,11 +197,11 @@ describe('LessonSection', () => {
   test('renders selection toolbar when there is a selection', async () => {
     const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
 
-    const contentDiv = getByTestId('lesson-content');
-    const mockSel = makeMockSelection('some selectable text', contentDiv);
+    const contentArea = getByTestId('book-content-area');
+    const mockSel = makeMockSelection('some selectable text', contentArea);
     const restore = installMockSelection(mockSel);
 
-    await act(async () => fireEvent.mouseUp(contentDiv));
+    await act(async () => fireEvent.mouseUp(contentArea));
 
     await waitFor(() => {
       expect(getByTestId('selection-toolbar')).toBeTruthy();
@@ -212,11 +212,11 @@ describe('LessonSection', () => {
   test('renders note editor when open', async () => {
     const { getByTestId, getByText } = await renderAndSettle(<LessonSection {...props} />);
 
-    const contentDiv = getByTestId('lesson-content');
-    const mockSel = makeMockSelection('note-worthy text', contentDiv);
+    const contentArea = getByTestId('book-content-area');
+    const mockSel = makeMockSelection('note-worthy text', contentArea);
     const restore = installMockSelection(mockSel);
 
-    await act(async () => fireEvent.mouseUp(contentDiv));
+    await act(async () => fireEvent.mouseUp(contentArea));
 
     await waitFor(() => {
       expect(getByTestId('selection-toolbar')).toBeTruthy();
@@ -233,11 +233,11 @@ describe('LessonSection', () => {
   test('renders card editor when open', async () => {
     const { getByTestId, getByText } = await renderAndSettle(<LessonSection {...props} />);
 
-    const contentDiv = getByTestId('lesson-content');
-    const mockSel = makeMockSelection('card-worthy text', contentDiv);
+    const contentArea = getByTestId('book-content-area');
+    const mockSel = makeMockSelection('card-worthy text', contentArea);
     const restore = installMockSelection(mockSel);
 
-    await act(async () => fireEvent.mouseUp(contentDiv));
+    await act(async () => fireEvent.mouseUp(contentArea));
 
     await waitFor(() => {
       expect(getByTestId('selection-toolbar')).toBeTruthy();
@@ -279,11 +279,11 @@ describe('LessonSection', () => {
     });
 
     const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
-    const contentDiv = getByTestId('lesson-content');
-    const mockSel = makeMockSelection('auto copied text', contentDiv);
+    const contentArea = getByTestId('book-content-area');
+    const mockSel = makeMockSelection('auto copied text', contentArea);
     const restore = installMockSelection(mockSel);
 
-    await act(async () => fireEvent.mouseUp(contentDiv));
+    await act(async () => fireEvent.mouseUp(contentArea));
 
     await waitFor(() => {
       expect(getByTestId('selection-toolbar')).toBeTruthy();
@@ -343,20 +343,20 @@ describe('LessonSection', () => {
     });
 
     const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
-    const contentDiv = getByTestId('lesson-content');
+    const contentArea = getByTestId('book-content-area');
 
-    const mockSel1 = makeMockSelection('first selection', contentDiv);
+    const mockSel1 = makeMockSelection('first selection', contentArea);
     const restore1 = installMockSelection(mockSel1);
-    await act(async () => fireEvent.mouseUp(contentDiv));
+    await act(async () => fireEvent.mouseUp(contentArea));
 
     await act(async () => {
       await new Promise((r) => setTimeout(r, 100));
     });
 
-    const mockSel2 = makeMockSelection('second selection', contentDiv);
+    const mockSel2 = makeMockSelection('second selection', contentArea);
     restore1();
     const restore2 = installMockSelection(mockSel2);
-    await act(async () => fireEvent.mouseUp(contentDiv));
+    await act(async () => fireEvent.mouseUp(contentArea));
 
     await act(async () => {
       await new Promise((r) => setTimeout(r, 500));

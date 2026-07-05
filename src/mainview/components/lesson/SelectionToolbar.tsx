@@ -8,7 +8,9 @@ import { useHighlightsStore } from '../../stores/highlightsStore';
 import { useLessonViewStore } from '../../stores/lessonViewStore';
 import { useSelectionStore } from '../../stores/selectionStore';
 import { Button } from '../ui';
+import CardEditor from './CardEditor';
 import { ColorPickerRow } from './ColorPickerRow';
+import NoteEditor from './NoteEditor';
 
 export default function SelectionToolbar() {
   const { t } = useTranslation();
@@ -20,6 +22,8 @@ export default function SelectionToolbar() {
       selection: s.selection,
       pickerPos: s.pickerPos,
       selectedHighlightId: s.selectedHighlightId,
+      showNoteEditor: s.showNoteEditor,
+      showCardEditor: s.showCardEditor,
       openNoteEditor: s.openNoteEditor,
       openCardEditor: s.openCardEditor,
     })),
@@ -124,6 +128,9 @@ export default function SelectionToolbar() {
         <span className="shrink-0">{t('icons.clipboard')}</span>
         <span className="truncate">{copied ? t('selection.copied') : t('lesson.copy')}</span>
       </Button>
+
+      {store.showNoteEditor && <NoteEditor />}
+      {store.showCardEditor && <CardEditor />}
     </div>
   );
 }

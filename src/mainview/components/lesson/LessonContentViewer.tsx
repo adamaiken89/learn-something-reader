@@ -21,10 +21,8 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import { THEME_TOKENS, themeToCSSVars } from '../../themes';
 import { rehypeHighlightText } from '../rehypeHighlightText';
 import { rehypeSearchText } from '../rehypeSearchText';
-import CardEditor from './CardEditor';
 import LessonContentCompletionButton from './LessonContentCompletionButton';
 import LessonContentHeader from './LessonContentHeader';
-import NoteEditor from './NoteEditor';
 import NotePopover from './NotePopover';
 import SelectionToolbar from './SelectionToolbar';
 
@@ -85,11 +83,12 @@ export default function LessonContentViewer({ search }: LessonContentViewerProps
           ref={contentRef}
           tabIndex={-1}
           onScroll={handleScroll}
-          onMouseUp={handleTextSelectionWithAutoCopy}
         >
           <div
             className={`p-6 book-content${contentWidth === 'wide' ? ' book-content-wide' : contentWidth === 'standard' ? ' book-content-standard' : ''}`}
+            data-testid="book-content-area"
             style={{ fontSize: `${fontSize}px`, ...themeVars }}
+            onMouseUp={handleTextSelectionWithAutoCopy}
           >
             <LessonContentHeader rehypePlugins={rehypePlugins} />
             <ReactMarkdown
@@ -109,8 +108,6 @@ export default function LessonContentViewer({ search }: LessonContentViewerProps
 
       <SelectionToolbar />
       <NotePopover />
-      <CardEditor />
-      <NoteEditor />
     </>
   );
 }

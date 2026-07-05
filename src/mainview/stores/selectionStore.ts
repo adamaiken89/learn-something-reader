@@ -84,9 +84,10 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
     window.getSelection()?.removeAllRanges();
   },
 
-  closeNoteEditor: () => set({ showNoteEditor: false, noteText: '' }),
+  closeNoteEditor: () =>
+    set({ showNoteEditor: false, noteText: '', showToolbar: false, selection: null }),
 
-  closeCardEditor: () => set({ showCardEditor: false }),
+  closeCardEditor: () => set({ showCardEditor: false, showToolbar: false, selection: null }),
 
   resetSelection: () => set({ showToolbar: false, selection: null }),
 }));

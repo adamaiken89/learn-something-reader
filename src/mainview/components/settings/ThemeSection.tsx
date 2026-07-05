@@ -77,6 +77,42 @@ const THEME_CARDS: { id: Theme; icon: string; labelKey: string; descKey: string 
     labelKey: 'settings.themes.everforest',
     descKey: 'settings.themes.everforestDesc',
   },
+  {
+    id: 'notebook',
+    icon: 'icons.themeNotebook',
+    labelKey: 'settings.themes.notebook',
+    descKey: 'settings.themes.notebookDesc',
+  },
+  {
+    id: 'one-dark',
+    icon: 'icons.themeOneDark',
+    labelKey: 'settings.themes.oneDark',
+    descKey: 'settings.themes.oneDarkDesc',
+  },
+  {
+    id: 'terminal',
+    icon: 'icons.themeTerminal',
+    labelKey: 'settings.themes.terminal',
+    descKey: 'settings.themes.terminalDesc',
+  },
+  {
+    id: 'monokai',
+    icon: 'icons.themeMonokai',
+    labelKey: 'settings.themes.monokai',
+    descKey: 'settings.themes.monokaiDesc',
+  },
+  {
+    id: 'monochrome',
+    icon: 'icons.themeMonochrome',
+    labelKey: 'settings.themes.monochrome',
+    descKey: 'settings.themes.monochromeDesc',
+  },
+  {
+    id: 'night-owl',
+    icon: 'icons.themeNightOwl',
+    labelKey: 'settings.themes.nightOwl',
+    descKey: 'settings.themes.nightOwlDesc',
+  },
 ];
 
 export default function ThemeSection() {

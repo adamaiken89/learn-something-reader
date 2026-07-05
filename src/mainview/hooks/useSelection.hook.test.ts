@@ -171,6 +171,26 @@ describe('useSelection', () => {
       expect(result.current.showToolbar).toBe(false);
     });
 
+    test('does not reset selection when input element focused', () => {
+      window.getSelection = () => mockSelection('', true);
+      const input = document.createElement('input');
+      Object.defineProperty(document, 'activeElement', {
+        get: () => input,
+        configurable: true,
+      });
+      const ref = { current: document.body };
+      renderHook(() => useSelection(ref));
+      act(() => {
+        document.dispatchEvent(new Event('selectionchange'));
+      });
+      act(() => {
+        document.dispatchEvent(new Event('selectionchange'));
+      });
+      delete (document as { activeElement?: unknown }).activeElement;
+      expect(useSelectionStore.getState().showToolbar).toBe(false);
+      expect(useSelectionStore.getState().selection).toBeNull();
+    });
+
     test('no-op when container ref is null', () => {
       window.getSelection = () => mockSelection('text', false);
       const { result } = renderHook(() => useSelection());

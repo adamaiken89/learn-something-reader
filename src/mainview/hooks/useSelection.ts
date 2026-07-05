@@ -40,6 +40,15 @@ export function useSelection(scrollContainerRef?: RefObject<HTMLElement | null>)
         hideRafRef.current = requestAnimationFrame(() => {
           const sel2 = window.getSelection();
           if (!sel2 || sel2.isCollapsed || !sel2.rangeCount) {
+            const active = document.activeElement;
+            if (
+              active &&
+              (active.tagName === 'INPUT' ||
+                active.tagName === 'TEXTAREA' ||
+                active.tagName === 'SELECT' ||
+                (active as HTMLElement).isContentEditable)
+            )
+              return;
             useSelectionStore.getState().resetSelection();
           }
         });

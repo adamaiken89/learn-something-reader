@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
 import { api } from '../../api';
-import { useFloatingPosition } from '../../hooks/useFloatingPosition';
 import { useLessonViewStore } from '../../stores/lessonViewStore';
 import { useSelectionStore } from '../../stores/selectionStore';
 
@@ -13,7 +12,6 @@ export default function CardEditor() {
   const store = useSelectionStore(
     useShallow((s) => ({
       selection: s.selection,
-      pickerPos: s.pickerPos,
       showCardEditor: s.showCardEditor,
       closeCardEditor: s.closeCardEditor,
     })),
@@ -23,8 +21,6 @@ export default function CardEditor() {
 
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
-  const editorY = store.pickerPos.y - 120;
-  const { menuRef, position } = useFloatingPosition(store.pickerPos.x, editorY, editorY);
   const prevShowRef = useRef(false);
 
   useEffect(() => {
@@ -38,12 +34,7 @@ export default function CardEditor() {
   if (!store.showCardEditor || !store.selection) return null;
 
   return (
-    <div
-      ref={menuRef}
-      data-testid="card-editor"
-      className="fixed z-50 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-xl"
-      style={{ left: position.x, top: position.y, transform: 'translate(-50%, 0)', width: '300px' }}
-    >
+    <div data-testid="card-editor" className="border-t border-gray-600 p-3">
       <p className="text-[10px] text-gray-500 mb-2 font-semibold uppercase tracking-wider">
         {t('lesson.createCard')}
       </p>

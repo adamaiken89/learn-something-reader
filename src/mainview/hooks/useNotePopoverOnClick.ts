@@ -18,6 +18,15 @@ export function useNotePopoverOnClick(
     if (!el) return;
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
+
+      const existingSel = window.getSelection();
+      if (existingSel && !existingSel.isCollapsed && existingSel.rangeCount) {
+        e.preventDefault();
+        setSelectedHighlight(null);
+        handleTextSelection();
+        return;
+      }
+
       if (target.tagName === 'MARK' && target.dataset.highlightId) {
         if (target.dataset.noteId) {
           const highlightId = target.dataset.highlightId;
@@ -40,13 +49,7 @@ export function useNotePopoverOnClick(
         return;
       }
       if (target.closest('button') || target.closest('[data-no-select]')) return;
-      const existingSel = window.getSelection();
-      if (existingSel && !existingSel.isCollapsed && existingSel.rangeCount) {
-        e.preventDefault();
-        setSelectedHighlight(null);
-        handleTextSelection();
-        return;
-      }
+      if (!target.closest('.book-content')) return;
       const caretRange = document.caretRangeFromPoint(e.clientX, e.clientY);
       if (!caretRange) return;
       const textNode = caretRange.startContainer;

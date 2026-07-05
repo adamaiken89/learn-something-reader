@@ -17,6 +17,12 @@ const THEME_LABELS: Record<Theme, string> = {
   'tokyo-night': 'settings.themes.tokyoNight',
   'rose-pine': 'settings.themes.rosePine',
   everforest: 'settings.themes.everforest',
+  notebook: 'settings.themes.notebook',
+  'one-dark': 'settings.themes.oneDark',
+  terminal: 'settings.themes.terminal',
+  monokai: 'settings.themes.monokai',
+  monochrome: 'settings.themes.monochrome',
+  'night-owl': 'settings.themes.nightOwl',
 };
 
 const THEME_ICONS: Record<Theme, string> = {
@@ -32,6 +38,12 @@ const THEME_ICONS: Record<Theme, string> = {
   'tokyo-night': 'icons.themeTokyoNight',
   'rose-pine': 'icons.themeRosePine',
   everforest: 'icons.themeEverforest',
+  notebook: 'icons.themeNotebook',
+  'one-dark': 'icons.themeOneDark',
+  terminal: 'icons.themeTerminal',
+  monokai: 'icons.themeMonokai',
+  monochrome: 'icons.themeMonochrome',
+  'night-owl': 'icons.themeNightOwl',
 };
 
 function ThemeControl() {

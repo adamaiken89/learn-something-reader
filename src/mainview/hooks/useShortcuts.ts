@@ -13,9 +13,17 @@ export function useShortcuts(scope: Shortcut['scope'], handlers: ShortcutHandler
     const scopeShortcuts = SHORTCUTS.filter((s) => s.scope === scope);
 
     const listener = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)
-        return;
+      const active = document.activeElement;
+      if (
+        active &&
+        (active.tagName === 'INPUT' ||
+          active.tagName === 'TEXTAREA' ||
+          active.tagName === 'SELECT' ||
+          active.getAttribute('role') === 'textbox' ||
+          (active as HTMLElement).isContentEditable)
+      ) {
+        if (!e.metaKey && !e.ctrlKey) return;
+      }
 
       const hasMod = e.metaKey || e.ctrlKey;
       const lowerKey = e.key.toLowerCase();
