@@ -83,6 +83,11 @@ const HANDLERS: Record<string, MockHandler> = {
   reviewUserCard: () => mockData.getMockUserCard(),
   toggleUserCardStar: () => mockData.getMockUserCard(),
 
+  // Sessions
+  getLastSession: () => null,
+  setLastSession: () => ({ ok: true as const }),
+  clearLastSession: () => ({ ok: true as const }),
+
   // Data
   clearAllData: () => ({ ok: true as const }),
   clearLogs: () => ({ ok: true as const }),

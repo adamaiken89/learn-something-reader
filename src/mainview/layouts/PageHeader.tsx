@@ -27,9 +27,7 @@ export default function PageHeader({
 }: PageHeaderProps) {
   const { t } = useTranslation();
   const push = useViewStore((s) => s.push);
-  const views = useViewStore((s) => s.views);
   const focusMode = useSettingsStore((s) => s.focusMode);
-  const lastView = views[views.length - 1];
 
   return (
     <header className="relative z-40 bg-gray-800 border-b border-gray-700 shrink-0 min-h-7 flex flex-col">
@@ -56,15 +54,6 @@ export default function PageHeader({
 
           {!hideHeaderActions && !actions && (
             <div className="ml-auto flex items-center gap-1.5">
-              {(lastView?.type === 'courseList' || lastView?.type === 'moduleList') && (
-                <button
-                  onClick={() => push({ type: 'dashboard' })}
-                  className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-                  title={t('dashboard.title')}
-                >
-                  {t('icons.stats')}
-                </button>
-              )}
               <button
                 onClick={() => push({ type: 'bookmarks' })}
                 className="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"

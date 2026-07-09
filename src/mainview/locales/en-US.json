@@ -29,18 +29,8 @@
     "reviewDesc": "Spaced repetition to reinforce what you've learned",
     "browseCourses": "Browse Courses →"
   },
-  "courseList": {
-    "loadingCourses": "Loading courses...",
-    "loadError": "Error",
-    "noCourses": "No courses found. Add courses to the subjects/ directory.",
-    "modules": "{{count}} modules",
-    "progress": "Progress"
-  },
   "courseSwitcher": {
     "noCourses": "No courses found"
-  },
-  "moduleList": {
-    "modules": "{{count}} modules"
   },
   "lesson": {
     "loadingLesson": "Loading lesson...",
@@ -71,7 +61,10 @@
     "copy": "Copy",
     "reviewFlashcards": "Review Flashcards",
     "cards": "Cards",
-    "searchCourse": "Search"
+    "searchCourse": "Search",
+    "moduleBadge": "M{{current}}/{{total}}",
+    "modules": "Modules",
+    "noSections": "No sections in this module."
   },
   "viewerSearch": {
     "placeholder": "Find in page...",
@@ -300,7 +293,13 @@
     "recentActivity": "Recent Activity",
     "courses": "Courses",
     "courseProgress": "Course Progress",
-    "noData": "No data available."
+    "noData": "No data available.",
+    "resume": "Resume",
+    "moduleProgress": "Module: {{module}}",
+    "progress": "Progress",
+    "modules": "{{count}} modules",
+    "noCourses": "No courses found.",
+    "addCoursesHint": "Add course folders to {{path}}"
   },
   "icons": {
     "bookmarkFilled": "★",

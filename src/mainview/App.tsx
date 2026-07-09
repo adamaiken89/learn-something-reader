@@ -2,16 +2,15 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Course } from '../bun/types';
+import { api } from './api';
 import SearchFab from './components/SearchFab';
 import SearchOverlay from './components/SearchOverlay';
 import { useAppInit } from './hooks/useAppInit';
 import { useShortcuts } from './hooks/useShortcuts';
 import { useWindowTitle } from './hooks/useWindowTitle';
 import BookmarksPage from './pages/BookmarksPage';
-import CourseListPage from './pages/CourseListPage';
 import DashboardPage from './pages/DashboardPage';
 import LessonPage from './pages/LessonPage';
-import ModuleListPage from './pages/ModuleListPage';
 import QuizPage from './pages/QuizPage';
 import ReviewPage from './pages/ReviewPage';
 import SettingsPage from './pages/SettingsPage';
@@ -36,8 +35,19 @@ export default function App() {
       setLoading(false);
       return;
     }
-    replace({ type: 'courseList' });
-    setLoading(false);
+    void api.session.get().then((last) => {
+      if (last) {
+        replace({
+          type: 'lesson',
+          course: last.course,
+          module: last.module,
+          sectionID: last.sectionId,
+        });
+      } else {
+        replace({ type: 'dashboard' });
+      }
+      setLoading(false);
+    });
   }, [currentView, replace]);
 
   useShortcuts('global', {
@@ -54,19 +64,13 @@ export default function App() {
 
   const viewContent = (() => {
     switch (currentView.type) {
-      case 'courseList':
-        return <CourseListPage />;
-
-      case 'moduleList':
-        return <ModuleListPage course={currentView.course} />;
-
       case 'lesson':
         return (
           <LessonPage
             course={currentView.course}
             module={currentView.module}
             initialSectionID={currentView.sectionID}
-            onBack={() => replace({ type: 'moduleList', course: currentView.course })}
+            onBack={() => replace({ type: 'dashboard' })}
           />
         );
 
@@ -103,7 +107,7 @@ export default function App() {
         );
 
       case 'dashboard':
-        return <DashboardPage courseID={currentView.courseID} onBack={pop} />;
+        return <DashboardPage />;
     }
   })();
 

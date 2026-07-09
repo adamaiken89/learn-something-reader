@@ -48,14 +48,14 @@ describe('QuizReviewButtons', () => {
   });
 
   test('quiz button does nothing without course/module', async () => {
-    useViewStore.setState({ views: [{ type: 'courseList' }] });
+    useViewStore.setState({ views: [{ type: 'dashboard' }] });
     const { getByText } = render(<QuizReviewButtons />);
     await user.click(getByText('Quiz'));
     expect(useViewStore.getState().views).toHaveLength(1);
   });
 
   test('review button does nothing without course', async () => {
-    useViewStore.setState({ views: [{ type: 'courseList' }] });
+    useViewStore.setState({ views: [{ type: 'dashboard' }] });
     const { getByText } = render(<QuizReviewButtons />);
     await user.click(getByText('Review'));
     expect(useViewStore.getState().views).toHaveLength(1);

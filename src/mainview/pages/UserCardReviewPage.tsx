@@ -19,7 +19,7 @@ export default function UserCardReviewPage({ courseId, onBack }: UserCardReviewP
         center={
           <CourseSwitcher
             currentCourseId={courseId}
-            onSelect={(course) => replace({ type: 'moduleList', course })}
+            onSelect={(course) => replace({ type: 'lesson', course, module: course.modules[0] })}
           />
         }
       />

@@ -1,5 +1,13 @@
 import { logger } from './logger';
-import type { Highlight, Note, Bookmark, CompletedModule, StudySession, UserCard } from './types';
+import type {
+  Highlight,
+  Note,
+  Bookmark,
+  CompletedModule,
+  StudySession,
+  UserCard,
+  LastSession,
+} from './types';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
@@ -17,6 +25,7 @@ interface StorageData {
   remoteRepoURL?: string;
   lastSyncedCommit?: string | null;
   lastSyncTime?: string | null;
+  lastSession?: LastSession | null;
 }
 
 function load(): StorageData {
@@ -559,6 +568,23 @@ export function clearAllData(): void {
     studySessions: [],
     userCards: [],
   });
+}
+
+export function getLastSession(): LastSession | null {
+  const data = load();
+  return data.lastSession ?? null;
+}
+
+export function setLastSession(session: LastSession): void {
+  const data = load();
+  data.lastSession = session;
+  save(data);
+}
+
+export function clearLastSession(): void {
+  const data = load();
+  data.lastSession = null;
+  save(data);
 }
 
 export function saveSyncConfig(config: {

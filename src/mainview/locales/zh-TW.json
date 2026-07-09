@@ -29,18 +29,8 @@
     "reviewDesc": "間隔重複強化所學內容",
     "browseCourses": "瀏覽課程 →"
   },
-  "courseList": {
-    "loadingCourses": "正在載入課程...",
-    "loadError": "錯誤",
-    "noCourses": "找不到課程。請將課程加入 subjects/ 目錄。",
-    "modules": "{{count}} 個單元",
-    "progress": "進度"
-  },
   "courseSwitcher": {
     "noCourses": "找不到課程"
-  },
-  "moduleList": {
-    "modules": "{{count}} 個單元"
   },
   "lesson": {
     "loadingLesson": "正在載入課程...",
@@ -71,7 +61,10 @@
     "copy": "複製",
     "reviewFlashcards": "複習閃卡",
     "cards": "卡片",
-    "searchCourse": "搜尋"
+    "searchCourse": "搜尋",
+    "moduleBadge": "M{{current}}/{{total}}",
+    "modules": "單元",
+    "noSections": "此單元無章節。"
   },
   "viewerSearch": {
     "placeholder": "在頁面中搜尋...",
@@ -300,7 +293,13 @@
     "recentActivity": "最近活動",
     "courses": "課程",
     "courseProgress": "課程進度",
-    "noData": "無可用資料。"
+    "noData": "無可用資料。",
+    "resume": "繼續學習",
+    "moduleProgress": "單元：{{module}}",
+    "progress": "進度",
+    "modules": "{{count}} 個單元",
+    "noCourses": "找不到課程。",
+    "addCoursesHint": "將課程資料夾加入 {{path}}"
   },
   "icons": {
     "bookmarkFilled": "★",

@@ -1,5 +1,5 @@
 import type { AppRequests } from '../bun/rpcSchema';
-import type { QuizQuestion, SRSDeck } from '../bun/types';
+import type { LastSession, QuizQuestion, SRSDeck } from '../bun/types';
 import { logger } from './logger';
 import { rpc as defaultRpc } from './rpc';
 import { showToast } from './toast';
@@ -156,6 +156,11 @@ export const api = {
     status: () => request(() => _rpcRequest.getSyncStatus()),
     start: (force?: boolean) => request(() => _rpcRequest.syncStart({ force })),
     setURL: (url: string) => request(() => _rpcRequest.syncSetURL({ remoteRepoURL: url })),
+  },
+  session: {
+    get: () => request(() => _rpcRequest.getLastSession()),
+    set: (session: LastSession) => request(() => _rpcRequest.setLastSession(session)),
+    clear: () => request(() => _rpcRequest.clearLastSession()),
   },
   window: {
     setTitle: (title: string) => request(() => _rpcRequest.setWindowTitle({ title })),

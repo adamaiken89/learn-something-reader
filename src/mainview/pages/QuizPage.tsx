@@ -20,7 +20,7 @@ export default function QuizPage({ courseId, moduleId, onBack }: QuizPageProps) 
         center={
           <CourseSwitcher
             currentCourseId={courseId}
-            onSelect={(course) => replace({ type: 'moduleList', course })}
+            onSelect={(course) => replace({ type: 'lesson', course, module: course.modules[0] })}
           />
         }
       />

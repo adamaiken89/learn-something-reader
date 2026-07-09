@@ -15,15 +15,13 @@ export function useWindowTitle() {
 
     let title: string;
     switch (currentView.type) {
-      case 'courseList':
-        title = 'CourseReader';
+      case 'lesson': {
+        const modIdx =
+          currentView.course.modules.findIndex((m) => m.id === currentView.module.id) + 1;
+        const modTotal = currentView.course.modules.length;
+        title = `CourseReader — ${currentView.course.displayName} — ${currentView.module.name} (${modIdx}/${modTotal})`;
         break;
-      case 'moduleList':
-        title = `CourseReader — ${currentView.course.displayName}`;
-        break;
-      case 'lesson':
-        title = `CourseReader — ${currentView.course.displayName}`;
-        break;
+      }
       case 'quiz':
         title = `CourseReader — ${currentView.course.displayName} — ${t('common.quiz')}`;
         break;

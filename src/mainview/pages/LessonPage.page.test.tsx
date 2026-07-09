@@ -46,6 +46,7 @@ describe('LessonPage', () => {
     mockResponse('getHighlights', []);
     mockResponse('getNotes', []);
     mockResponse('getCompletedModuleIDs', []);
+    mockResponse('setLastSession', { ok: true });
     useSettingsStore.setState({ focusMode: false });
     useCourseStore.setState({
       courses: [mockCourse],
@@ -60,11 +61,9 @@ describe('LessonPage', () => {
     });
   });
 
-  test('renders ModuleSwitcher with current module', async () => {
+  test('renders module badge with current position', async () => {
     const { container } = await renderAndSettle(ui);
-    const switcher = container.querySelector('[data-testid="module-switcher"]');
-    expect(switcher).toBeTruthy();
-    expect(switcher!.getAttribute('data-current-module-id')).toBe('mod-01');
+    expect(container.textContent).toContain('M1/1');
   });
 
   test('renders LessonToolbar', async () => {

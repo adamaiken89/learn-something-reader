@@ -122,6 +122,14 @@ export interface CompletedModule {
   completedAt: string;
 }
 
+export interface LastSession {
+  course: Course;
+  module: ModuleMeta;
+  sectionId: string;
+  scrollPosition: number;
+  updatedAt: string;
+}
+
 export interface StudySession {
   date: string;
   courseID: string;

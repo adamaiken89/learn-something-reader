@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { Course, ModuleMeta } from '../../bun/types';
 import LessonContentViewer from '../components/lesson/LessonContentViewer';
-import SectionsPanel from '../components/lesson/SectionsPanel';
+import NavigationPanel from '../components/lesson/NavigationPanel';
 import ViewerSearch from '../components/lesson/ViewerSearch';
 import PomodoroTimer from '../components/PomodoroTimer';
 import StudyTools from '../components/StudyTools';
@@ -17,6 +17,7 @@ import { useLessonSection } from '../hooks/useLessonSection';
 import { useWheelNavigation } from '../hooks/useWheelNavigation';
 import { useLessonViewStore } from '../stores/lessonViewStore';
 import { useSelectionStore } from '../stores/selectionStore';
+import { useViewStore } from '../stores/viewStore';
 
 interface Props {
   course: Course;
@@ -32,6 +33,7 @@ export default function LessonSection({
   initialSearchQuery,
 }: Props) {
   const { t } = useTranslation();
+  const push = useViewStore((s) => s.push);
 
   const {
     toggle,
@@ -128,16 +130,19 @@ export default function LessonSection({
                   : 'anim-panel-slide-right-exit'
               }
             >
-              <SectionsPanel
+              <NavigationPanel
                 sections={sections}
                 courseId={course.id}
                 moduleId={module.id}
                 moduleName={module.name}
+                modules={course.modules}
+                currentModuleId={module.id}
                 hasPrev={nav.hasPrev}
                 hasNext={nav.hasNext}
                 onGoPrev={nav.goPrev}
                 onGoNext={nav.goNext}
                 onScrollToSection={scrollToSection}
+                onModuleSelect={(mod) => push({ type: 'lesson', course, module: mod })}
                 onClose={toggleSections}
               />
             </div>

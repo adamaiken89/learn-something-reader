@@ -203,6 +203,18 @@ const rpc = BrowserView.defineRPC<AppSchema>({
 
       toggleUserCardStar: ({ id }) => Storage.toggleUserCardStar(id),
 
+      getLastSession: () => Storage.getLastSession(),
+
+      setLastSession: async (session) => {
+        Storage.setLastSession(session);
+        return { ok: true as const };
+      },
+
+      clearLastSession: async () => {
+        Storage.clearLastSession();
+        return { ok: true as const };
+      },
+
       setWindowTitle: async ({ title }) => {
         mainWindow?.setTitle(title);
         return { ok: true as const };

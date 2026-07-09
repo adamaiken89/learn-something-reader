@@ -47,7 +47,11 @@ export default function BookmarksPage({ onBack, onOpen }: Props) {
     <PageLayout>
       <PageHeader
         onBack={onBack}
-        center={<CourseSwitcher onSelect={(course) => replace({ type: 'moduleList', course })} />}
+        center={
+          <CourseSwitcher
+            onSelect={(course) => replace({ type: 'lesson', course, module: course.modules[0] })}
+          />
+        }
         hideHeaderActions
       />
       <PageContent>

@@ -35,7 +35,7 @@ describe('CardsButton', () => {
   });
 
   test('does nothing without course', async () => {
-    useViewStore.setState({ views: [{ type: 'courseList' }] });
+    useViewStore.setState({ views: [{ type: 'dashboard' }] });
     const { getByText } = render(<CardsButton />);
     await user.click(getByText(/Cards/));
     expect(useViewStore.getState().views).toHaveLength(1);

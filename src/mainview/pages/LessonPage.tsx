@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import type { Course, ModuleMeta } from '../../bun/types';
 import LessonToolbar from '../components/lesson/LessonToolbar';
-import ModuleSwitcher from '../components/ModuleSwitcher';
 import SearchOverlay from '../components/SearchOverlay';
+import { useLastSession } from '../hooks/useLastSession';
 import { useLessonToolbarShortcuts } from '../hooks/useLessonToolbarShortcuts';
 import PageContent from '../layouts/PageContent';
 import PageHeader from '../layouts/PageHeader';
@@ -11,7 +12,6 @@ import PageLayout from '../layouts/PageLayout';
 import LessonSection from '../sections/LessonSection';
 import { useLessonUIStore } from '../stores/lessonUIStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { useViewStore } from '../stores/viewStore';
 
 interface LessonFeatureProps {
   course: Course;
@@ -26,16 +26,20 @@ export default function LessonPage({
   initialSectionID,
   onBack,
 }: LessonFeatureProps) {
+  const { t } = useTranslation();
   const searchCourseOpen = useLessonUIStore((s) => s.searchCourseOpen);
   const setSearchCourseOpen = useLessonUIStore((s) => s.setSearchCourseOpen);
-  const push = useViewStore((s) => s.push);
   const transitionStyle = useSettingsStore((s) => s.transitionStyle);
 
   useLessonToolbarShortcuts(course, module);
+  useLastSession(course, module);
 
   const [animClass, setAnimClass] = useState('');
   const [contentKey, setContentKey] = useState(0);
   const prevModuleRef = useRef(module);
+
+  const moduleIndex = course.modules.findIndex((m) => m.id === module.id);
+  const moduleBadge = `M${moduleIndex + 1}/${course.modules.length}`;
 
   useEffect(() => {
     const prev = prevModuleRef.current;
@@ -66,11 +70,13 @@ export default function LessonPage({
       <PageHeader
         onBack={onBack}
         center={
-          <ModuleSwitcher
-            modules={course.modules}
-            currentModuleId={module.id}
-            onSelect={(m) => push({ type: 'lesson', course, module: m })}
-          />
+          <span className="text-sm font-semibold text-gray-300 tabular-nums whitespace-nowrap">
+            {t('lesson.moduleBadge', {
+              current: moduleIndex + 1,
+              total: course.modules.length,
+              defaultValue: moduleBadge,
+            })}
+          </span>
         }
         toolbar={<LessonToolbar />}
       />

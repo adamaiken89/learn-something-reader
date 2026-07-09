@@ -25,7 +25,7 @@ beforeEach(() => {
 
 describe('useCurrentLesson', () => {
   test('returns nulls when no lesson view', () => {
-    useViewStore.setState({ views: [{ type: 'courseList' }] });
+    useViewStore.setState({ views: [{ type: 'dashboard' }] });
     const { result } = renderHook(() => useCurrentLesson());
     expect(result.current).toEqual({ course: null, module: null });
   });
@@ -46,7 +46,7 @@ describe('useCurrentLesson', () => {
 
   test('returns last view when multiple views exist', () => {
     useViewStore.setState({
-      views: [{ type: 'courseList' }, { type: 'lesson', course, module: mod }],
+      views: [{ type: 'dashboard' }, { type: 'lesson', course, module: mod }],
     });
     const { result } = renderHook(() => useCurrentLesson());
     expect(result.current.course).toBe(course);

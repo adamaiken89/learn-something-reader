@@ -174,7 +174,7 @@ describe('LessonSection', () => {
     expect(container.textContent).not.toContain('Study Tools');
   });
 
-  test('renders sections panel when showSections is true', async () => {
+  test('renders navigation panel when showSections is true', async () => {
     mockResponse('loadLesson', {
       h1: 'Test Heading',
       bodyContent: 'Test body content',
@@ -184,7 +184,7 @@ describe('LessonSection', () => {
     useSettingsStore.setState({ showSections: true });
     const { container } = await renderAndSettle(<LessonSection {...props} />);
     expect(container.textContent).toContain('Test Heading');
-    expect(container.querySelector('[data-testid="sections-panel"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="navigation-panel"]')).toBeTruthy();
   });
 
   test('renders viewer search when search is active via initialSearchQuery', async () => {

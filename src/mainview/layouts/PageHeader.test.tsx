@@ -2,7 +2,6 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
-import type { Course } from '../../bun/types';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useViewStore } from '../stores/viewStore';
 import PageHeader from './PageHeader';
@@ -80,41 +79,6 @@ describe('PageHeader', () => {
     const { getByText } = render(<PageHeader />);
     await user.click(getByText('Settings'));
     expect(push).toHaveBeenCalledWith({ type: 'settings' });
-  });
-
-  test('shows Dashboard button on courseList view', () => {
-    useViewStore.setState({
-      views: [{ type: 'courseList' }],
-    } as Partial<ReturnType<typeof useViewStore.getState>>);
-    const { getByText } = render(<PageHeader />);
-    expect(getByText('📊')).toBeInTheDocument();
-  });
-
-  test('shows Dashboard button on moduleList view', () => {
-    useViewStore.setState({
-      views: [{ type: 'moduleList', course: { id: 'cs101' } as Course }],
-    } as Partial<ReturnType<typeof useViewStore.getState>>);
-    const { getByText } = render(<PageHeader />);
-    expect(getByText('📊')).toBeInTheDocument();
-  });
-
-  test('hides Dashboard button on non-list views', () => {
-    useViewStore.setState({
-      views: [{ type: 'settings' }],
-    } as Partial<ReturnType<typeof useViewStore.getState>>);
-    const { queryByText } = render(<PageHeader />);
-    expect(queryByText('📊')).toBeNull();
-  });
-
-  test('clicking Dashboard pushes dashboard view', async () => {
-    const push = mock(() => {});
-    useViewStore.setState({
-      views: [{ type: 'courseList' }],
-      push,
-    } as Partial<ReturnType<typeof useViewStore.getState>>);
-    const { getByText } = render(<PageHeader />);
-    await user.click(getByText('📊'));
-    expect(push).toHaveBeenCalledWith({ type: 'dashboard' });
   });
 
   test('clicking back calls onBack', async () => {

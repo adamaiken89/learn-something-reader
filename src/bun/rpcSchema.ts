@@ -6,6 +6,7 @@ import type {
   Bookmark,
   Course,
   Highlight,
+  LastSession,
   ModuleMeta,
   Note,
   QuizQuestion,
@@ -166,6 +167,9 @@ export type AppRequests = CourseRequests &
     clearAllData: { params: void; response: { ok: true } };
     clearLogs: { params: void; response: { ok: true } };
     setWindowTitle: { params: { title: string }; response: { ok: true } };
+    getLastSession: { params: void; response: LastSession | null };
+    setLastSession: { params: LastSession; response: { ok: true } };
+    clearLastSession: { params: void; response: { ok: true } };
   };
 
 export type AppSchema = {
