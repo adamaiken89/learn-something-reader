@@ -166,7 +166,10 @@ function MermaidOverlay({ svg, bg, onClose }: { svg: string; bg?: string; onClos
             ✕
           </button>
         </div>
-        <div ref={contentRef} className="overflow-auto flex-1 bg-gray-900 flex items-center justify-center p-10">
+        <div
+          ref={contentRef}
+          className="overflow-auto flex-1 bg-gray-900 flex items-center justify-center p-10"
+        >
           <div
             className="mermaid-diagram"
             style={{ width: `${zoom * 100}%`, maxWidth: 'none' }}

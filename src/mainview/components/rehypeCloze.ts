@@ -56,7 +56,12 @@ function walkAndTransformCloze(node: HastNode): HastNode {
   if (node.type === 'text' && 'value' in node) {
     const text = (node as { value: string }).value;
     if (/\{[^}]+\}/.test(text)) {
-      return { type: 'element', tagName: 'span', children: transformClozeText(text) } as HastNode;
+      return {
+        type: 'element',
+        tagName: 'span',
+        properties: {},
+        children: transformClozeText(text),
+      } as HastNode;
     }
   }
   if ((node as HastElement).children && Array.isArray((node as HastElement).children)) {
@@ -80,34 +85,39 @@ function wrapInteractiveBlock(bq: HastElement): HastElement {
     return bq;
   }
 
-  // Find answer line (the last <p> with <em>Answer</em> or first <p> with <em>Answer</em>)
+  // Find answer line
   let answerNode: HastNode | null = null;
   const contentNodes: HastNode[] = [];
-  let foundAnswer = false;
   for (const c of bq.children) {
     if (c.type === 'element' && (c as HastElement).tagName === 'p') {
       const p = c as HastElement;
-      const strong = p.children?.find(
+      const em = p.children?.find(
         (pc) => pc.type === 'element' && (pc as HastElement).tagName === 'em',
       );
-      if (strong) {
-        const emText = (strong as HastElement).children?.[0];
+      if (em) {
+        const emText = (em as HastElement).children?.[0];
         if (
           emText?.type === 'text' &&
-          (emText as { value: string }).value.toLowerCase() === 'answer'
+          (emText as { value: string }).value.toLowerCase().startsWith('answer')
         ) {
           answerNode = c;
-          foundAnswer = true;
           continue;
         }
       }
     }
-    if (!foundAnswer) contentNodes.push(c);
+    contentNodes.push(c);
   }
 
-  // Build summary label
-  const summaryLabel =
-    label === 'cloze' ? '📝 Cloze' : label === 'predict' ? '🔮 Predict' : '⚠️ Spot the Mistake';
+  // For cloze: keep blockquote format, just hide answer line
+  if (label === 'cloze') {
+    return {
+      ...bq,
+      children: contentNodes,
+    } as HastElement;
+  }
+
+  // For predict/spot the mistake: wrap in <details>
+  const summaryLabel = label === 'predict' ? '🔮 Predict' : '⚠️ Spot the Mistake';
 
   return {
     type: 'element',
@@ -142,10 +152,8 @@ function wrapInteractiveBlock(bq: HastElement): HastElement {
   } as HastElement;
 }
 
-export function rehypeCloze(_options?: { active?: boolean }) {
-  const active = _options?.active ?? true;
+export function rehypeCloze() {
   return (tree: HastNode) => {
-    if (!active) return;
     if (!tree || !('children' in tree)) return;
 
     const root = tree as HastElement;

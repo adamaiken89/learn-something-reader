@@ -57,7 +57,7 @@ describe('rehypeCloze', () => {
     expect(clozeSpans![1]?.properties?.dataAnswer).toBe('Term2');
   });
 
-  test('wraps Cloze blockquote in details', () => {
+  test('keeps Cloze blockquote as blockquote with answer hidden', () => {
     const bq = h('blockquote', [
       h('p', [h('strong', [text('Cloze')]), text(': ')]),
       h('p', [text('The ___ is X')]),
@@ -65,9 +65,24 @@ describe('rehypeCloze', () => {
     ]);
     const tree = root([bq]);
     rehypeCloze()(tree);
-    const details = tree.children[0] as HastElement;
-    expect(details.tagName).toBe('details');
-    expect(details.properties?.className).toContain('interactive-block');
+    const result = tree.children[0] as HastElement;
+    expect(result.tagName).toBe('blockquote');
+    // Answer line should be removed
+    const hasAnswer = result.children?.some((c) => {
+      const p = c as HastElement;
+      return (
+        p.tagName === 'p' &&
+        p.children?.some((pc) => {
+          const em = pc as HastElement;
+          return (
+            em.tagName === 'em' &&
+            em.children?.[0] &&
+            (em.children[0] as { value?: string }).value?.toLowerCase() === 'answer'
+          );
+        })
+      );
+    });
+    expect(hasAnswer).toBe(false);
   });
 
   test('wraps Predict blockquote in details', () => {
@@ -109,27 +124,19 @@ describe('rehypeCloze', () => {
     expect(pre.tagName).toBe('pre');
   });
 
-  test('no transformation when active=false', () => {
-    const tree = root([h('p', [text('{cloze} here')])]);
-    rehypeCloze({ active: false })(tree);
-    const p = tree.children[0] as HastElement;
-    // Should remain unchanged: text nodes not wrapped
-    const hasClozeSpan = p.children?.some((c) => (c as HastElement).tagName === 'span');
-    expect(hasClozeSpan).toBe(false);
-  });
-
-  test('summary element present with correct label', () => {
+  test('Predict blockquote wraps in details with summary', () => {
     const bq = h('blockquote', [
-      h('p', [h('strong', [text('Cloze')]), text(': test')]),
+      h('p', [h('strong', [text('Predict')]), text(': test')]),
       h('p', [h('em', [text('Answer')]), text(': test')]),
     ]);
     const tree = root([bq]);
     rehypeCloze()(tree);
     const details = tree.children[0] as HastElement;
+    expect(details.tagName).toBe('details');
     const summary = details.children?.[0] as HastElement;
     expect(summary.tagName).toBe('summary');
     const summaryText = summary.children?.[0] as { value?: string };
-    expect(summaryText.value).toContain('Cloze');
+    expect(summaryText.value).toContain('Predict');
   });
 
   test('handles empty root gracefully', () => {
@@ -144,7 +151,7 @@ describe('rehypeCloze', () => {
     expect(tree).toBeDefined();
   });
 
-  test('answer hidden inside interactive-answer div', () => {
+  test('Predict answer hidden inside interactive-answer div', () => {
     const bq = h('blockquote', [
       h('p', [h('strong', [text('Predict')]), text(': Q?')]),
       h('p', [h('em', [text('Answer')]), text(': A!')]),
@@ -152,10 +159,70 @@ describe('rehypeCloze', () => {
     const tree = root([bq]);
     rehypeCloze()(tree);
     const details = tree.children[0] as HastElement;
+    expect(details.tagName).toBe('details');
     const contentDiv = details.children?.[1] as HastElement;
     const answerDiv = contentDiv.children?.find(
       (c) => (c as HastElement).properties?.className === 'interactive-answer',
     );
     expect(answerDiv).toBeDefined();
+  });
+
+  test('Cloze blockquote with {term} blanks: answer hidden, blanks present', () => {
+    // Exact format from lesson.md:
+    // > **Cloze**: "Information enters through {sensory memory}, but only what we {attend to} passes into {working memory}."
+    // >
+    // > *Answer: sensory memory, attend to, working memory*
+    const bq = h('blockquote', [
+      h('p', [
+        h('strong', [text('Cloze')]),
+        text(
+          ': "Information enters through {sensory memory}, but only what we {attend to} passes into {working memory}."',
+        ),
+      ]),
+      h('p', [h('em', [text('Answer')]), text(': sensory memory, attend to, working memory')]),
+    ]);
+    const tree = root([bq]);
+    rehypeCloze()(tree);
+    const result = tree.children[0] as HastElement;
+
+    // Should remain a blockquote (not details)
+    expect(result.tagName).toBe('blockquote');
+
+    // Answer line should be removed
+    const hasAnswer = result.children?.some((c) => {
+      const p = c as HastElement;
+      return (
+        p.tagName === 'p' &&
+        p.children?.some((pc) => {
+          const em = pc as HastElement;
+          return (
+            em.tagName === 'em' &&
+            em.children?.[0] &&
+            (em.children[0] as { value?: string }).value?.toLowerCase() === 'answer'
+          );
+        })
+      );
+    });
+    expect(hasAnswer).toBe(false);
+
+    // Find all cloze-blank spans anywhere in the result
+    const findClozeBlanks = (node: HastNode): HastElement[] => {
+      const blanks: HastElement[] = [];
+      if ((node as HastElement).properties?.className === 'cloze-blank') {
+        blanks.push(node as HastElement);
+      }
+      if ((node as HastElement).children) {
+        for (const child of (node as HastElement).children) {
+          blanks.push(...findClozeBlanks(child));
+        }
+      }
+      return blanks;
+    };
+
+    const clozeBlanks = findClozeBlanks(result);
+    expect(clozeBlanks.length).toBe(3);
+    expect(clozeBlanks[0].properties?.dataAnswer).toBe('sensory memory');
+    expect(clozeBlanks[1].properties?.dataAnswer).toBe('attend to');
+    expect(clozeBlanks[2].properties?.dataAnswer).toBe('working memory');
   });
 });

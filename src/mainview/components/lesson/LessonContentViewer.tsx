@@ -39,12 +39,11 @@ export default function LessonContentViewer({ search }: LessonContentViewerProps
   const courseId = useLessonViewStore((s) => s.courseId);
   const moduleId = useLessonViewStore((s) => s.moduleId);
 
-  const { contentWidth, fontSize, theme, readingMode } = useSettingsStore(
+  const { contentWidth, fontSize, theme } = useSettingsStore(
     useShallow((s) => ({
       contentWidth: s.contentWidth,
       fontSize: s.fontSize,
       theme: s.theme,
-      readingMode: s.readingMode,
     })),
   );
   const themeVars = themeToCSSVars(THEME_TOKENS[theme]);
@@ -74,12 +73,12 @@ export default function LessonContentViewer({ search }: LessonContentViewerProps
       [
         rehypeHighlight,
         [rehypeHighlightText, highlights ?? []],
-        [rehypeCloze, { active: readingMode === 'active' }],
+        rehypeCloze,
         ...(search.searchActive && search.searchQuery
           ? [[rehypeSearchText, search.searchQuery, search.caseSensitive]]
           : []),
       ] as PluggableList,
-    [highlights, search.searchActive, search.searchQuery, search.caseSensitive, readingMode],
+    [highlights, search.searchActive, search.searchQuery, search.caseSensitive],
   );
 
   return (
@@ -107,7 +106,7 @@ export default function LessonContentViewer({ search }: LessonContentViewerProps
                 span: ({ className, ...props }) => {
                   if (className?.includes('cloze-blank')) {
                     return (
-                      <ClozeBlank answer={(props as Record<string, string>).dataAnswer || ''} />
+                      <ClozeBlank answer={(props as Record<string, string>)['data-answer'] || ''} />
                     );
                   }
                   return <span className={className} {...props} />;

@@ -7,37 +7,34 @@ import ClozeBlank from './ClozeBlank';
 describe('ClozeBlank', () => {
   const user = userEvent.setup();
 
-  test('renders text input without reveal button initially', () => {
-    const { getByPlaceholderText, queryByText } = render(<ClozeBlank answer="discount" />);
-    expect(getByPlaceholderText('Type your answer...')).toBeInTheDocument();
-    expect(queryByText('Reveal')).toBeNull();
+  test('renders black block initially, answer hidden', () => {
+    const { getByRole, queryByText } = render(<ClozeBlank answer="sensory memory" />);
+    const blank = getByRole('button');
+    expect(blank).toHaveClass('cloze-blank-hidden');
+    expect(queryByText('sensory memory')).toBeNull();
   });
 
-  test('does not show reveal button when input is empty', () => {
-    const { queryByText } = render(<ClozeBlank answer="discount" />);
-    expect(queryByText('Reveal')).toBeNull();
+  test('click reveals the answer', async () => {
+    const { getByRole, getByText } = render(<ClozeBlank answer="sensory memory" />);
+    const blank = getByRole('button');
+    await user.click(blank);
+    expect(blank).toHaveClass('revealed');
+    expect(getByText('sensory memory')).toBeVisible();
   });
 
-  test('shows reveal button after typing', async () => {
-    const { getByPlaceholderText, getByText } = render(<ClozeBlank answer="discount" />);
-    await user.type(getByPlaceholderText('Type your answer...'), 'disc');
-    expect(getByText('Reveal')).toBeInTheDocument();
+  test('keyboard Enter reveals the answer', async () => {
+    const { getByRole, getByText } = render(<ClozeBlank answer="working memory" />);
+    const blank = getByRole('button');
+    blank.focus();
+    await user.keyboard('{Enter}');
+    expect(getByText('working memory')).toBeVisible();
   });
 
-  test('shows correct answer after reveal with correct input', async () => {
-    const { getByPlaceholderText, getByText, queryByPlaceholderText } = render(
-      <ClozeBlank answer="discount" />,
-    );
-    await user.type(getByPlaceholderText('Type your answer...'), 'discount');
-    await user.click(getByText('Reveal'));
-    expect(queryByPlaceholderText('Type your answer...')).toBeNull();
-    expect(getByText('discount')).toBeInTheDocument();
-  });
-
-  test('shows incorrect feedback when answer is wrong', async () => {
-    const { getByPlaceholderText, getByText } = render(<ClozeBlank answer="discount" />);
-    await user.type(getByPlaceholderText('Type your answer...'), 'wrong');
-    await user.click(getByText('Reveal'));
-    expect(getByText('discount')).toBeInTheDocument();
+  test('keyboard Space reveals the answer', async () => {
+    const { getByRole, getByText } = render(<ClozeBlank answer="attend to" />);
+    const blank = getByRole('button');
+    blank.focus();
+    await user.keyboard(' ');
+    expect(getByText('attend to')).toBeVisible();
   });
 });
