@@ -4,6 +4,7 @@ import type { GlobalStats } from '../../bun/stats';
 import type { LastSession } from '../../bun/types';
 import { api } from '../api';
 import { useCourseStore } from '../stores/courseStore';
+import { showToast } from '../toast';
 
 export function useDashboard() {
   const courses = useCourseStore((s) => s.courses);
@@ -13,12 +14,18 @@ export function useDashboard() {
 
   useEffect(() => {
     let cancelled = false;
-    void Promise.all([api.session.get(), api.stats.global()]).then(([sess, stats]) => {
-      if (cancelled) return;
-      setLastSession(sess);
-      setGlobalStats(stats);
-      setLoading(false);
-    });
+    void Promise.all([api.session.get(), api.stats.global()])
+      .then(([sess, stats]) => {
+        if (cancelled) return;
+        setLastSession(sess);
+        setGlobalStats(stats);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        showToast.error('toast.loadFailed');
+        setLoading(false);
+      });
     return () => {
       cancelled = true;
     };

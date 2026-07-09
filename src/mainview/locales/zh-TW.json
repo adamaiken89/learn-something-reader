@@ -299,7 +299,11 @@
     "progress": "進度",
     "modules": "{{count}} 個單元",
     "noCourses": "找不到課程。",
-    "addCoursesHint": "將課程資料夾加入 {{path}}"
+    "addCoursesHint": "將課程資料夾加入 {{path}}",
+    "nextUp": "下一步",
+    "nextModule": "下一步：{{module}}",
+    "courseComplete": "課程完成！🎉",
+    "continueLearning": "繼續學習"
   },
   "icons": {
     "bookmarkFilled": "★",

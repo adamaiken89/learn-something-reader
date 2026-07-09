@@ -19,13 +19,13 @@ src/
 │   ├── shortcuts.ts      # Keyboard shortcuts (single source of truth)
 │   ├── i18n.ts           # Internationalization setup
 │   ├── layouts/          # PageLayout, PageHeader, PageContent
-│   ├── pages/            # 9 pages: CourseList, ModuleList, Lesson, Quiz, Review, UserCardReview, Settings, Bookmarks, Dashboard
+│   ├── pages/            # 7 pages: Dashboard, Lesson, Quiz, Review, UserCardReview, Settings, Bookmarks
 │   ├── sections/         # Complex content: Lesson, Quiz, Review, UserCardReview
 │   ├── components/       # Leaf-level reusable UI. No routing awareness.
-│   │   ├── lesson/       # LessonToolbar, SectionsPanel, SelectionToolbar, NoteEditor, CardEditor, ColorPickerRow, NotePopover, ViewerSearch
+│   │   ├── lesson/       # LessonToolbar, NavigationPanel, SelectionToolbar, NoteEditor, CardEditor, ColorPickerRow, NotePopover, ViewerSearch
 │   │   ├── study-tools/  # NotesHighlightsTab, BookmarksTab, CardsTab, AITab
 │   │   ├── ui/           # Button, StatCard
-│   │   └── ...           # CourseSwitcher, ModuleSwitcher, ErrorBoundary, MermaidDiagram, SearchOverlay, StudyTools, PomodoroTimer
+│   │   └── ...           # CourseSwitcher, ErrorBoundary, MermaidDiagram, SearchOverlay, StudyTools, PomodoroTimer
 │   ├── hooks/            # useBookmarks, useHighlights, useLesson, useQuizEngine, useReviewState, useCardReviewState, useLessonNav, useLessonSearch, useNotes, useSelection, useShortcuts, useCourseListPage, useLessonSection, useSettingsPage
 │   └── stores/           # Zustand: viewStore, courseStore, settingsStore, pomodoroStore, bookmarksStore, completionStore, highlightsStore, lessonUIStore, notesStore, syncStore
 ├── types/                # Ambient declarations (js-yaml, three, jest-dom)

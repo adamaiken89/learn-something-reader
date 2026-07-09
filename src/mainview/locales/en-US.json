@@ -299,7 +299,11 @@
     "progress": "Progress",
     "modules": "{{count}} modules",
     "noCourses": "No courses found.",
-    "addCoursesHint": "Add course folders to {{path}}"
+    "addCoursesHint": "Add course folders to {{path}}",
+    "nextUp": "Next Up",
+    "nextModule": "Next: {{module}}",
+    "courseComplete": "Course complete! 🎉",
+    "continueLearning": "Continue"
   },
   "icons": {
     "bookmarkFilled": "★",

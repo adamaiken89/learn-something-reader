@@ -114,7 +114,7 @@ export default function App() {
   return (
     <>
       {viewContent}
-      <SearchFab onClick={() => setSearchOpen(true)} />
+      {currentView.type !== 'dashboard' && <SearchFab onClick={() => setSearchOpen(true)} />}
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
     </>
   );
