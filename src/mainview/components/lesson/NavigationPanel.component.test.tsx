@@ -1,4 +1,4 @@
-import { act } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
@@ -6,8 +6,10 @@ import type { ModuleMeta, Section } from '../../../bun/types';
 import i18n from '../../i18n';
 import { useBookmarksStore } from '../../stores/bookmarksStore';
 import { useCompletionStore } from '../../stores/completionStore';
-import { clearMocks, mockResponse, renderAndSettle, setupRPC } from '../../testUtils';
+import { clearMocks, mockResponse, setupRPC } from '../../testUtils';
 import NavigationPanel from './NavigationPanel';
+
+setupRPC();
 
 function makeSection(id: string, heading: string, level: number): Section {
   return { id, heading, level, parentID: 'root' };
@@ -36,134 +38,96 @@ beforeEach(() => {
   useCompletionStore.setState({ completed: {}, totalModules: {} });
 });
 
-setupRPC();
+function Panel(props?: Partial<Parameters<typeof NavigationPanel>[0]>) {
+  return (
+    <NavigationPanel
+      courseId={defaultCourseId}
+      moduleId={defaultModuleId}
+      moduleName="Test Module"
+      modules={defaultModules}
+      onScrollToSection={() => {}}
+      onModuleSelect={() => {}}
+      {...props}
+    />
+  );
+}
 
 describe('NavigationPanel', () => {
   const user = userEvent.setup();
 
   test('renders tab buttons', async () => {
-    const { getByText } = await renderAndSettle(
-      <NavigationPanel
-        courseId={defaultCourseId}
-        moduleId={defaultModuleId}
-        moduleName="Test Module"
-        modules={defaultModules}
-        onScrollToSection={() => {}}
-        onModuleSelect={() => {}}
-      />,
-    );
-    expect(getByText('Sections')).toBeInTheDocument();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<Panel />).getByText;
+    });
+    expect(getByText!('Sections')).toBeInTheDocument();
   });
 
   test('renders current module expanded with sections', async () => {
-    const { getByText } = await renderAndSettle(
-      <NavigationPanel
-        courseId={defaultCourseId}
-        moduleId={defaultModuleId}
-        moduleName="Test Module"
-        modules={defaultModules}
-        onScrollToSection={() => {}}
-        onModuleSelect={() => {}}
-      />,
-    );
-    // Current module should be visible and expanded
-    expect(getByText('Module 1')).toBeInTheDocument();
-    // Sections for current module should be visible (from defaultSections mock)
-    expect(getByText('Introduction')).toBeInTheDocument();
-    expect(getByText('Body Content')).toBeInTheDocument();
-    expect(getByText('Conclusion')).toBeInTheDocument();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<Panel />).getByText;
+    });
+    expect(getByText!('Module 1')).toBeInTheDocument();
+    expect(getByText!('Introduction')).toBeInTheDocument();
+    expect(getByText!('Body Content')).toBeInTheDocument();
+    expect(getByText!('Conclusion')).toBeInTheDocument();
   });
 
   test('renders all modules in tree', async () => {
-    const { getByText } = await renderAndSettle(
-      <NavigationPanel
-        courseId={defaultCourseId}
-        moduleId={defaultModuleId}
-        moduleName="Test Module"
-        modules={defaultModules}
-        onScrollToSection={() => {}}
-        onModuleSelect={() => {}}
-      />,
-    );
-    expect(getByText('Module 1')).toBeInTheDocument();
-    expect(getByText('Module 2')).toBeInTheDocument();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<Panel />).getByText;
+    });
+    expect(getByText!('Module 1')).toBeInTheDocument();
+    expect(getByText!('Module 2')).toBeInTheDocument();
   });
 
   test('clicking section calls scrollToSection', async () => {
     const scrollToSection = mock(() => {});
-    const { getByText } = await renderAndSettle(
-      <NavigationPanel
-        courseId={defaultCourseId}
-        moduleId={defaultModuleId}
-        moduleName="Test Module"
-        modules={defaultModules}
-        onScrollToSection={scrollToSection}
-        onModuleSelect={() => {}}
-      />,
-    );
-    await user.click(getByText('Introduction'));
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<Panel onScrollToSection={scrollToSection} />).getByText;
+    });
+    await user.click(getByText!('Introduction'));
     expect(scrollToSection).toHaveBeenCalledTimes(1);
     expect(scrollToSection).toHaveBeenCalledWith('intro');
   });
 
   test('current module has indigo highlight', async () => {
-    const { getByText } = await renderAndSettle(
-      <NavigationPanel
-        courseId={defaultCourseId}
-        moduleId={defaultModuleId}
-        moduleName="Test Module"
-        modules={defaultModules}
-        onScrollToSection={() => {}}
-        onModuleSelect={() => {}}
-      />,
-    );
-    expect(getByText('Module 1').closest('button')?.className).toContain('indigo');
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<Panel />).getByText;
+    });
+    expect(getByText!('Module 1').closest('button')?.className).toContain('indigo');
   });
 
   test('shows module numbers', async () => {
-    const { getByText } = await renderAndSettle(
-      <NavigationPanel
-        courseId={defaultCourseId}
-        moduleId={defaultModuleId}
-        moduleName="Test Module"
-        modules={defaultModules}
-        onScrollToSection={() => {}}
-        onModuleSelect={() => {}}
-      />,
-    );
-    expect(getByText('1')).toBeInTheDocument();
-    expect(getByText('2')).toBeInTheDocument();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<Panel />).getByText;
+    });
+    expect(getByText!('1')).toBeInTheDocument();
+    expect(getByText!('2')).toBeInTheDocument();
   });
 
   test('clicking module calls onModuleSelect', async () => {
     const onModuleSelect = mock(() => {});
-    const { getByText } = await renderAndSettle(
-      <NavigationPanel
-        courseId={defaultCourseId}
-        moduleId={defaultModuleId}
-        moduleName="Test Module"
-        modules={defaultModules}
-        onScrollToSection={() => {}}
-        onModuleSelect={onModuleSelect}
-      />,
-    );
-    await user.click(getByText('Module 2'));
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<Panel onModuleSelect={onModuleSelect} />).getByText;
+    });
+    await user.click(getByText!('Module 2'));
     expect(onModuleSelect).toHaveBeenCalledTimes(1);
     expect(onModuleSelect).toHaveBeenCalledWith(defaultModules[1], undefined);
   });
 
   test('close button renders', async () => {
-    const { container } = await renderAndSettle(
-      <NavigationPanel
-        courseId={defaultCourseId}
-        moduleId={defaultModuleId}
-        moduleName="Test Module"
-        modules={defaultModules}
-        onScrollToSection={() => {}}
-        onModuleSelect={() => {}}
-      />,
-    );
-    expect(container.querySelector('.lucide-chevron-right')).toBeInTheDocument();
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<Panel />).container;
+    });
+    expect(container!.querySelector('.lucide-chevron-right')).toBeInTheDocument();
   });
 
   test('renders session indicators when sessions exist', async () => {
@@ -176,18 +140,11 @@ describe('NavigationPanel', () => {
         updatedAt: '2024-01-01',
       },
     ]);
-    const { getByText } = await renderAndSettle(
-      <NavigationPanel
-        courseId={defaultCourseId}
-        moduleId={defaultModuleId}
-        moduleName="Test Module"
-        modules={defaultModules}
-        onScrollToSection={() => {}}
-        onModuleSelect={() => {}}
-      />,
-    );
-    // Module should still render
-    expect(getByText('Module 1')).toBeInTheDocument();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<Panel />).getByText;
+    });
+    expect(getByText!('Module 1')).toBeInTheDocument();
   });
 
   test('handleToggleSectionBookmark calls bookmark store toggle', async () => {
@@ -198,17 +155,9 @@ describe('NavigationPanel', () => {
       sectionID: 'intro',
     });
     useBookmarksStore.setState({ byModule: {} });
-    await renderAndSettle(
-      <NavigationPanel
-        courseId={defaultCourseId}
-        moduleId={defaultModuleId}
-        moduleName="Test Module"
-        modules={defaultModules}
-        onScrollToSection={() => {}}
-        onModuleSelect={() => {}}
-      />,
-    );
-    // Handler calls void toggle() — fire-and-forget. Test the store directly.
+    await act(async () => {
+      render(<Panel />);
+    });
     const { toggle } = useBookmarksStore.getState();
     await act(async () => {
       await toggle(defaultCourseId, defaultModuleId, 'Test Module – Introduction', 'intro');

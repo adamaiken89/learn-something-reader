@@ -148,8 +148,6 @@ describe('NoteEditor', () => {
     });
     const { getByText } = render(<NoteEditor />);
     await user.click(getByText('Save Note'));
-    await act(async () => {});
-    // Editor should close
     await waitFor(() => {
       expect(useSelectionStore.getState().showNoteEditor).toBe(false);
     });

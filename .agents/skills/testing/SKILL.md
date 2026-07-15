@@ -97,9 +97,12 @@ describe('Page', () => {
 
   test('snapshot — loaded', async () => {
     mockResponse('someMethod', { title: 'Loaded' });
-    const { container } = render(<Page onBack={() => {}} />);
-    await waitFor(() => expect(screen.getByText('Loaded')).toBeInTheDocument());
-    expect(container).toMatchSnapshot();
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<Page onBack={() => {}} />).container;
+    });
+    await waitFor(() => expect(container!.textContent).toContain('Loaded'));
+    expect(container!).toMatchSnapshot();
   });
 });
 ```
@@ -447,25 +450,53 @@ pushSpy.mockRestore(); // always restore
 - Testing API calls → `mockResponse()` + assert store state
 - Only mock a store method when you need call-arg verification AND must prevent side effects
 
-## act() Wrapping Rule
+## act() and Async Rendering
 
-`render()` and `renderHook()` already call `act()` — do NOT wrap them. Only wrap state mutations outside `waitFor()`.
+Components with `useEffect(() => { void asyncFn(); }, [])` fire async state updates that escape the synchronous `act()` boundary. Three patterns handle this, from simplest to most robust:
+
+### Pattern 1: `findByText`/`waitFor` (suppresses warnings via RTL's asyncWrapper)
+
+RTL's `asyncWrapper` sets `IS_REACT_ACT_ENVIRONMENT = false` before any `await`, suppressing React's act warning during the search. Best when the test only needs to assert on DOM content after async load.
 
 ```typescript
-// ✅ waitFor handles async
 test('loads data', async () => {
   render(<Component />);
-  await waitFor(() => expect(screen.getByText('Loaded')).toBeInTheDocument());
+  expect(await findByText('Loaded')).toBeInTheDocument();
 });
 ```
 
-**Never use `Bun.sleep(N)` or `setTimeout(r, N)`** — bypasses React microtask queue. Use `waitFor()`.
+### Pattern 2: Wrap `render()` in `await act()` (keeps actQueue active)
 
-**For non-React store tests**, flush microtasks:
+For components with deep async children (CourseSwitcher, QuizSection, etc.), wrapping `render()` inside `await act(async () => { ... })` keeps React's `actQueue` non-null across all async continuations — updates are queued instead of warned.
+
 ```typescript
-await new Promise(r => setTimeout(r, 0));
-expect(useStore.getState().field).toEqual(expected);
+test('renders with async children', async () => {
+  let container: HTMLElement;
+  await act(async () => {
+    container = render(<Page />).container;
+  });
+  await waitFor(() => expect(container!.textContent).toContain('loaded'));
+});
 ```
+
+### Pattern 3: Pre-set store state (skip async loads entirely)
+
+Best for testing post-load UI. Set `loaded: true` before render so the async load short-circuits.
+
+```typescript
+beforeEach(() => {
+  useCourseStore.setState({ courses: [mockCourse], loaded: true });
+});
+const { container } = render(<Page />);
+// No async load fires — courseStore.load() short-circuits at `if (get().loaded) return`
+```
+
+### Never
+
+- `await act(async () => {})` — empty act is a hack, not a fix
+- `renderSettled` / `renderAndSettle` helpers — use the patterns above instead
+- `Bun.sleep(N)` or `setTimeout(r, N)` — bypasses React microtask queue
+- `await new Promise(r => setTimeout(r, 0))` to flush — not needed with proper patterns
 
 ## Dependency Tiers
 

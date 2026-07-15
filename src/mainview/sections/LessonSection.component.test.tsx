@@ -1,4 +1,4 @@
-import { act, fireEvent, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
@@ -9,7 +9,7 @@ import { useLessonUIStore } from '../stores/lessonUIStore';
 import { useNotesStore } from '../stores/notesStore';
 import { useSelectionStore } from '../stores/selectionStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { clearMocks, deleteMock, mockResponse, renderAndSettle, setupRPC } from '../testUtils';
+import { clearMocks, deleteMock, mockResponse, setupRPC } from '../testUtils';
 import LessonSection from './LessonSection';
 
 setupRPC();
@@ -121,32 +121,51 @@ describe('LessonSection', () => {
   test('renders loading state', async () => {
     deleteMock('loadLesson');
     mockResponse('loadLesson', new Promise(() => {}));
-    const { container } = await renderAndSettle(<LessonSection {...props} />);
-    expect(container.textContent).toContain('Loading lesson');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonSection {...props} />).container;
+    });
+    await waitFor(() => expect(container!.textContent).toContain('Loading lesson'));
   });
 
   test('renders lesson content when loaded', async () => {
-    const { container } = await renderAndSettle(<LessonSection {...props} />);
-    expect(container.textContent).toContain('Test Heading');
-    expect(container.textContent).toContain('Test body content');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonSection {...props} />).container;
+    });
+    await waitFor(() => {
+      expect(container!.textContent).toContain('Test Heading');
+      expect(container!.textContent).toContain('Test body content');
+    });
   });
 
   test('renders completion button when not completed', async () => {
-    const { container } = await renderAndSettle(<LessonSection {...props} />);
-    expect(container.textContent).toContain('Mark as Complete');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonSection {...props} />).container;
+    });
+    await waitFor(() => expect(container!.textContent).toContain('Mark as Complete'));
   });
 
   test('renders completed state', async () => {
     mockResponse('isModuleCompleted', true);
-    const { container } = await renderAndSettle(<LessonSection {...props} />);
-    expect(container.textContent).toContain('Completed');
-    expect(container.textContent).not.toContain('Mark as Complete');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonSection {...props} />).container;
+    });
+    await waitFor(() => {
+      expect(container!.textContent).toContain('Completed');
+      expect(container!.textContent).not.toContain('Mark as Complete');
+    });
   });
 
   test('renders pomodoro timer when enabled', async () => {
     useLessonUIStore.setState({ showPomodoro: true });
-    const { container } = await renderAndSettle(<LessonSection {...props} />);
-    expect(container.textContent).toContain('Focus');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonSection {...props} />).container;
+    });
+    await waitFor(() => expect(container!.textContent).toContain('Focus'));
   });
 
   test('renders navigation panel when rightPanel is sections', async () => {
@@ -157,87 +176,106 @@ describe('LessonSection', () => {
       sections: [{ id: 's1', heading: 'Section One', level: 1, parentID: null }],
     });
     useSettingsStore.setState({ rightPanel: 'sections' });
-    const { container } = await renderAndSettle(<LessonSection {...props} />);
-    expect(container.textContent).toContain('Test Heading');
-    expect(container.querySelector('[data-testid="navigation-panel"]')).toBeTruthy();
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonSection {...props} />).container;
+    });
+    await waitFor(() => {
+      expect(container!.textContent).toContain('Test Heading');
+      expect(container!.querySelector('[data-testid="navigation-panel"]')).toBeTruthy();
+    });
   });
 
   test('renders viewer search when search is active via initialSearchQuery', async () => {
-    const { getByTestId } = await renderAndSettle(
-      <LessonSection {...props} initialSearchQuery="test query" />,
-    );
-    expect(getByTestId('viewer-search')).toBeTruthy();
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    await act(async () => {
+      getByTestId = render(
+        <LessonSection {...props} initialSearchQuery="test query" />,
+      ).getByTestId;
+    });
+    await waitFor(() => expect(getByTestId!('viewer-search')).toBeTruthy());
   });
 
   test('renders selection toolbar when there is a selection', async () => {
-    const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    await act(async () => {
+      getByTestId = render(<LessonSection {...props} />).getByTestId;
+    });
 
-    const contentArea = getByTestId('book-content-area');
+    const contentArea = getByTestId!('book-content-area');
     const mockSel = makeMockSelection('some selectable text', contentArea);
     const restore = installMockSelection(mockSel);
 
     await act(async () => fireEvent.mouseUp(contentArea));
 
-    await waitFor(() => {
-      expect(getByTestId('selection-toolbar')).toBeTruthy();
-    });
+    await waitFor(() => expect(getByTestId!('selection-toolbar')).toBeTruthy());
     restore();
   });
 
   test('renders note editor when open', async () => {
-    const { getByTestId, getByText } = await renderAndSettle(<LessonSection {...props} />);
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      const r = render(<LessonSection {...props} />);
+      getByTestId = r.getByTestId;
+      getByText = r.getByText;
+    });
 
-    const contentArea = getByTestId('book-content-area');
+    const contentArea = getByTestId!('book-content-area');
     const mockSel = makeMockSelection('note-worthy text', contentArea);
     const restore = installMockSelection(mockSel);
 
     await act(async () => fireEvent.mouseUp(contentArea));
 
-    await waitFor(() => {
-      expect(getByTestId('selection-toolbar')).toBeTruthy();
-    });
+    await waitFor(() => expect(getByTestId!('selection-toolbar')).toBeTruthy());
 
-    await user.click(getByText('Add Note'));
+    await user.click(getByText!('Add Note'));
 
-    await waitFor(() => {
-      expect(getByTestId('note-editor')).toBeTruthy();
-    });
+    await waitFor(() => expect(getByTestId!('note-editor')).toBeTruthy());
     restore();
   });
 
   test('renders card editor when open', async () => {
-    const { getByTestId, getByText } = await renderAndSettle(<LessonSection {...props} />);
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      const r = render(<LessonSection {...props} />);
+      getByTestId = r.getByTestId;
+      getByText = r.getByText;
+    });
 
-    const contentArea = getByTestId('book-content-area');
+    const contentArea = getByTestId!('book-content-area');
     const mockSel = makeMockSelection('card-worthy text', contentArea);
     const restore = installMockSelection(mockSel);
 
     await act(async () => fireEvent.mouseUp(contentArea));
 
-    await waitFor(() => {
-      expect(getByTestId('selection-toolbar')).toBeTruthy();
-    });
+    await waitFor(() => expect(getByTestId!('selection-toolbar')).toBeTruthy());
 
-    await user.click(getByText('Create Card'));
+    await user.click(getByText!('Create Card'));
 
-    await waitFor(() => {
-      expect(getByTestId('card-editor')).toBeTruthy();
-    });
+    await waitFor(() => expect(getByTestId!('card-editor')).toBeTruthy());
     restore();
   });
 
   test('renders navigation panel (collapsed) when sections panel hidden', async () => {
-    const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
-    expect(getByTestId('navigation-panel')).toBeInTheDocument();
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    await act(async () => {
+      getByTestId = render(<LessonSection {...props} />).getByTestId;
+    });
+    expect(getByTestId!('navigation-panel')).toBeInTheDocument();
   });
 
   test('calls handleToggleCompleted when completion button clicked', async () => {
     mockResponse('toggleModuleCompleted', true);
     mockResponse('logSession', undefined);
 
-    const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    await act(async () => {
+      getByTestId = render(<LessonSection {...props} />).getByTestId;
+    });
 
-    await user.click(getByTestId('complete-btn'));
+    await user.click(getByTestId!('complete-btn'));
 
     await waitFor(() => {
       expect(useCompletionStore.getState().completed).toHaveProperty('cs101:mod-01', true);
@@ -253,20 +291,19 @@ describe('LessonSection', () => {
       }),
     });
 
-    const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
-    const contentArea = getByTestId('book-content-area');
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    await act(async () => {
+      getByTestId = render(<LessonSection {...props} />).getByTestId;
+    });
+    const contentArea = getByTestId!('book-content-area');
     const mockSel = makeMockSelection('auto copied text', contentArea);
     const restore = installMockSelection(mockSel);
 
     await act(async () => fireEvent.mouseUp(contentArea));
 
-    await waitFor(() => {
-      expect(getByTestId('selection-toolbar')).toBeTruthy();
-    });
+    await waitFor(() => expect(getByTestId!('selection-toolbar')).toBeTruthy());
 
-    await waitFor(() => {
-      expect(clipboardText).toBe('auto copied text');
-    });
+    await waitFor(() => expect(clipboardText).toBe('auto copied text'));
 
     Object.assign(navigator.clipboard, { writeText: originalWriteText });
     restore();
@@ -281,8 +318,11 @@ describe('LessonSection', () => {
       }),
     });
 
-    const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
-    const contentDiv = getByTestId('lesson-content');
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    await act(async () => {
+      getByTestId = render(<LessonSection {...props} />).getByTestId;
+    });
+    const contentDiv = getByTestId!('lesson-content');
 
     const collapsedSel = {
       isCollapsed: true,
@@ -294,9 +334,7 @@ describe('LessonSection', () => {
 
     await act(async () => fireEvent.mouseUp(contentDiv));
 
-    await waitFor(() => {
-      expect(clipboardText).toBe('');
-    });
+    await waitFor(() => expect(clipboardText).toBe(''));
 
     Object.assign(navigator.clipboard, { writeText: originalWriteText });
     window.getSelection = origGetSelection;
@@ -313,25 +351,24 @@ describe('LessonSection', () => {
       }),
     });
 
-    const { getByTestId } = await renderAndSettle(<LessonSection {...props} />);
-    const contentArea = getByTestId('book-content-area');
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    await act(async () => {
+      getByTestId = render(<LessonSection {...props} />).getByTestId;
+    });
+    const contentArea = getByTestId!('book-content-area');
 
     const mockSel1 = makeMockSelection('first selection', contentArea);
     const restore1 = installMockSelection(mockSel1);
     await act(async () => fireEvent.mouseUp(contentArea));
 
-    await waitFor(() => {
-      expect(copyCount).toBe(0);
-    });
+    await waitFor(() => expect(copyCount).toBe(0));
 
     const mockSel2 = makeMockSelection('second selection', contentArea);
     restore1();
     const restore2 = installMockSelection(mockSel2);
     await act(async () => fireEvent.mouseUp(contentArea));
 
-    await waitFor(() => {
-      expect(copyCount).toBe(1);
-    });
+    await waitFor(() => expect(copyCount).toBe(1));
 
     expect(lastCopied).toBe('second selection');
 

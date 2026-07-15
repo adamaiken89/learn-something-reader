@@ -1,10 +1,11 @@
-import { act } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { Course, ModuleMeta } from '../../bun/types';
 import i18n from '../i18n';
 import { useSettingsStore } from '../stores/settingsStore';
-import { mockResponse, renderAndSettle, setupRPC } from '../testUtils';
+import { mockResponse, setupRPC } from '../testUtils';
 import QuizPage from './QuizPage';
 
 setupRPC();
@@ -29,6 +30,7 @@ const mockCourse: Course = {
 };
 
 describe('QuizPage', () => {
+  const user = userEvent.setup();
   const defaultProps = {
     course: mockCourse,
     module: mockModule,
@@ -44,32 +46,39 @@ describe('QuizPage', () => {
   });
 
   test('renders CourseSwitcher with currentCourseId', async () => {
-    const { container } = await renderAndSettle(<QuizPage {...defaultProps} />);
-    const switcher = container.querySelector('[data-course-id="cs101"]');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<QuizPage {...defaultProps} />).container;
+    });
+    const switcher = container!.querySelector('[data-course-id="cs101"]');
     expect(switcher).toBeTruthy();
     expect(switcher!.getAttribute('data-course-id')).toBe('cs101');
   });
 
   test('renders back button that calls onBack', async () => {
     let called = false;
-    const { getByText } = await renderAndSettle(
-      <QuizPage
-        {...defaultProps}
-        onBack={() => {
-          called = true;
-        }}
-      />,
-    );
+    let getByText: ReturnType<typeof render>['getByText'];
     await act(async () => {
-      getByText('← Back').click();
+      getByText = render(
+        <QuizPage
+          {...defaultProps}
+          onBack={() => {
+            called = true;
+          }}
+        />,
+      ).getByText;
     });
+    await user.click(getByText!('← Back'));
     expect(called).toBe(true);
   });
 
   test('snapshot — loaded', async () => {
-    const { container } = await renderAndSettle(<QuizPage {...defaultProps} />);
-    const switcher = container.querySelector('[data-course-id="cs101"]');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<QuizPage {...defaultProps} />).container;
+    });
+    const switcher = container!.querySelector('[data-course-id="cs101"]');
     expect(switcher).toBeTruthy();
-    expect(container.textContent).toContain('← Back');
+    await waitFor(() => expect(container!.textContent).toContain('← Back'));
   });
 });

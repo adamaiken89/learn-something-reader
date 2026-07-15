@@ -11,7 +11,6 @@ import {
   mermaidMockState,
   toastMockState,
 } from './testFsShared';
-
 expect.extend(jestDomMatchers);
 
 import { clearMocks } from './mainview/mockState';
@@ -28,6 +27,14 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
     disconnect() {}
   };
 }
+
+// Mock @dnd-kit/react — happy-dom lacks Document which @dnd-kit/dom requires
+void mock.module('@dnd-kit/react', () => ({
+  DragDropProvider: ({ children }: { children: React.ReactNode }) => children,
+  DragOverlay: () => null,
+  useDraggable: () => ({ ref: () => {}, isDragging: false }),
+  useDroppable: () => ({ ref: () => {}, isDropTarget: false }),
+}));
 
 class MockElectroview {
   constructor(_config: Record<string, unknown>) {}
@@ -215,6 +222,7 @@ afterEach(() => {
   resetAllStores();
   document.body.innerHTML = '';
   localStorage.clear();
+  resetAllStores();
   Object.assign(fsMockImpl, {
     existsSync: () => false,
     readFileSync: (_path: string) => '',

@@ -1,9 +1,10 @@
+import { act, render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { UseLessonSearchReturn } from '../../hooks/useLessonSearch';
 import { useLessonViewStore } from '../../stores/lessonViewStore';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { mockResponse, renderAndSettle, setupRPC } from '../../testUtils';
+import { mockResponse, setupRPC } from '../../testUtils';
 import LessonContentViewer from './LessonContentViewer';
 
 setupRPC();
@@ -51,44 +52,41 @@ function createMockSearch(overrides?: Partial<UseLessonSearchReturn>): UseLesson
 describe('LessonContentViewer', () => {
   test('does not render search bar (handled by LessonSection)', async () => {
     useLessonViewStore.setState({ searchTrigger: 1 });
-
-    const { container } = await renderAndSettle(
-      <LessonContentViewer
-        search={createMockSearch({ searchActive: true, searchQuery: 'test' })}
-      />,
-    );
-
-    const scrollContainer = container.querySelector('[data-testid="lesson-content"]');
-    expect(scrollContainer).toBeInTheDocument();
-
-    expect(container.querySelector('[data-testid="viewer-search"]')).not.toBeInTheDocument();
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(
+        <LessonContentViewer
+          search={createMockSearch({ searchActive: true, searchQuery: 'test' })}
+        />,
+      ).container;
+    });
+    expect(container!.querySelector('[data-testid="lesson-content"]')).toBeInTheDocument();
+    expect(container!.querySelector('[data-testid="viewer-search"]')).not.toBeInTheDocument();
   });
 
   test('does not render search bar when search inactive', async () => {
-    const { container } = await renderAndSettle(
-      <LessonContentViewer search={createMockSearch()} />,
-    );
-    expect(container.querySelector('[data-testid="viewer-search"]')).not.toBeInTheDocument();
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonContentViewer search={createMockSearch()} />).container;
+    });
+    expect(container!.querySelector('[data-testid="viewer-search"]')).not.toBeInTheDocument();
   });
 
   test('renders lesson content with markdown', async () => {
-    const { container } = await renderAndSettle(
-      <LessonContentViewer search={createMockSearch()} />,
-    );
-    expect(container.querySelector('[data-testid="lesson-content"]')).toBeInTheDocument();
-    // markdown content rendered
-    expect(container.textContent).toContain('Content here');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonContentViewer search={createMockSearch()} />).container;
+    });
+    expect(container!.querySelector('[data-testid="lesson-content"]')).toBeInTheDocument();
+    await waitFor(() => expect(container!.textContent).toContain('Content here'));
   });
-
-  // ClozeBlank rendering tested separately in ClozeBlank.component.test.tsx
-  // and rehypeCloze.test.ts — react-markdown is mocked here so rehype plugins don't run
 
   test('handleScroll no-ops when contentRef.current is null', async () => {
     useLessonViewStore.setState({ contentRef: { current: null } });
-    // Should not throw
-    const { container } = await renderAndSettle(
-      <LessonContentViewer search={createMockSearch()} />,
-    );
-    expect(container.querySelector('[data-testid="lesson-content"]')).toBeInTheDocument();
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonContentViewer search={createMockSearch()} />).container;
+    });
+    expect(container!.querySelector('[data-testid="lesson-content"]')).toBeInTheDocument();
   });
 });

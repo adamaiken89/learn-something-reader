@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { describe, expect, test } from 'bun:test';
 
 import { useClipboardFallback } from './useClipboardFallback';
@@ -19,51 +19,65 @@ describe('useClipboardFallback', () => {
     unmount();
   });
 
-  test('handles Ctrl+A on input — selects all', () => {
+  test('handles Ctrl+A on input — selects all', async () => {
     const input = document.createElement('input');
     input.value = 'hello world';
     document.body.appendChild(input);
     input.focus();
-    input.setSelectionRange(3, 5);
 
-    renderHook(() => useClipboardFallback());
+    await act(async () => {
+      renderHook(() => useClipboardFallback());
+    });
 
-    const event = fireKeydown({ key: 'a', ctrl: true });
-    window.dispatchEvent(event);
+    let event: KeyboardEvent;
+    await act(async () => {
+      event = fireKeydown({ key: 'a', ctrl: true });
+      window.dispatchEvent(event!);
+    });
 
-    expect(event.defaultPrevented).toBe(true);
+    expect(event!.defaultPrevented).toBe(true);
     expect(input.selectionStart).toBe(0);
     expect(input.selectionEnd).toBe(11);
 
     document.body.removeChild(input);
   });
 
-  test('ignores non-input focus', () => {
+  test('ignores non-input focus', async () => {
     const btn = document.createElement('button');
     document.body.appendChild(btn);
     btn.focus();
 
-    renderHook(() => useClipboardFallback());
+    await act(async () => {
+      renderHook(() => useClipboardFallback());
+    });
 
-    const event = fireKeydown({ key: 'a', ctrl: true });
-    window.dispatchEvent(event);
+    let event: KeyboardEvent;
+    await act(async () => {
+      event = fireKeydown({ key: 'a', ctrl: true });
+      window.dispatchEvent(event!);
+    });
 
-    expect(event.defaultPrevented).toBe(false);
+    expect(event!.defaultPrevented).toBe(false);
 
     document.body.removeChild(btn);
   });
 
-  test('ignores non-modifier key', () => {
+  test('ignores non-modifier key', async () => {
     const input = document.createElement('input');
     document.body.appendChild(input);
     input.focus();
 
-    renderHook(() => useClipboardFallback());
+    await act(async () => {
+      renderHook(() => useClipboardFallback());
+    });
 
-    const event = fireKeydown({ key: 'a' });
-    window.dispatchEvent(event);
+    let event: KeyboardEvent;
+    await act(async () => {
+      event = fireKeydown({ key: 'a' });
+      window.dispatchEvent(event!);
+    });
 
-    expect(event.defaultPrevented).toBe(false);
+    expect(event!.defaultPrevented).toBe(false);
 
     document.body.removeChild(input);
   });

@@ -94,7 +94,7 @@ export default function QuizOverlay({ onClose }: Props) {
                             push({ type: 'clozeQuiz', course, module: mod });
                             onClose();
                           }}
-                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+                          className="px-2 py-0.5 text-[10px] font-medium rounded bg-indigo-600/30 text-indigo-300 hover:bg-indigo-500/50 transition-colors"
                         >
                           Cloze
                         </button>

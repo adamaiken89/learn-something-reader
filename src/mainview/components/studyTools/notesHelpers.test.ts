@@ -112,4 +112,58 @@ describe('findSectionIdForHighlight', () => {
     expect(result).toEqual({ id: 'custom-id', heading: 'Custom Heading' });
     document.body.removeChild(c2);
   });
+
+  test('walks up to ancestor when no prevSibling', () => {
+    const c2 = makeContainer(`
+      <div>
+        <p>Text <mark data-highlight-id="h3">word</mark></p>
+      </div>
+    `);
+    document.body.appendChild(c2);
+    const ref = { current: c2 };
+    const result = findSectionIdForHighlight(ref, 'h3', []);
+    expect(result).toBeNull();
+    document.body.removeChild(c2);
+  });
+
+  test('finds heading inside nested prevSibling', () => {
+    const c2 = makeContainer(`
+      <div>
+        <div><h3 id="nested">Nested Heading</h3></div>
+        <p>Text <mark data-highlight-id="h4">word</mark></p>
+      </div>
+    `);
+    document.body.appendChild(c2);
+    const ref = { current: c2 };
+    const result = findSectionIdForHighlight(ref, 'h4', []);
+    expect(result).toEqual({ id: 'nested', heading: 'Nested Heading' });
+    document.body.removeChild(c2);
+  });
+
+  test('falls back to sections array by heading text when heading has no id', () => {
+    const c2 = makeContainer(`
+      <h2>No ID Heading</h2>
+      <p>Text <mark data-highlight-id="h5">word</mark></p>
+    `);
+    document.body.appendChild(c2);
+    const ref = { current: c2 };
+    const result = findSectionIdForHighlight(ref, 'h5', [
+      { id: 'found-by-text', heading: 'No ID Heading', level: 2, parentID: null },
+    ]);
+    expect(result).toEqual({ id: 'found-by-text', heading: 'No ID Heading' });
+    document.body.removeChild(c2);
+  });
+
+  test('returns null when no heading found anywhere', () => {
+    const c2 = makeContainer(`
+      <div>
+        <p>Just text <mark data-highlight-id="h6">word</mark></p>
+      </div>
+    `);
+    document.body.appendChild(c2);
+    const ref = { current: c2 };
+    const result = findSectionIdForHighlight(ref, 'h6', []);
+    expect(result).toBeNull();
+    document.body.removeChild(c2);
+  });
 });

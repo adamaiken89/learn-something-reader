@@ -1,10 +1,11 @@
-import { render } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { Course, ModuleMeta } from '../../bun/types';
 import i18n from '../i18n';
 import { useSettingsStore } from '../stores/settingsStore';
-import { clearMocks, mockResponse, renderAndSettle, setupRPC } from '../testUtils';
+import { clearMocks, mockResponse, setupRPC } from '../testUtils';
 import ClozeQuizPage from './ClozeQuizPage';
 
 setupRPC();
@@ -29,6 +30,7 @@ const mockCourse: Course = {
 };
 
 describe('ClozeQuizPage', () => {
+  const user = userEvent.setup();
   const defaultProps = {
     course: mockCourse,
     module: mockModule,
@@ -45,35 +47,47 @@ describe('ClozeQuizPage', () => {
 
   test('snapshot — loading', () => {
     mockResponse('loadClozeQuiz', new Promise(() => {}));
+    mockResponse('getLastQuizSession', new Promise(() => {}));
     const { container } = render(<ClozeQuizPage {...defaultProps} />);
     expect(container.textContent).toContain('Module 1');
     expect(container.textContent).toContain('Cloze Drill');
   });
 
   test('snapshot — loaded', async () => {
-    const { container } = await renderAndSettle(<ClozeQuizPage {...defaultProps} />);
-    expect(container.textContent).toContain('Module 1');
-    expect(container.textContent).toContain('Cloze Drill');
-    expect(container.querySelector('.animate-pulse')).toBeNull();
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<ClozeQuizPage {...defaultProps} />).container;
+    });
+    expect(container!.textContent).toContain('Module 1');
+    await waitFor(() => {
+      expect(container!.textContent).toContain('Cloze Drill');
+      expect(container!.querySelector('.animate-pulse')).toBeNull();
+    });
   });
 
   test('renders module name in header', async () => {
-    const { container } = await renderAndSettle(<ClozeQuizPage {...defaultProps} />);
-    expect(container.textContent).toContain('Module 1');
-    expect(container.textContent).toContain('Cloze Drill');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<ClozeQuizPage {...defaultProps} />).container;
+    });
+    expect(container!.textContent).toContain('Module 1');
+    await waitFor(() => expect(container!.textContent).toContain('Cloze Drill'));
   });
 
   test('calls onBack when back button clicked', async () => {
     let called = false;
-    const { getByText } = await renderAndSettle(
-      <ClozeQuizPage
-        {...defaultProps}
-        onBack={() => {
-          called = true;
-        }}
-      />,
-    );
-    getByText('← Back').click();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(
+        <ClozeQuizPage
+          {...defaultProps}
+          onBack={() => {
+            called = true;
+          }}
+        />,
+      ).getByText;
+    });
+    await user.click(getByText!('← Back'));
     expect(called).toBe(true);
   });
 });

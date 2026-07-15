@@ -1,5 +1,6 @@
 import { render, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, test } from 'bun:test';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, spyOn, test } from 'bun:test';
 
 import i18n from '../i18n';
 import { useCompletionStore } from '../stores/completionStore';
@@ -25,6 +26,7 @@ const mockCourse = {
 };
 
 describe('DashboardPage', () => {
+  const user = userEvent.setup();
   beforeEach(() => {
     void i18n.changeLanguage('en-US');
     clearMocks();
@@ -122,6 +124,42 @@ describe('DashboardPage', () => {
       expect(container.textContent).toContain('Intro to CS');
     });
     expect(container.textContent).toContain('Dashboard');
+    expect(container.querySelector('.animate-pulse')).toBeNull();
+  });
+
+  test('opens search overlay when search button clicked', async () => {
+    const { container } = render(<DashboardPage />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('Dashboard');
+    });
+    const searchBtn = container.querySelector('button[title*="Search"]')!;
+    await user.click(searchBtn);
+    await waitFor(() => {
+      expect(container.querySelector('input[placeholder*="Search"]')).toBeTruthy();
+    });
+  });
+
+  test('clicking settings button navigates to settings', async () => {
+    const { useViewStore } = await import('../stores/viewStore');
+    const pushSpy = spyOn(useViewStore.getState(), 'push');
+    const { container } = render(<DashboardPage />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('Dashboard');
+    });
+    const settingsBtn = Array.from(container.querySelectorAll('button')).find(
+      (b) => b.getAttribute('title') === 'Settings',
+    )!;
+    await user.click(settingsBtn);
+    expect(pushSpy).toHaveBeenCalledWith({ type: 'settings' });
+    pushSpy.mockRestore();
+  });
+
+  test('renders course grid when courses exist', async () => {
+    useCourseStore.setState({ courses: [mockCourse] });
+    const { container } = render(<DashboardPage />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('Intro to CS');
+    });
     expect(container.querySelector('.animate-pulse')).toBeNull();
   });
 });

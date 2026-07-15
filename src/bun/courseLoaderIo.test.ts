@@ -234,3 +234,62 @@ describe('saveSRSDeck', () => {
     expect(written.cards['test-1-q1'].question).toBe('Q?');
   });
 });
+
+describe('getQuizIndex', () => {
+  test('returns modules with mcq/cloze flags + cumulative quizzes', async () => {
+    loader = await import('./courseLoader');
+    mockState.modulesDirEntries = [
+      { name: '01-intro', isDirectory: () => true },
+      { name: '02-variables', isDirectory: () => true },
+      { name: '03-control-flow', isDirectory: () => true },
+    ];
+    // Use dynamic readdirSync that returns different content per path
+    Object.assign(fsMockImpl, {
+      readdirSync: (path: string) => {
+        if (path.endsWith('/test/modules')) return mockState.modulesDirEntries;
+        if (path.endsWith('/test'))
+          return [
+            { name: 'cumulative_quiz_05.yaml', isFile: () => true, isDirectory: () => false },
+            { name: 'cumulative_quiz.yaml', isFile: () => true, isDirectory: () => false },
+            { name: 'syllabus.yaml', isFile: () => true, isDirectory: () => false },
+            { name: 'modules', isFile: () => false, isDirectory: () => true },
+          ];
+        return [];
+      },
+      existsSync: (path: string) => {
+        if (path.endsWith('/test')) return true;
+        if (path.endsWith('/test/modules')) return true;
+        if (path.endsWith('/01-intro/quiz.yaml')) return true;
+        if (path.endsWith('/02-variables/quiz.yaml')) return true;
+        if (path.endsWith('/02-variables/cloze.yaml')) return true;
+        if (path.endsWith('/03-control-flow/cloze.yaml')) return true;
+        return false;
+      },
+    });
+    const index = loader.getQuizIndex('test');
+    expect(index.modules).toEqual({
+      '01-intro': { mcq: true, cloze: false },
+      '02-variables': { mcq: true, cloze: true },
+      '03-control-flow': { mcq: false, cloze: true },
+    });
+    expect(index.cumulativeQuizzes).toContainEqual({
+      id: 'cumulative_quiz_05.yaml',
+      milestone: 5,
+    });
+    expect(index.cumulativeQuizzes).toContainEqual({
+      id: 'cumulative_quiz.yaml',
+      milestone: 3,
+    });
+  });
+
+  test('returns empty index when no modules dir', async () => {
+    loader = await import('./courseLoader');
+    Object.assign(fsMockImpl, {
+      existsSync: () => false,
+      readdirSync: () => [],
+    });
+    const index = loader.getQuizIndex('test');
+    expect(index.modules).toEqual({});
+    expect(index.cumulativeQuizzes).toEqual([]);
+  });
+});

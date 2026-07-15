@@ -1,10 +1,10 @@
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { Course } from '../../bun/types';
 import i18n from '../i18n';
 import { useSettingsStore } from '../stores/settingsStore';
-import { clearMocks, mockResponse, renderAndSettle, setupRPC } from '../testUtils';
+import { clearMocks, mockResponse, setupRPC } from '../testUtils';
 import CumulativeQuizPage from './CumulativeQuizPage';
 
 setupRPC();
@@ -55,27 +55,33 @@ describe('CumulativeQuizPage', () => {
         },
       ],
     });
-    const { container } = await renderAndSettle(<CumulativeQuizPage {...defaultProps} />);
-    expect(container.textContent).toContain('CS 101');
+    const { container } = render(<CumulativeQuizPage {...defaultProps} />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('CS 101');
+    });
     expect(container.textContent).toContain('Cumulative Review');
   });
 
   test('shows course name and Cumulative Review in header', async () => {
-    const { container } = await renderAndSettle(<CumulativeQuizPage {...defaultProps} />);
-    expect(container.textContent).toContain('CS 101');
+    const { container } = render(<CumulativeQuizPage {...defaultProps} />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('CS 101');
+    });
     expect(container.textContent).toContain('Cumulative Review');
   });
 
   test('shows range label for cumulativeQuizId', async () => {
-    const { container } = await renderAndSettle(
+    const { container } = render(
       <CumulativeQuizPage {...defaultProps} cumulativeQuizId="cumulative_quiz_01-03.yaml" />,
     );
-    expect(container.textContent).toContain('01–03');
+    await waitFor(() => {
+      expect(container.textContent).toContain('01–03');
+    });
   });
 
   test('calls onBack when back button clicked', async () => {
     let called = false;
-    const { getByText } = await renderAndSettle(
+    const { getByText } = render(
       <CumulativeQuizPage
         {...defaultProps}
         onBack={() => {
@@ -83,6 +89,9 @@ describe('CumulativeQuizPage', () => {
         }}
       />,
     );
+    await waitFor(() => {
+      expect(getByText('← Back')).toBeInTheDocument();
+    });
     getByText('← Back').click();
     expect(called).toBe(true);
   });

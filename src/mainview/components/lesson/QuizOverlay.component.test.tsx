@@ -1,10 +1,10 @@
-import { fireEvent } from '@testing-library/react';
+import { act, fireEvent, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { Course } from '../../../bun/types';
 import { useViewStore } from '../../stores/viewStore';
-import { clearMocks, mockResponse, renderAndSettle, setupRPC } from '../../testUtils';
+import { clearMocks, mockResponse, setupRPC } from '../../testUtils';
 
 setupRPC();
 import QuizOverlay from './QuizOverlay';
@@ -49,37 +49,56 @@ describe('QuizOverlay', () => {
 
   test('renders module quiz buttons', async () => {
     setup();
-    const { getAllByText, getByText } = await renderAndSettle(<QuizOverlay onClose={() => {}} />);
-    expect(getAllByText('MCQ').length).toBeGreaterThan(0);
-    expect(getByText('Intro')).toBeInTheDocument();
-    expect(getByText('Variables')).toBeInTheDocument();
-    expect(getByText('Functions')).toBeInTheDocument();
+    let getAllByText: ReturnType<typeof render>['getAllByText'];
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      const r = render(<QuizOverlay onClose={() => {}} />);
+      getAllByText = r.getAllByText;
+      getByText = r.getByText;
+    });
+    await waitFor(() => {
+      expect(getAllByText!('MCQ').length).toBeGreaterThan(0);
+    });
+    expect(getByText!('Intro')).toBeInTheDocument();
+    expect(getByText!('Variables')).toBeInTheDocument();
+    expect(getByText!('Functions')).toBeInTheDocument();
   });
 
   test('shows cloze buttons only for modules with cloze quiz', async () => {
     setup();
-    const { getAllByText } = await renderAndSettle(<QuizOverlay onClose={() => {}} />);
-    const btns = getAllByText('Cloze');
-    expect(btns).toHaveLength(2);
+    let getAllByText: ReturnType<typeof render>['getAllByText'];
+    await act(async () => {
+      getAllByText = render(<QuizOverlay onClose={() => {}} />).getAllByText;
+    });
+    await waitFor(() => {
+      expect(getAllByText!('Cloze')).toHaveLength(2);
+    });
   });
 
   test('shows cumulative START button', async () => {
     setup();
-    const { getByText } = await renderAndSettle(<QuizOverlay onClose={() => {}} />);
-    expect(getByText('START')).toBeInTheDocument();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<QuizOverlay onClose={() => {}} />).getByText;
+    });
+    await waitFor(() => expect(getByText!('START')).toBeInTheDocument());
   });
 
   test('MCQ click pushes quiz view and closes overlay', async () => {
     setup();
     let closed = false;
-    const { getAllByText } = await renderAndSettle(
-      <QuizOverlay
-        onClose={() => {
-          closed = true;
-        }}
-      />,
-    );
-    await user.click(getAllByText('MCQ')[0]);
+    let getAllByText: ReturnType<typeof render>['getAllByText'];
+    await act(async () => {
+      getAllByText = render(
+        <QuizOverlay
+          onClose={() => {
+            closed = true;
+          }}
+        />,
+      ).getAllByText;
+    });
+    await waitFor(() => expect(getAllByText!('MCQ').length).toBeGreaterThan(0));
+    await user.click(getAllByText!('MCQ')[0]);
     const views = useViewStore.getState().views;
     expect(views[views.length - 1].type).toBe('quiz');
     expect(closed).toBe(true);
@@ -88,14 +107,18 @@ describe('QuizOverlay', () => {
   test('Cloze click pushes clozeQuiz view and closes overlay', async () => {
     setup();
     let closed = false;
-    const { getAllByText } = await renderAndSettle(
-      <QuizOverlay
-        onClose={() => {
-          closed = true;
-        }}
-      />,
-    );
-    await user.click(getAllByText('Cloze')[0]);
+    let getAllByText: ReturnType<typeof render>['getAllByText'];
+    await act(async () => {
+      getAllByText = render(
+        <QuizOverlay
+          onClose={() => {
+            closed = true;
+          }}
+        />,
+      ).getAllByText;
+    });
+    await waitFor(() => expect(getAllByText!('Cloze').length).toBeGreaterThan(0));
+    await user.click(getAllByText!('Cloze')[0]);
     const views = useViewStore.getState().views;
     expect(views[views.length - 1].type).toBe('clozeQuiz');
     expect(closed).toBe(true);
@@ -103,8 +126,12 @@ describe('QuizOverlay', () => {
 
   test('START click pushes cumulativeQuiz view with milestone', async () => {
     setup();
-    const { getByText } = await renderAndSettle(<QuizOverlay onClose={() => {}} />);
-    await user.click(getByText('START'));
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<QuizOverlay onClose={() => {}} />).getByText;
+    });
+    await waitFor(() => expect(getByText!('START')).toBeInTheDocument());
+    await user.click(getByText!('START'));
     const views = useViewStore.getState().views;
     expect(views[views.length - 1].type).toBe('cumulativeQuiz');
   });
@@ -112,14 +139,17 @@ describe('QuizOverlay', () => {
   test('Escape key calls onClose', async () => {
     setup();
     let closed = false;
-    const { container } = await renderAndSettle(
-      <QuizOverlay
-        onClose={() => {
-          closed = true;
-        }}
-      />,
-    );
-    const overlay = container.querySelector('[data-testid="overlay-backdrop"]')!.parentElement!;
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(
+        <QuizOverlay
+          onClose={() => {
+            closed = true;
+          }}
+        />,
+      ).container;
+    });
+    const overlay = container!.querySelector('[data-testid="overlay-backdrop"]')!.parentElement!;
     expect(overlay).toBeTruthy();
     fireEvent.keyDown(overlay, { key: 'Escape' });
     expect(closed).toBe(true);
@@ -128,15 +158,18 @@ describe('QuizOverlay', () => {
   test('backdrop click calls onClose', async () => {
     setup();
     let closed = false;
-    const { getByTestId } = await renderAndSettle(
-      <QuizOverlay
-        onClose={() => {
-          closed = true;
-        }}
-      />,
-    );
-    expect(getByTestId('overlay-backdrop')).toBeTruthy();
-    await user.click(getByTestId('overlay-backdrop'));
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    await act(async () => {
+      getByTestId = render(
+        <QuizOverlay
+          onClose={() => {
+            closed = true;
+          }}
+        />,
+      ).getByTestId;
+    });
+    expect(getByTestId!('overlay-backdrop')).toBeTruthy();
+    await user.click(getByTestId!('overlay-backdrop'));
     expect(closed).toBe(true);
   });
 
@@ -145,7 +178,10 @@ describe('QuizOverlay', () => {
       views: [{ type: 'lesson', course, module: course.modules[0] }],
     });
     mockResponse('quizIndex', { modules: {}, cumulativeQuizzes: [] });
-    const { getByText } = await renderAndSettle(<QuizOverlay onClose={() => {}} />);
-    expect(getByText(/No quizzes available/i)).toBeInTheDocument();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<QuizOverlay onClose={() => {}} />).getByText;
+    });
+    await waitFor(() => expect(getByText!(/No quizzes available/i)).toBeInTheDocument());
   });
 });

@@ -1,10 +1,13 @@
+import { act, render, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { ModuleMeta } from '../../bun/types';
+import i18n from '../i18n';
 import { useCourseStore } from '../stores/courseStore';
 import { useLessonUIStore } from '../stores/lessonUIStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import { mockResponse, renderAndSettle, setupRPC } from '../testUtils';
+import { mockResponse, setupRPC } from '../testUtils';
 import LessonPage from './LessonPage';
 
 setupRPC();
@@ -32,7 +35,15 @@ const mockCourse = {
 const ui = <LessonPage course={mockCourse} module={mockModule} onBack={() => {}} />;
 
 describe('LessonPage', () => {
+  const user = userEvent.setup();
+
   beforeEach(() => {
+    Object.defineProperty(window, 'innerWidth', {
+      value: 1024,
+      writable: true,
+      configurable: true,
+    });
+    void i18n.changeLanguage('en-US');
     mockResponse('loadLesson', {
       content: '# Test',
       h1: '',
@@ -66,39 +77,69 @@ describe('LessonPage', () => {
   });
 
   test('renders module badge with current position', async () => {
-    const { container } = await renderAndSettle(ui);
-    expect(container.textContent).toContain('M1/1');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(ui).container;
+    });
+    await waitFor(() => expect(container!.textContent).toContain('M1/1'));
   });
 
   test('hides LessonToolbar in normal mode', async () => {
-    const { container } = await renderAndSettle(ui);
-    expect(container.querySelector('[data-testid="lesson-toolbar"]')).toBeNull();
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(ui).container;
+    });
+    await waitFor(() => {
+      expect(container!.querySelector('[data-testid="lesson-toolbar"]')).toBeNull();
+    });
   });
 
   test('calls onBack when back button clicked', async () => {
     let called = false;
-    const { getByText } = await renderAndSettle(
-      <LessonPage
-        course={mockCourse}
-        module={mockModule}
-        onBack={() => {
-          called = true;
-        }}
-      />,
-    );
-    getByText('← Back').click();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(
+        <LessonPage
+          course={mockCourse}
+          module={mockModule}
+          onBack={() => {
+            called = true;
+          }}
+        />,
+      ).getByText;
+    });
+    await user.click(getByText!('← Back'));
     expect(called).toBe(true);
   });
 
   test('renders back button', async () => {
-    const { getByText } = await renderAndSettle(ui);
-    expect(getByText('← Back')).toBeInTheDocument();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(ui).getByText;
+    });
+    expect(getByText!('← Back')).toBeInTheDocument();
   });
 
   test('snapshot — loaded', async () => {
-    const { container } = await renderAndSettle(ui);
-    expect(container.textContent).toContain('M1/1');
-    expect(container.textContent).toContain('← Back');
-    expect(container.querySelector('[data-testid="markdown"]')).toBeTruthy();
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(ui).container;
+    });
+    await waitFor(() => {
+      expect(container!.textContent).toContain('M1/1');
+      expect(container!.textContent).toContain('← Back');
+      expect(container!.querySelector('[data-testid="markdown"]')).toBeTruthy();
+    });
+  });
+
+  test('shows LessonToolbar in focus mode', async () => {
+    useSettingsStore.setState({ focusMode: true });
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(ui).container;
+    });
+    await waitFor(() => {
+      expect(container!.querySelector('[data-testid="lesson-toolbar"]')).toBeTruthy();
+    });
   });
 });

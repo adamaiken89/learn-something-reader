@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { parseCourse, parseQuiz, parseSections } from './courseLoader';
+import { parseCourse, parseCumulativeQuiz, parseQuiz, parseSections } from './courseLoader';
 import { createSRSCard, performReview } from './srs';
 import type { QuizQuestion, SRSCard } from './types';
 
@@ -361,5 +361,42 @@ describe('performReview', () => {
     const result = performReview(baseCard, true, fixedDate);
     expect(original.repetitions).toBe(0);
     expect(result.repetitions).toBe(1);
+  });
+});
+
+describe('parseCumulativeQuiz', () => {
+  test('parses valid YAML sequence into questions', () => {
+    const yaml = `
+- type: mcq
+  question: What is X?
+  options:
+    A: "1"
+    B: "2"
+    C: "3"
+  answer: A
+- type: cloze
+  text: The {answer} is 42
+  answer: answer
+- type: tf
+  question: Is this true?
+  answer: True
+`;
+    const result = parseCumulativeQuiz(yaml);
+    expect(result.questions).toHaveLength(3);
+    expect(result.questions[0].type).toBeUndefined();
+    expect(result.questions[1].type).toBe('cloze');
+    expect(result.questions[2].type).toBe('tf');
+  });
+
+  test('returns empty array for empty input', () => {
+    expect(parseCumulativeQuiz('').questions).toEqual([]);
+  });
+
+  test('returns empty array for non-sequence YAML', () => {
+    expect(parseCumulativeQuiz('key: value').questions).toEqual([]);
+  });
+
+  test('returns empty array for invalid YAML', () => {
+    expect(parseCumulativeQuiz('[[[').questions).toEqual([]);
   });
 });

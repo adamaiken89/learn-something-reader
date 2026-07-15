@@ -1,7 +1,8 @@
 import path from 'path';
 import { defineConfig, type Plugin } from 'vite';
 
-import react from '@vitejs/plugin-react';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
+import babel from '@rolldown/plugin-babel';
 
 function mockViewPlugin(): Plugin {
   const enabled = process.env.VITE_E2E === 'true';
@@ -24,10 +25,9 @@ function mockViewPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [
-    react({
-      babel: {
-        plugins: [['babel-plugin-react-compiler', {}]],
-      },
+    react(),
+    babel({
+      presets: [reactCompilerPreset()],
     }),
     mockViewPlugin(),
   ],
