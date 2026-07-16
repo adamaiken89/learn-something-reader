@@ -13,11 +13,13 @@ function isEditable(el: Element | null): boolean {
 
 function exec(cmd: string, el: Element): void {
   try {
-    document.execCommand(cmd);
+    const ok = document.execCommand(cmd);
+    if (ok) return;
   } catch {
-    if (cmd === 'selectAll' && 'select' in el) {
-      (el as HTMLInputElement | HTMLTextAreaElement).select();
-    }
+    /* execCommand threw */
+  }
+  if (cmd === 'selectAll' && 'select' in el) {
+    (el as HTMLInputElement | HTMLTextAreaElement).select();
   }
 }
 
