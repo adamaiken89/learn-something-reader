@@ -25,7 +25,7 @@ export default function QuizPage({ course, module, onBack }: QuizPageProps) {
           />
         }
       />
-      <PageContent className="quiz-bg">
+      <PageContent className="px-6 quiz-bg">
         <QuizSection course={course} module={module} />
       </PageContent>
     </PageLayout>

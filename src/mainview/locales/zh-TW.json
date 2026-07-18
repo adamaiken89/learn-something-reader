@@ -73,7 +73,10 @@
     "cumulativeQuiz": "綜合複習",
     "quizMCQ": "選擇題",
     "quizCloze": "填空題",
-    "quizCumulative": "綜合測驗"
+    "quizCumulative": "綜合測驗",
+    "warmUpCount": "有 {{count}} 張卡片待複習",
+    "warmUpReview": "立即複習",
+    "warmUpDismiss": "忽略"
   },
   "viewerSearch": {
     "placeholder": "在頁面中搜尋...",
@@ -329,7 +332,8 @@
     "nextUp": "下一步",
     "nextModule": "下一步：{{module}}",
     "courseComplete": "課程完成！🎉",
-    "continueLearning": "繼續學習"
+    "continueLearning": "繼續學習",
+    "srsDue": "有 {{count}} 張卡片待複習"
   },
   "icons": {
     "themeDark": "🌙",

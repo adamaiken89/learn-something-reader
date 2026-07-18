@@ -1,7 +1,10 @@
 import { BrowserView, BrowserWindow, Updater, Utils } from 'electrobun/bun';
 import type { AppSchema } from './rpcSchema';
 import * as CourseLoader from './courseLoader';
-import * as Storage from './storage';
+import * as Annotations from './persistence-annotations';
+import { clearAllData } from './persistence';
+import * as Progress from './persistence-progress';
+import * as UserCards from './persistence-usercards';
 import { processLessonMarkdown } from './lessonMarkdown';
 import {
   getDueCardsForCourse,
@@ -70,6 +73,11 @@ const rpc = BrowserView.defineRPC<AppSchema>({
         }
       },
 
+      getDueCardsCount: ({ courseId }) => {
+        const deck = CourseLoader.loadSRSDeck(courseId);
+        return getDueCardsForCourse(deck, courseId).length;
+      },
+
       toggleSRSStar: ({ courseId, cardId }) => {
         const deck = CourseLoader.loadSRSDeck(courseId);
         const updated = toggleStar(deck, cardId);
@@ -97,61 +105,62 @@ const rpc = BrowserView.defineRPC<AppSchema>({
 
       quizStart: ({ courseId, moduleId }) => CourseLoader.loadQuiz(courseId, moduleId),
 
-      getHighlights: ({ courseID, moduleID }) => Storage.getHighlightsForModule(courseID, moduleID),
+      getHighlights: ({ courseID, moduleID }) =>
+        Annotations.getHighlightsForModule(courseID, moduleID),
 
       addHighlight: ({ courseID, moduleID, selectedText, startOffset, endOffset, color }) =>
-        Storage.addHighlight(courseID, moduleID, selectedText, startOffset, endOffset, color),
+        Annotations.addHighlight(courseID, moduleID, selectedText, startOffset, endOffset, color),
 
       deleteHighlight: async ({ id }) => {
-        Storage.deleteHighlight(id);
+        Annotations.deleteHighlight(id);
         return { ok: true as const };
       },
 
-      addAnnotation: (data) => Storage.addAnnotation(data),
+      addAnnotation: (data) => Annotations.addAnnotation(data),
 
-      getNotes: ({ courseID, moduleID }) => Storage.getNotesForModule(courseID, moduleID),
+      getNotes: ({ courseID, moduleID }) => Annotations.getNotesForModule(courseID, moduleID),
 
       addNote: ({ courseID, moduleID, content, highlightID, sectionID }) =>
-        Storage.addNote(courseID, moduleID, content, highlightID, sectionID),
+        Annotations.addNote(courseID, moduleID, content, highlightID, sectionID),
 
       updateNote: async ({ id, content }) => {
-        Storage.updateNote(id, content);
+        Annotations.updateNote(id, content);
         return { ok: true as const };
       },
 
       deleteNote: async ({ id }) => {
-        Storage.deleteNote(id);
+        Annotations.deleteNote(id);
         return { ok: true as const };
       },
 
-      getAllBookmarks: () => Storage.getAllBookmarks(),
+      getAllBookmarks: () => Annotations.getAllBookmarks(),
 
-      getCourseBookmarks: ({ courseID }) => Storage.getBookmarksForCourse(courseID),
+      getCourseBookmarks: ({ courseID }) => Annotations.getBookmarksForCourse(courseID),
 
       getModuleBookmarks: ({ courseID, moduleID }) =>
-        Storage.getBookmarksForModule(courseID, moduleID),
+        Annotations.getBookmarksForModule(courseID, moduleID),
 
       addBookmark: ({ courseID, moduleID, title, sectionID, scrollPosition }) =>
-        Storage.addBookmark(courseID, moduleID, title, sectionID, scrollPosition),
+        Annotations.addBookmark(courseID, moduleID, title, sectionID, scrollPosition),
 
       deleteBookmark: async ({ id }) => {
-        Storage.deleteBookmark(id);
+        Annotations.deleteBookmark(id);
         return { ok: true as const };
       },
 
-      checkBookmark: ({ courseID, moduleID }) => Storage.isBookmarked(courseID, moduleID),
+      checkBookmark: ({ courseID, moduleID }) => Annotations.isBookmarked(courseID, moduleID),
 
-      isModuleCompleted: ({ courseID, moduleID }) => Storage.isModuleCompleted(courseID, moduleID),
+      isModuleCompleted: ({ courseID, moduleID }) => Progress.isModuleCompleted(courseID, moduleID),
 
       toggleModuleCompleted: ({ courseID, moduleID }) =>
-        Storage.toggleModuleCompleted(courseID, moduleID),
+        Progress.toggleModuleCompleted(courseID, moduleID),
 
-      getCompletedModuleIDs: ({ courseID }) => Storage.getCompletedModuleIDs(courseID),
+      getCompletedModuleIDs: ({ courseID }) => Progress.getCompletedModuleIDs(courseID),
 
-      getCompletedModuleCount: ({ courseID }) => Storage.getCompletedModuleCount(courseID),
+      getCompletedModuleCount: ({ courseID }) => Progress.getCompletedModuleCount(courseID),
 
       clearAllData: async () => {
-        Storage.clearAllData();
+        clearAllData();
         return { ok: true as const };
       },
 
@@ -161,7 +170,7 @@ const rpc = BrowserView.defineRPC<AppSchema>({
       },
 
       logSession: async ({ courseID, moduleID, durationMinutes, type, score, total }) => {
-        Storage.addStudySession({ courseID, moduleID, durationMinutes, type, score, total });
+        Progress.addStudySession({ courseID, moduleID, durationMinutes, type, score, total });
         return { ok: true as const };
       },
 
@@ -170,10 +179,10 @@ const rpc = BrowserView.defineRPC<AppSchema>({
       getGlobalStats: () => Stats.getGlobalStats(),
 
       getLastQuizSession: ({ courseID, moduleID }) =>
-        Storage.getLastQuizSession(courseID, moduleID),
+        Progress.getLastQuizSession(courseID, moduleID),
 
       getSyncStatus: () => {
-        const config = Storage.getSyncConfig();
+        const config = Progress.getSyncConfig();
         return {
           lastSyncTime: config.lastSyncTime,
           lastSyncedCommit: config.lastSyncedCommit,
@@ -185,44 +194,44 @@ const rpc = BrowserView.defineRPC<AppSchema>({
       syncStart: async ({ force }) => Sync.syncCourses(force),
 
       syncSetURL: async ({ remoteRepoURL }) => {
-        Storage.saveSyncConfig({ remoteRepoURL });
+        Progress.saveSyncConfig({ remoteRepoURL });
         return { ok: true as const };
       },
 
-      getUserCards: ({ courseId, moduleId }) => Storage.getUserCards(courseId, moduleId),
+      getUserCards: ({ courseId, moduleId }) => UserCards.getUserCards(courseId, moduleId),
 
       addUserCard: ({ courseId, moduleId, front, back }) =>
-        Storage.addUserCard(courseId, moduleId, front, back),
+        UserCards.addUserCard(courseId, moduleId, front, back),
 
       deleteUserCard: async ({ id }) => {
-        Storage.deleteUserCard(id);
+        UserCards.deleteUserCard(id);
         return { ok: true as const };
       },
 
-      reviewUserCard: ({ id, correct }) => Storage.reviewUserCard(id, correct),
+      reviewUserCard: ({ id, correct }) => UserCards.reviewUserCard(id, correct),
 
-      toggleUserCardStar: ({ id }) => Storage.toggleUserCardStar(id),
+      toggleUserCardStar: ({ id }) => UserCards.toggleUserCardStar(id),
 
-      getLastSession: () => Storage.getLastSession(),
+      getLastSession: () => Progress.getLastSession(),
 
       setLastSession: async (session) => {
-        Storage.setLastSession(session);
+        Progress.setLastSession(session);
         return { ok: true as const };
       },
 
       clearLastSession: async () => {
-        Storage.clearLastSession();
+        Progress.clearLastSession();
         return { ok: true as const };
       },
 
-      getModuleSession: ({ courseId, moduleId }) => Storage.getModuleSession(courseId, moduleId),
+      getModuleSession: ({ courseId, moduleId }) => Progress.getModuleSession(courseId, moduleId),
 
       setModuleSession: async (session) => {
-        Storage.setModuleSession(session);
+        Progress.setModuleSession(session);
         return { ok: true as const };
       },
 
-      getCourseModuleSessions: ({ courseId }) => Storage.getCourseModuleSessions(courseId),
+      getCourseModuleSessions: ({ courseId }) => Progress.getCourseModuleSessions(courseId),
 
       setWindowTitle: async ({ title }) => {
         mainWindow?.setTitle(title);

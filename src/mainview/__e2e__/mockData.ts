@@ -554,7 +554,7 @@ function getLesson(_courseId: string, _moduleId: string) {
     h1: 'Getting Started',
     meta: [],
     sections: SECTIONS,
-    bodyContent: LESSON_MARKDOWN,
+    bodyContent: LESSON_MARKDOWN.replace(/^# .*\n+/, ''),
   };
 }
 
@@ -591,6 +591,7 @@ function getGlobalStats(): GlobalStats {
     totalCompletedModules: 2,
     totalStudyMinutes: 240,
     streak: 3,
+    totalSrsDueCount: 5,
     courseSummaries: [
       {
         courseID: 'intro-programming',

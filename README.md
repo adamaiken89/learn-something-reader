@@ -5,7 +5,7 @@
 <h1 align="center">CourseReader</h1>
 
 <p align="center">
-  Desktop study app for structured curricula with quizzes, spaced repetition, and persistent annotations.
+  Desktop study app for structured curricula with quizzes, spaced repetition, AI study tools, and persistent annotations.
 </p>
 
 <p align="center">
@@ -16,12 +16,14 @@
 
 ## Features
 
-- **Course reading** — structured curricula with book-like prose, 18 themes, adjustable font size, section navigation, and in-lesson search
-- **Module quizzes** — MCQs per module with instant scoring
-- **Spaced repetition** — SM-2 flashcard deck with due/starred/all filters + custom user cards
+- **Course reading** — structured curricula with book-like prose, 18 themes, adjustable font size, page transitions, section navigation, and in-lesson search
+- **Quizzes** — MCQ, cloze drill, and cumulative review quizzes with instant scoring and confetti
+- **Spaced repetition** — FSRS-5 flashcard deck with due/starred/all filters + custom user cards
+- **AI study tools** — Feynman Explain, Reframe, and Drill skills that copy prompts to Perplexity (zero setup, no API key)
 - **Annotations** — persistent highlights, notes, and bookmarks per module
 - **Search** — ⌘K global search across lessons, notes, and highlights with section-level scroll-to
 - **Study tools** — pomodoro timer, focus mode, per-course/global stats, keyboard shortcuts
+- **Internationalization** — 4 locales (English US/GB, 繁體中文, 简体中文)
 
 See [`docs/`](docs/) for detailed architecture, conventions, and reading experience.
 
@@ -47,25 +49,6 @@ bun test               # run all tests (bun:test + happy-dom)
 bun run check          # tsc + eslint + prettier
 bun run knip           # find unused code/exports/dependencies
 ```
-
-## Subjects
-
-| Subject                   | Modules |
-| ------------------------- | ------- |
-| Advanced React 19         | 20      |
-| External Library Patterns | 40      |
-| Fixed Income              | 22      |
-| GraphQL Deep Dive         | 20      |
-| Modern CSS with React     | 17      |
-| Zustand State Management  | 21      |
-
-Subjects live in `subjects/<id>/` with syllabus, modules, and SRS deck.
-
-## Course content
-
-Default course content: <https://github.com/adamaiken89/course-content>
-
-Paste or copy link in Settings → Remote Content input box.
 
 ## Tech stack
 

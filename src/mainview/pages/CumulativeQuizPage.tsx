@@ -30,7 +30,7 @@ export default function CumulativeQuizPage({ course, cumulativeQuizId, onBack }:
           </span>
         }
       />
-      <PageContent className="quiz-bg">
+      <PageContent className="px-6 quiz-bg">
         <CumulativeQuizSection course={course} cumulativeQuizId={cumulativeQuizId} />
       </PageContent>
     </PageLayout>

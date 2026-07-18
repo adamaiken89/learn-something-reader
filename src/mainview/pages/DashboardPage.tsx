@@ -48,7 +48,7 @@ export default function DashboardPage() {
     return (
       <PageLayout>
         <PageHeader title={t('dashboard.title')} actions={headerActions} />
-        <PageContent className="py-4 px-4">
+        <PageContent className="px-6 py-4">
           <div className="animate-pulse space-y-4">
             <div className="h-24 bg-gray-700/50 rounded-lg" />
             <div className="h-16 bg-gray-700/50 rounded-lg" />
@@ -66,7 +66,7 @@ export default function DashboardPage() {
   return (
     <PageLayout>
       <PageHeader title={t('dashboard.title')} actions={headerActions} />
-      <PageContent className="py-4">
+      <PageContent className="px-6 py-4">
         <div className="anim-fade-in-up">
           {lastSession && <ResumeCard lastSession={lastSession} />}
         </div>

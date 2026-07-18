@@ -73,7 +73,10 @@
     "cumulativeQuiz": "综合复习",
     "quizMCQ": "选择题",
     "quizCloze": "填空题",
-    "quizCumulative": "综合测验"
+    "quizCumulative": "综合测验",
+    "warmUpCount": "有 {{count}} 张卡片待复习",
+    "warmUpReview": "立即复习",
+    "warmUpDismiss": "忽略"
   },
   "viewerSearch": {
     "placeholder": "在页面中搜索...",
@@ -329,7 +332,8 @@
     "nextUp": "下一步",
     "nextModule": "下一步：{{module}}",
     "courseComplete": "课程完成！🎉",
-    "continueLearning": "继续学习"
+    "continueLearning": "继续学习",
+    "srsDue": "有 {{count}} 张卡片待复习"
   },
   "icons": {
     "themeDark": "🌙",

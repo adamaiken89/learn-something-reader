@@ -73,7 +73,11 @@
     "cumulativeQuiz": "Cumulative Review",
     "quizMCQ": "MCQ",
     "quizCloze": "Cloze",
-    "quizCumulative": "Cumulative"
+    "quizCumulative": "Cumulative",
+    "warmUpCount_one": "{{count}} card due for review",
+    "warmUpCount_other": "{{count}} cards due for review",
+    "warmUpReview": "Review Now",
+    "warmUpDismiss": "Dismiss"
   },
   "viewerSearch": {
     "placeholder": "Find in page...",
@@ -329,7 +333,9 @@
     "nextUp": "Next Up",
     "nextModule": "Next: {{module}}",
     "courseComplete": "Course complete! 🎉",
-    "continueLearning": "Continue"
+    "continueLearning": "Continue",
+    "srsDue_one": "{{count}} card due for review",
+    "srsDue_other": "{{count}} cards due for review"
   },
   "icons": {
     "themeDark": "🌙",

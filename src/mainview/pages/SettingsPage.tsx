@@ -29,7 +29,7 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
   return (
     <PageLayout>
       <PageHeader onBack={onBack} title={t('common.settings')} hideHeaderActions />
-      <PageContent>
+      <PageContent className="px-6">
         <div className="py-8">
           {/* Preferences */}
           <div className="anim-fade-in-up" style={{ animationDelay: '60ms' }}>

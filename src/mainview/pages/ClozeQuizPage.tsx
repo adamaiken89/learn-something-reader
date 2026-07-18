@@ -19,7 +19,7 @@ export default function ClozeQuizPage({ course, module, onBack }: Props) {
           <span className="text-sm font-medium text-gray-300">{module.name} — Cloze Drill</span>
         }
       />
-      <PageContent className="quiz-bg">
+      <PageContent className="px-6 quiz-bg">
         <ClozeQuizSection course={course} module={module} />
       </PageContent>
     </PageLayout>

@@ -26,7 +26,7 @@ export default function ResumeCard({ lastSession }: { lastSession: LastSession }
     const mid = lastSession.module.id;
     void Promise.all([
       api.quiz.hasCloze(cid, mid).catch(() => false),
-      api.quiz.index(cid).catch(null),
+      api.quiz.index(cid).catch(() => null),
     ]).then(([cloze, quizIndex]) => {
       setHasCloze(cloze);
       const moduleNum = parseInt(mid, 10);

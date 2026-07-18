@@ -54,7 +54,7 @@ export default function BookmarksPage({ onBack, onOpen }: Props) {
         }
         hideHeaderActions
       />
-      <PageContent className="py-8">
+      <PageContent className="px-6 py-8">
         {bookmarks.length === 0 ? (
           <p className="text-center text-gray-500 py-12">{t('bookmarks.noBookmarks')}</p>
         ) : (

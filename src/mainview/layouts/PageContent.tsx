@@ -9,7 +9,7 @@ export default function PageContent({ children, className = '' }: PageContentPro
   return (
     <main
       data-testid="page-content"
-      className={`overflow-y-auto flex-1 flex flex-col px-6 min-h-0 ${className}`}
+      className={`overflow-y-auto flex-1 flex flex-col min-h-0 ${className}`}
     >
       {children}
     </main>

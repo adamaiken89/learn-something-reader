@@ -61,6 +61,7 @@ export const api = {
       get: (courseId: string) => request(() => _rpcRequest.getSRSDeck({ courseId })),
       filter: (courseId: string, filter: string) =>
         request(() => _rpcRequest.filterSRSCards({ courseId, filter })),
+      dueCount: (courseId: string) => request(() => _rpcRequest.getDueCardsCount({ courseId })),
       toggleStar: (courseId: string, cardId: string) =>
         request(() => _rpcRequest.toggleSRSStar({ courseId, cardId })),
       review: (courseId: string, cardId: string, correct: boolean, deck: SRSDeck) =>

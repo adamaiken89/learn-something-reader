@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, mock, spyOn, test } from 'bun:test';
 
 import { fsMockImpl, mockExecSyncImpl } from '../testFsShared';
-import { invalidateCache } from './storage';
+import { invalidateCache } from './persistence';
 import * as utilsModule from './utils';
 
 const mockExistsSync = mock<(p: string) => boolean>();

@@ -56,6 +56,13 @@ export default function StatsBar({ stats }: { stats: NonNullable<GlobalStats> })
           label={t('dashboard.courses')}
         />
       </div>
+      {stats.totalSrsDueCount > 0 && (
+        <div className="mt-2 pt-2 border-t border-gray-700/50 flex items-center justify-center">
+          <span className="text-[10px] text-amber-400">
+            {t('dashboard.srsDue', { count: stats.totalSrsDueCount })}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

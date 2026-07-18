@@ -11,7 +11,7 @@ import {
 import { join } from 'path';
 
 import { logger } from './logger';
-import { getSyncConfig, saveSyncConfig } from './storage';
+import { getSyncConfig, saveSyncConfig } from './persistence-progress';
 import * as utilsModule from './utils';
 
 const TMP_DIR = join(process.env.HOME || '', '.coursereader', 'tmp-sync');

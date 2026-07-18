@@ -1,7 +1,7 @@
 import { describe, expect, test, beforeEach } from 'bun:test';
 
 import { fsMockImpl } from '../testFsShared';
-import { invalidateCache } from './storage';
+import { invalidateCache } from './persistence';
 
 const mockSyllabi: Record<string, string> = {};
 const mockDirEntries: Array<{ name: string; isDirectory: () => boolean }> = [];

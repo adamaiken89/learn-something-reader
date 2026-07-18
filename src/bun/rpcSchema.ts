@@ -63,6 +63,7 @@ type CourseRequests = {
 type SRSRequests = {
   getSRSDeck: { params: { courseId: string }; response: SRSDeck };
   filterSRSCards: { params: { courseId: string; filter: string }; response: SRSCard[] };
+  getDueCardsCount: { params: { courseId: string }; response: number };
   toggleSRSStar: { params: { courseId: string; cardId: string }; response: SRSDeck };
   reviewSRSCard: {
     params: { courseId: string; cardId: string; correct: boolean; deck: SRSDeck };

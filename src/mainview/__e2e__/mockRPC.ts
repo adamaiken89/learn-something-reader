@@ -31,6 +31,7 @@ const HANDLERS: Record<string, MockHandler> = {
   // SRS
   getSRSDeck: () => ({ cards: {} }),
   filterSRSCards: () => [],
+  getDueCardsCount: () => 0,
   toggleSRSStar: () => ({ cards: {} }),
   reviewSRSCard: () => null,
   createSRSCard: () => null,

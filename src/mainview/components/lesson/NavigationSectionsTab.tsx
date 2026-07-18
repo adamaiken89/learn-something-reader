@@ -2,6 +2,7 @@ import { Check, ChevronDown, ChevronRight, Circle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { headingId } from '../../../bun/lessonMarkdown';
 import type { ModuleMeta, ModuleSession, Section } from '../../../bun/types';
 import { api } from '../../api';
 import { logger } from '../../logger';
@@ -29,6 +30,7 @@ export default function NavigationSectionsTab({
 }: Props) {
   const { t } = useTranslation();
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+  const [collapseCurrent, setCollapseCurrent] = useState(false);
   const [allSections, setAllSections] = useState<Record<string, Section[]>>({});
   const [moduleSessions, setModuleSessions] = useState<Record<string, ModuleSession>>({});
   const sectionsRef = useRef<HTMLDivElement>(null);
@@ -56,6 +58,7 @@ export default function NavigationSectionsTab({
   }, [courseId, modules]);
 
   useEffect(() => {
+    setCollapseCurrent(false);
     setExpandedModules((prev) => {
       if (prev.has(moduleId)) return prev;
       return new Set(prev).add(moduleId);
@@ -90,10 +93,12 @@ export default function NavigationSectionsTab({
     <div className="overflow-y-auto flex-1" ref={sectionsRef}>
       {modules.map((mod) => {
         const isCurrent = mod.id === moduleId;
-        const isExpanded = isCurrent || expandedModules.has(mod.id);
+        const isExpanded = isCurrent ? !collapseCurrent : expandedModules.has(mod.id);
         const isCompleted = completed[`${courseId}:${mod.id}`] ?? false;
         const modSections = allSections[mod.id] ?? [];
-        const displaySections = modSections.filter((s) => s.level > 1);
+        const displaySections = modSections.filter(
+          (s) => s.level > 1 && !['Drill', 'Feynman Explain', 'Reframe'].includes(s.heading),
+        );
         return (
           <div key={mod.id}>
             <button
@@ -102,8 +107,11 @@ export default function NavigationSectionsTab({
                 if (!isCurrent) {
                   const s = moduleSessions[`${courseId}:${mod.id}`];
                   onModuleSelect(mod, s?.sectionId ?? undefined);
+                  toggleExpand(mod.id);
+                  return;
                 }
-                toggleExpand(mod.id);
+                onScrollToSection(headingId(mod.name));
+                setCollapseCurrent(true);
               }}
               title={mod.name}
               className={`w-full text-left px-2 py-1.5 text-xs transition-colors flex items-start ${
