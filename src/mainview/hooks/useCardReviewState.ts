@@ -26,6 +26,8 @@ interface UseCardReviewStateReturn<TCard> {
   setFilter: (f: FilterMode) => void;
   handleReview: (correct: boolean) => Promise<void>;
   handleToggleStar: () => Promise<void>;
+  goPrev: () => void;
+  goNext: () => void;
   reload: () => void;
 }
 
@@ -97,6 +99,20 @@ export function useCardReviewState<TCard>(
     setCards((prev) => prev.map((c) => (c === card ? updated : c)));
   };
 
+  const goPrev = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((i) => i - 1);
+      setShowAnswer(false);
+    }
+  };
+
+  const goNext = () => {
+    if (currentIndex < cards.length - 1) {
+      setCurrentIndex((i) => i + 1);
+      setShowAnswer(false);
+    }
+  };
+
   const currentCard = cards[currentIndex];
 
   const accuracy = sessionReviewed > 0 ? sessionCorrect / sessionReviewed : 0;
@@ -118,6 +134,8 @@ export function useCardReviewState<TCard>(
     },
     handleReview,
     handleToggleStar,
+    goPrev,
+    goNext,
     reload: () => loadCards(filter),
   };
 }

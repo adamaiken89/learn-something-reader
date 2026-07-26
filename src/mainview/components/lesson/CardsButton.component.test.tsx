@@ -27,11 +27,11 @@ beforeEach(() => {
 describe('CardsButton', () => {
   const user = userEvent.setup();
 
-  test('pushes userCardReview on click', async () => {
+  test('pushes review on click', async () => {
     const { getByText } = render(<CardsButton />);
     await user.click(getByText(/Cards/));
     const views = useViewStore.getState().views;
-    expect(views[views.length - 1].type).toBe('userCardReview');
+    expect(views[views.length - 1].type).toBe('review');
   });
 
   test('does nothing without course', async () => {

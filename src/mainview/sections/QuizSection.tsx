@@ -40,8 +40,8 @@ export default function QuizSection({ course, module }: Props) {
   const nextQuestion = useQuizStore((s) => s.nextQuestion);
   const skipQuestion = useQuizStore((s) => s.skipQuestion);
   const retry = useQuizStore((s) => s.retry);
-
-  const [highlightedIdx, setHighlightedIdx] = useState(-1);
+  const highlightedIdx = useQuizStore((s) => s.highlightedIdx);
+  const setHighlightedIdx = useQuizStore((s) => s.setHighlightedIdx);
   const [previousSession, setPreviousSession] = useState<StudySession | null>(null);
 
   useEffect(() => {

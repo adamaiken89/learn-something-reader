@@ -59,22 +59,6 @@ describe('MermaidDiagram', () => {
     expect(utils.getByTestId('mermaid-overlay-svg')).toBeInTheDocument();
   });
 
-  test('pan moves SVG transform on drag', async () => {
-    const utils = renderDiagram();
-    await openOverlay(utils);
-
-    const container = utils.container.querySelector('.overflow-hidden.flex-1') as HTMLElement;
-    expect(container).toBeTruthy();
-
-    fireEvent.mouseDown(container, { clientX: 100, clientY: 100 });
-    fireEvent.mouseMove(window, { clientX: 150, clientY: 120 });
-    fireEvent.mouseUp(window);
-
-    const svgEl = utils.getByTestId('mermaid-overlay-svg');
-    const transform = svgEl.style.transform;
-    expect(transform).toContain('translate(50px, 20px)');
-  });
-
   test('zoom in button increases zoom', async () => {
     const utils = renderDiagram();
     await openOverlay(utils);

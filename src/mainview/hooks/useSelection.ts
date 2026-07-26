@@ -13,7 +13,6 @@ export function useSelection(scrollContainerRef?: RefObject<HTMLElement | null>)
     useShallow((s) => ({
       showToolbar: s.showToolbar,
       showNoteEditor: s.showNoteEditor,
-      showCardEditor: s.showCardEditor,
       noteText: s.noteText,
       selection: s.selection,
       pickerPos: s.pickerPos,
@@ -21,11 +20,9 @@ export function useSelection(scrollContainerRef?: RefObject<HTMLElement | null>)
       handleTextSelection: s.handleTextSelection,
       setSelectedHighlight: s.setSelectedHighlight,
       openNoteEditor: s.openNoteEditor,
-      openCardEditor: s.openCardEditor,
       setNoteText: s.setNoteText,
       closeToolbar: s.closeToolbar,
       closeNoteEditor: s.closeNoteEditor,
-      closeCardEditor: s.closeCardEditor,
       updatePickerPos: s.updatePickerPos,
     })),
   );
@@ -64,7 +61,7 @@ export function useSelection(scrollContainerRef?: RefObject<HTMLElement | null>)
             const toolbar = document.querySelector('[data-testid="selection-toolbar"]');
             if (toolbar?.contains(active)) return;
             const st = useSelectionStore.getState();
-            if (st.showNoteEditor || st.showCardEditor) return;
+            if (st.showNoteEditor) return;
             st.resetSelection();
           }
         });

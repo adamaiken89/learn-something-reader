@@ -23,7 +23,10 @@ export default function LessonWarmUpBar({ courseId }: { courseId: string }) {
       setDismissed(true);
       return;
     }
-    api.courses.srs.dueCount(courseId).then(setDueCount).catch(() => setDueCount(0));
+    api.courses.srs
+      .dueCount(courseId)
+      .then(setDueCount)
+      .catch(() => setDueCount(0));
   }, [courseId, dismissKey, today]);
 
   const handleDismiss = () => {

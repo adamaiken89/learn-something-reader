@@ -17,7 +17,6 @@ import type {
   SRSCard,
   SRSDeck,
   StudySession,
-  UserCard,
 } from './types';
 
 interface LessonResponse {
@@ -161,23 +160,11 @@ type SyncRequests = {
   syncSetURL: { params: { remoteRepoURL: string }; response: { ok: true } };
 };
 
-type UserCardRequests = {
-  getUserCards: { params: { courseId?: string; moduleId?: string }; response: UserCard[] };
-  addUserCard: {
-    params: { courseId: string; moduleId: string; front: string; back: string };
-    response: UserCard;
-  };
-  deleteUserCard: { params: { id: string }; response: { ok: true } };
-  reviewUserCard: { params: { id: string; correct: boolean }; response: UserCard | null };
-  toggleUserCardStar: { params: { id: string }; response: UserCard | null };
-};
-
 export type AppRequests = CourseRequests &
   SRSRequests &
   AnnotationRequests &
   ProgressRequests &
-  SyncRequests &
-  UserCardRequests & {
+  SyncRequests & {
     clearAllData: { params: void; response: { ok: true } };
     clearLogs: { params: void; response: { ok: true } };
     setWindowTitle: { params: { title: string }; response: { ok: true } };

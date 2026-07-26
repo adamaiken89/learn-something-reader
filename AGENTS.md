@@ -157,7 +157,7 @@ All 3 skills are single-turn output generators (not dialogues). Clip-browser del
 
 | Skill | AI persona | Output |
 |-------|-----------|--------|
-| Feynman Explain | Curious 12-year-old | 2-3 clarifying questions targeting jargon/assumptions/leaps |
+| Feynman Explain | Curious 12-year-old | Prompt instructs user to type explanation above pre-filled text, then send. AI asks 3-5 clarifying questions. Single-message Feynman workaround for chat UI. |
 | Reframe | Socratic coach | Alternative reframe + strength/weakness analysis (3 sections) |
 | Drill | Quizmaster | 5 practice questions (2 recall, 2 application, 1 analysis) |
 
@@ -177,7 +177,15 @@ Lesson markdown can include `## Feynman Explain`, `## Reframe`, `## Drill` headi
 
 ### System browser (Utils.openExternal)
 
-`copyPrompt()` (`ai/utils.ts`) copies prompt to clipboard, opens Perplexity in system browser via RPC (`api.shell.openExternal`). Backend calls `Utils.openExternal(url)` from `electrobun/bun`. Prompt appended as `?q=` URL param (sliced 15000 chars) for auto-fill. Full prompt on clipboard for long prompts.
+`copyPrompt()` (`ai/utils.ts`) copies prompt to clipboard, opens Perplexity in system browser via RPC (`api.shell.openExternal`). Backend calls `Utils.openExternal(url)` from `electrobun/bun`. Prompt appended as `?q=` URL param (sliced 6000 chars) for auto-fill. Full prompt on clipboard for long prompts. 6000 avoids HTTP 431 from URL + header size exceeding server/proxy limits.
+
+### Happy-dom event propagation limitation
+
+`setup.tsx:128-130` uses happy-dom `Window`. happy-dom NOT reliably bubble `KeyboardEvent` from `document.body` → `window`. Affects all `window.addEventListener('keydown', handler)` tests.
+
+**Fix**: Use `pressKey(key)` from `testUtils.ts` instead of `user.keyboard('{Key}')`. `pressKey` dispatches directly on `window` via `window.dispatchEvent(new KeyboardEvent(...))` wrapped in `act`. Bypasses bubbling issue.
+
+Use `user.keyboard()` only for tests needing focus management. For raw `window.addEventListener` dispatch, `pressKey()` is more reliable.
 
 ### Pedagogical notes
 
@@ -205,13 +213,18 @@ Prompts in `ai/skills.ts` are English-only (AI persona instructions stay English
 | Module cloze | `modules/N/cloze.yaml` (yaml sequence, `text` field with `{term}` markers) | ClozeQuizPage | ClozeQuizSection | `clozeQuiz` |
 | Cumulative | `cumulative_quiz.yaml` (hybrid: `source_modules: [N]` mapping + sequence) | CumulativeQuizPage | CumulativeQuizSection | `cumulativeQuiz` |
 
+### Quiz page headers
+
+All study pages (QuizPage, ClozeQuizPage, CumulativeQuizPage, ReviewPage) use shared `QuizHeader` (`components/QuizHeader.tsx`): wraps `PageHeader` with `onBack` + CourseSwitcher centered + optional `title` (left slot, after back divider). `title` shows module/course name + quiz type via i18n. Keys: `lesson.clozeQuiz` ("Cloze Drill"), `lesson.cumulativeQuiz` ("Cumulative Review"), `common.quiz` — NOTE these live in the **lesson** block, NOT `quiz.*` (quiz block only has engine strings like loadingQuiz/noQuestions). CumulativeQuizPage appends `displayLabel(id)` range suffix ` (01–03)` parsed from `cumulative_quiz_NN-NN.yaml`. Page tests mounting QuizHeader must `mockResponse('coursesList', [])` (CourseSwitcher fetches course list; mockRPC rejects unmocked methods).
+
 ### Quiz section architecture
 
 - **QuizSection** (`sections/QuizSection.tsx`): Full quiz with MCQ grid + cloze input. Uses `useQuizEngine()` (default loader → `api.quiz.start()`).
-- **ClozeQuizSection** (`sections/ClozeQuizSection.tsx`): Cloze-only (text input). Uses `useQuizEngine()` (default loader → `api.quiz.cloze()`).
+- **ClozeQuizSection** (`sections/ClozeQuizSection.tsx`): Cloze-only drag-and-drop. Manages own state (no `useQuizEngine` — dnd-kit flow differs from MCQ engine). Drag tokens into `{term}` blanks; wrong drop flashes red, only correct drops fill.
 - **CumulativeQuizSection** (`sections/CumulativeQuizSection.tsx`): Mixed MCQ + cloze + TF. Uses `useQuizEngine(courseId, quizId, loader)` with custom loader → `api.quiz.cumulative()`.
 - **All three** share `QuizCompletionView` for post-quiz summary (confetti, SVG score ring, filter tabs, review cards).
 - **TF questions**: parser auto-fills `options: { True: 'True', False: 'False' }` when type=`tf` and options empty. Rendered as 2-button MCQ grid.
+- **Cloze scoring**: `cloze.yaml` `answer` field holds only FIRST `{term}`; multi-blank questions need all terms. `ClozeQuizSection` exports `clozeAnswers(q)` (parses all `{term}`s from question text, falls back to `[q.answer]`) and `clozeCorrect(q, ua)` (compares against comma-joined parsed answers). Stored user answer is comma-joined full blank set — NEVER compare cloze against `q.answer` alone or multi-blank questions score wrong.
 
 ### useQuizEngine custom loader
 
@@ -227,12 +240,19 @@ const { status, questions, score, ... } = useQuizEngine(course.id, quizId, loade
 
 ### Cumulative quiz format
 
-`cumulative_quiz.yaml` is hybrid YAML: a mapping (for `source_modules`) followed by a sequence (for questions). Custom `parseCumulativeQuiz()` function (`courseLoader.ts`) splits at the first `- ` line and parses each section separately — no library can parse both as a single document.
+Two formats exist in the wild:
+1. **Pure YAML sequence** (`- id: ...` at top level) — parses to array directly. (equity-trading, llm-moe-cot, learning-methods-deep)
+2. **Hybrid mapping** (`source_modules: [..]` then `questions:` key with nested list) — custom `yaml.ts` parser returns a mapping object. (llm-basics)
+
+`parseCumulativeQuiz()` (`courseLoader.ts`) handles BOTH: if parse result is an array → map questions; if it's an object with `questions` array → map those; else empty. Do NOT assume one format — `!Array.isArray(raw) → empty` silently killed hybrid courses.
+
+### Default quiz resolution
+
+`loadCumulativeQuiz(courseId, id?)` — when `id` omitted (LessonContentViewer/SyllabusPage push `{type:'cumulativeQuiz', course}` with NO `cumulativeQuizId`), resolves via `resolveDefaultCumulativeQuiz(coursesDir, courseId)`: plain `cumulative_quiz.yaml` wins; else first numbered file (`cumulative_quiz_1-4.yaml` sorted by range start); else null → empty. Overlay (QuizOverlay START) always passes explicit `cq.id` from `getQuizIndex`.
 
 ### Milestones
 
-- `courseLoader.getCumulativeQuizMilestones(courseId)` returns `number[]` (last element of `source_modules`).
-- `CumulativeQuizSection` (`sections/CumulativeQuizSection.tsx`): Matching mixed MCQ/cloze/TF. TF questions rendered as 2-option MCQ. Same completion view with score ring and filtering.
+- `CumulativeQuizSection` (`sections/CumulativeQuizSection.tsx`): Matching mixed MCQ/cloze/TF. TF questions rendered as 2-option MCQ. Same completion view with score ring and filtering. NOTE: `getCumulativeQuizMilestones` does NOT exist in code (AGENTS.md earlier claimed it did) — `QuizOverlay` shows cumulative quizzes from `getQuizIndex`.
 
 ## Content area button conventions
 - Buttons inside `.book-content` (lesson viewer) must use `font-sans` to break from serif prose inheritance
@@ -266,4 +286,13 @@ Key invariants:
 - **Page/test files must call `setupRPC()`** at module level. Without it, RPC handler defaults to `Promise.resolve(null)` (works only if another test file happened to call it first — fragile ordering dependence).
 - **Store state pollution across test files**: zustand stores persist in-memory. `resetAllStores()` in `src/setup.tsx` afterEach resets all 12 stores to initial state via `src/mainview/resetStores.ts`. Uses `createRequire` (sync) to avoid electrobun `window` module-eval issue that dynamic `import()` has. After reset, individual test files can still set store state in their own `beforeEach`. Previously manual `localStorage.clear()` + explicit store resets — now automated.
 - **E2E tests excluded from bun**: `e2e/tests/` Playwright tests crash under `bun test` (Playwright `test.describe` not a bun API). Exclude via `package.json` `test` script or bun config.
+- **Dashboard brand**: dashboard has own brand identity independent of book themes. Uses `dashboard-bg` CSS class (warm dark `#0b0d14` + radial gradient). Cards use `bg-[#131620]` with `border-white/[0.06]`. Brand palette in `colors.ts` (`DASHBOARD_BG`, `DASHBOARD_CARD_BG`, `DASHBOARD_CARD_BORDER`, `DASHBOARD_ACCENT`).
+- **CourseCard**: single primary action only (Start/Continue/Complete). All quiz mode buttons (MCQ/Cloze/Cumulative/Cards) removed — modes accessed from inside course page. Hover glow via `hover:border-indigo-500/25`.
+- **ResumeCard**: Continue CTA only. No MCQ/Cloze/Cumulative mini buttons. Progress bar + course info + prominent CTA.
+- **StatsBar**: 2-tier layout — modules+study time as primary row (larger), streak+courses as secondary (smaller, border-top separator). SRS due warning rendered as dedicated amber callout card (`bg-amber-500/5 border-amber-500/15 rounded-lg`) below stats, not thin border-top text.
+- **Greeting**: time-aware greeting in DashboardPage (`greetingKey()`). Keys: `dashboard.greetingMorning`, `dashboard.greetingAfternoon`, `dashboard.greetingEvening`.
+- **ProgressBar 0% handling**: No `Math.max(2, pct)` guard. At 0%, fill bar is 0px wide (invisible), empty track stays visible.
+- **CourseCard layout**: `flex flex-col h-full` container, `flex-1` above content, `mt-auto` on button row for bottom alignment. `line-clamp-2` on title for consistent card heights.
+- **CourseCard arrow removed**: Right arrow icon removed from button row. Single CTA only.
+- **Header spacing**: DashboardPage header action icons use `gap-1.5`.
 - **UI tests via e2e**: Component/interaction tests impractical with bun + jsdom (Electrobun `BrowserView`, DOM measurement, scroll behavior, selection overlays all platform-specific). Use Playwright e2e tests for UI validation instead. Prefer at module level — page snapshots catch most regressions cheaply. Reach for e2e when testing: scroll-to-section, selection toolbar positioning, popover/overlay placement, keyboard shortcut dispatch, search highlight matching, page transitions.

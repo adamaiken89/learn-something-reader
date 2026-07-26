@@ -30,6 +30,8 @@ export const SHORTCUTS: Shortcut[] = [
   { key: 'ArrowUp', id: 'scrollUp', scope: 'lesson' },
   { key: 'ArrowDown', id: 'scrollDown', scope: 'lesson' },
   { key: 's', id: 'toggleSections', scope: 'lesson' },
+  { key: 'n', id: 'toggleNotes', scope: 'lesson' },
+  { key: 'a', id: 'toggleAI', scope: 'lesson' },
   { key: 'f', id: 'findInPage', scope: 'lesson', mod: true },
   { key: 'g', id: 'courseSearch', scope: 'lesson', mod: true },
 

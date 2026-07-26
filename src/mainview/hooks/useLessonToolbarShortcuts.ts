@@ -8,8 +8,8 @@ import { useViewStore } from '../stores/viewStore';
 import { useShortcuts } from './useShortcuts';
 
 export function useLessonToolbarShortcuts(course: Course, module: ModuleMeta): void {
-  const courses = useCourseStore((s) => s.courses);
   const push = useViewStore((s) => s.push);
+  const courses = useCourseStore((s) => s.courses);
   const {
     incFontSize,
     decFontSize,
@@ -55,7 +55,7 @@ export function useLessonToolbarShortcuts(course: Course, module: ModuleMeta): v
     reviewCards: () => {
       if (!course) return;
       const found = courses.find((c) => c.id === course.id);
-      if (found) push({ type: 'userCardReview', course: found });
+      if (found) push({ type: 'review', course: found });
     },
     quiz: () => {
       if (!course || !module) return;

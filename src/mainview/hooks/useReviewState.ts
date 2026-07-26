@@ -20,6 +20,8 @@ interface UseReviewStateReturn {
   setFilter: (f: FilterMode) => void;
   handleReview: (correct: boolean) => Promise<void>;
   handleToggleStar: () => Promise<void>;
+  goPrev: () => void;
+  goNext: () => void;
   reload: () => void;
 }
 

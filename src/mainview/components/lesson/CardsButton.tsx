@@ -16,7 +16,7 @@ function CardsButton() {
       onClick={() => {
         if (!course) return;
         const found = courses.find((c) => c.id === course.id);
-        if (found) push({ type: 'userCardReview', course: found });
+        if (found) push({ type: 'review', course: found });
       }}
       title={t('lesson.reviewFlashcards')}
     >

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Course, ModuleMeta } from '../../bun/types';
+import { handleToggle } from '../components/lesson/LessonContentCompletionButton';
 import LessonContentViewer from '../components/lesson/LessonContentViewer';
 import NavigationPanel from '../components/lesson/NavigationPanel';
 import ViewerSearch from '../components/lesson/ViewerSearch';
@@ -83,6 +84,10 @@ export default function LessonSection({
 
   useWheelNavigation({ contentRef, nav });
 
+  const handleNextChapter = () => {
+    void handleToggle().then(() => nav.goNext());
+  };
+
   if (loading) return <div className={loadingIndicator()}>{t('lesson.loadingLesson')}</div>;
 
   return (
@@ -117,7 +122,11 @@ export default function LessonSection({
         )}
 
         {search.searchActive && <ViewerSearch search={search} />}
-        <LessonContentViewer search={search} />
+        <LessonContentViewer
+          search={search}
+          hasNext={nav.hasNext}
+          onNextChapter={handleNextChapter}
+        />
       </div>
 
       {/* Right Sidebar — Navigation + AI Skills */}

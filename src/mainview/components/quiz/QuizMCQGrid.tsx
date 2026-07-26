@@ -30,6 +30,7 @@ export default function QuizMCQGrid({ highlightedIdx = -1 }: Props = {}) {
             key={key}
             onClick={() => !hasAnswer && selectAnswer(key)}
             disabled={hasAnswer}
+            data-highlighted={isHighlighted || undefined}
             className={optionButtonClass({
               showCorrect,
               showWrong,

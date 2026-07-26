@@ -28,9 +28,6 @@ export function useWindowTitle() {
       case 'review':
         title = `CourseReader — ${currentView.course.displayName} — ${t('common.review')}`;
         break;
-      case 'userCardReview':
-        title = `CourseReader — ${currentView.course.displayName} — ${t('common.review')}`;
-        break;
       case 'settings':
         title = `CourseReader — ${t('common.settings')}`;
         break;

@@ -8,9 +8,9 @@ export type View =
   | { type: 'clozeQuiz'; course: Course; module: ModuleMeta }
   | { type: 'cumulativeQuiz'; course: Course; cumulativeQuizId?: string }
   | { type: 'review'; course: Course }
-  | { type: 'userCardReview'; course: Course }
   | { type: 'settings' }
   | { type: 'bookmarks' }
+  | { type: 'syllabus'; course: Course }
   | { type: 'dashboard'; courseID?: string };
 
 interface ViewState {

@@ -31,7 +31,12 @@
     "browseCourses": "浏览课程 →"
   },
   "courseSwitcher": {
-    "noCourses": "未找到课程"
+    "noCourses": "未找到课程",
+    "search": "搜索课程...",
+    "noResults": "没有匹配的课程",
+    "inProgress": "进行中",
+    "notStarted": "未开始",
+    "completed": "已完成"
   },
   "lesson": {
     "loadingLesson": "正在加载课程...",
@@ -74,6 +79,10 @@
     "quizMCQ": "选择题",
     "quizCloze": "填空题",
     "quizCumulative": "综合测验",
+    "quizMCQComplete": "完成并答题",
+    "quizClozeComplete": "完成并填空",
+    "quizCumulativeComplete": "完成并综合测验",
+    "completeAndNext": "完成并下一章 \u2192",
     "warmUpCount": "有 {{count}} 张卡片待复习",
     "warmUpReview": "立即复习",
     "warmUpDismiss": "忽略"
@@ -141,13 +150,6 @@
     "flipHint": "空格键翻转",
     "forgotHint": "F 忘记了",
     "rememberedHint": "R 记住了"
-  },
-  "userCardReview": {
-    "noCards": "尚无卡片",
-    "noCardsHint": "在课程中选取文字以创建闪卡。",
-    "front": "正面",
-    "back": "背面",
-    "cardCounter": "第 {{current}} 张，共 {{total}} 张"
   },
   "settings": {
     "preferences": "偏好设置",
@@ -281,6 +283,16 @@
     "sectionLabel": " — 章节",
     "moduleLabel": " — 单元"
   },
+  "syllabus": {
+    "startLearning": "开始学习",
+    "resume": "继续学习",
+    "prerequisites": "先修要求",
+    "learningObjectives": "学习目标",
+    "modules": "单元",
+    "prereqOf": "先修：",
+    "continue": "继续",
+    "complete": "课程完成"
+  },
   "search": {
     "placeholder": "搜索所有课程...",
     "placeholderCourse": "在 {{course}} 中搜索...",
@@ -333,7 +345,14 @@
     "nextModule": "下一步：{{module}}",
     "courseComplete": "课程完成！🎉",
     "continueLearning": "继续学习",
-    "srsDue": "有 {{count}} 张卡片待复习"
+    "srsDue": "有 {{count}} 张卡片待复习",
+    "cards": "卡片",
+    "continue": "继续",
+    "start": "开始",
+    "complete": "已完成",
+    "greetingMorning": "早上好",
+    "greetingAfternoon": "下午好",
+    "greetingEvening": "晚上好"
   },
   "icons": {
     "themeDark": "🌙",
@@ -363,6 +382,9 @@
     "syncComplete": "同步完成",
     "syncFailed": "同步失败",
     "clipboardFailed": "剪贴板访问被拒绝"
+  },
+  "cards": {
+    "openInLesson": "在课程中打开"
   },
   "mermaid": {
     "expand": "点击展开",

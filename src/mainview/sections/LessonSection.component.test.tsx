@@ -9,6 +9,7 @@ import { useLessonUIStore } from '../stores/lessonUIStore';
 import { useNotesStore } from '../stores/notesStore';
 import { useSelectionStore } from '../stores/selectionStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useViewStore } from '../stores/viewStore';
 import { clearMocks, deleteMock, mockResponse, setupRPC } from '../testUtils';
 import LessonSection from './LessonSection';
 
@@ -70,10 +71,12 @@ beforeEach(() => {
   useHighlightsStore.setState({ byModule: {}, loading: {} });
   useCompletionStore.setState({ completed: {}, totalModules: {}, loading: {}, loaded: false });
   useNotesStore.setState({ byModule: {}, loading: {} });
+  useViewStore.setState({
+    views: [{ type: 'lesson', course: mockCourse, module: mockModuleMeta }],
+  });
   useSelectionStore.setState({
     showToolbar: false,
     showNoteEditor: false,
-    showCardEditor: false,
     noteText: '',
     selection: null,
     pickerPos: { x: 0, y: 0, selectionTop: 0 },
@@ -139,23 +142,22 @@ describe('LessonSection', () => {
     });
   });
 
-  test('renders completion button when not completed', async () => {
+  test('renders combined complete & quiz buttons', async () => {
     let container: HTMLElement;
     await act(async () => {
       container = render(<LessonSection {...props} />).container;
     });
-    await waitFor(() => expect(container!.textContent).toContain('Mark as Complete'));
+    await waitFor(() => expect(container!.textContent).toContain('MCQ'));
   });
 
-  test('renders completed state', async () => {
+  test('renders quiz buttons when module is completed', async () => {
     mockResponse('isModuleCompleted', true);
     let container: HTMLElement;
     await act(async () => {
       container = render(<LessonSection {...props} />).container;
     });
     await waitFor(() => {
-      expect(container!.textContent).toContain('Completed');
-      expect(container!.textContent).not.toContain('Mark as Complete');
+      expect(container!.textContent).toContain('MCQ');
     });
   });
 
@@ -235,29 +237,6 @@ describe('LessonSection', () => {
     restore();
   });
 
-  test('renders card editor when open', async () => {
-    let getByTestId: ReturnType<typeof render>['getByTestId'];
-    let getByText: ReturnType<typeof render>['getByText'];
-    await act(async () => {
-      const r = render(<LessonSection {...props} />);
-      getByTestId = r.getByTestId;
-      getByText = r.getByText;
-    });
-
-    const contentArea = getByTestId!('book-content-area');
-    const mockSel = makeMockSelection('card-worthy text', contentArea);
-    const restore = installMockSelection(mockSel);
-
-    await act(async () => fireEvent.mouseUp(contentArea));
-
-    await waitFor(() => expect(getByTestId!('selection-toolbar')).toBeTruthy());
-
-    await user.click(getByText!('Create Card'));
-
-    await waitFor(() => expect(getByTestId!('card-editor')).toBeTruthy());
-    restore();
-  });
-
   test('renders navigation panel (collapsed) when sections panel hidden', async () => {
     let getByTestId: ReturnType<typeof render>['getByTestId'];
     await act(async () => {
@@ -266,16 +245,16 @@ describe('LessonSection', () => {
     expect(getByTestId!('navigation-panel')).toBeInTheDocument();
   });
 
-  test('calls handleToggleCompleted when completion button clicked', async () => {
+  test('calls handleToggle when mark complete button clicked', async () => {
     mockResponse('toggleModuleCompleted', true);
     mockResponse('logSession', undefined);
 
-    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    let getByText: ReturnType<typeof render>['getByText'];
     await act(async () => {
-      getByTestId = render(<LessonSection {...props} />).getByTestId;
+      getByText = render(<LessonSection {...props} />).getByText;
     });
 
-    await user.click(getByTestId!('complete-btn'));
+    await user.click(getByText!('Mark as Complete'));
 
     await waitFor(() => {
       expect(useCompletionStore.getState().completed).toHaveProperty('cs101:mod-01', true);

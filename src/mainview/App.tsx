@@ -16,7 +16,7 @@ import LessonPage from './pages/LessonPage';
 import QuizPage from './pages/QuizPage';
 import ReviewPage from './pages/ReviewPage';
 import SettingsPage from './pages/SettingsPage';
-import UserCardReviewPage from './pages/UserCardReviewPage';
+import SyllabusPage from './pages/SyllabusPage';
 import { useViewStore } from './stores/viewStore';
 
 export default function App() {
@@ -97,11 +97,11 @@ export default function App() {
       case 'review':
         return <ReviewPage courseId={currentView.course.id} onBack={pop} />;
 
-      case 'userCardReview':
-        return <UserCardReviewPage courseId={currentView.course.id} onBack={pop} />;
-
       case 'settings':
         return <SettingsPage onBack={pop} />;
+
+      case 'syllabus':
+        return <SyllabusPage course={currentView.course} onBack={pop} />;
 
       case 'bookmarks':
         return (

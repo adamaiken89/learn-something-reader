@@ -4,7 +4,6 @@ import * as CourseLoader from './courseLoader';
 import * as Annotations from './persistence-annotations';
 import { clearAllData } from './persistence';
 import * as Progress from './persistence-progress';
-import * as UserCards from './persistence-usercards';
 import { processLessonMarkdown } from './lessonMarkdown';
 import {
   getDueCardsForCourse,
@@ -197,20 +196,6 @@ const rpc = BrowserView.defineRPC<AppSchema>({
         Progress.saveSyncConfig({ remoteRepoURL });
         return { ok: true as const };
       },
-
-      getUserCards: ({ courseId, moduleId }) => UserCards.getUserCards(courseId, moduleId),
-
-      addUserCard: ({ courseId, moduleId, front, back }) =>
-        UserCards.addUserCard(courseId, moduleId, front, back),
-
-      deleteUserCard: async ({ id }) => {
-        UserCards.deleteUserCard(id);
-        return { ok: true as const };
-      },
-
-      reviewUserCard: ({ id, correct }) => UserCards.reviewUserCard(id, correct),
-
-      toggleUserCardStar: ({ id }) => UserCards.toggleUserCardStar(id),
 
       getLastSession: () => Progress.getLastSession(),
 

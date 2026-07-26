@@ -74,13 +74,6 @@ const HANDLERS: Record<string, MockHandler> = {
   syncStart: () => ({ success: true, commitHash: 'abc123', message: 'Mock sync' }),
   syncSetURL: () => ({ ok: true as const }),
 
-  // User Cards
-  getUserCards: () => [],
-  addUserCard: () => mockData.getMockUserCard(),
-  deleteUserCard: () => ({ ok: true as const }),
-  reviewUserCard: () => mockData.getMockUserCard(),
-  toggleUserCardStar: () => mockData.getMockUserCard(),
-
   // Sessions
   getLastSession: () => null,
   setLastSession: () => ({ ok: true as const }),

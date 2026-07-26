@@ -50,6 +50,19 @@ function parseClozeText(text: string): {
   return { segments, answers };
 }
 
+export function clozeAnswers(q: QuizQuestion): string[] {
+  const parsed = parseClozeText(q.question).answers;
+  return parsed.length > 0 ? parsed : [q.answer];
+}
+
+export function clozeCorrect(q: QuizQuestion, ua: string | undefined): boolean {
+  if (ua === undefined) return false;
+  const expected = clozeAnswers(q)
+    .map((a) => a.trim().toLowerCase())
+    .join(', ');
+  return ua.trim().toLowerCase() === expected;
+}
+
 function DragToken({ id, label, isUsed }: { id: string; label: string; isUsed: boolean }) {
   const { ref, isDragging } = useDraggable({ id });
   if (isUsed) return null;
@@ -182,11 +195,7 @@ export default function ClozeQuizSection({ course, module }: Props) {
     setWrongBlankIdx(null);
   };
 
-  const score = questions.filter((q) => {
-    const ua = selectedAnswers[q.id];
-    if (ua === undefined) return false;
-    return ua.trim().toLowerCase() === q.answer.trim().toLowerCase();
-  }).length;
+  const score = questions.filter((q) => clozeCorrect(q, selectedAnswers[q.id])).length;
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { source, target } = event.operation;
@@ -255,7 +264,7 @@ export default function ClozeQuizSection({ course, module }: Props) {
       const ua = selectedAnswers[q.id];
       return {
         question: q,
-        isCorrect: ua?.trim().toLowerCase() === q.answer.trim().toLowerCase(),
+        isCorrect: clozeCorrect(q, ua),
         userAnswer: ua,
       };
     });

@@ -147,15 +147,40 @@ export function hasClozeQuiz(courseId: string, moduleId: string): boolean {
 }
 
 export function parseCumulativeQuiz(yamlStr: string): CumulativeQuiz {
-  const raw = yaml.parse(yamlStr) as Record<string, unknown>[] | null;
-  if (!Array.isArray(raw)) return { questions: [] };
-  return { questions: raw.map(makeQuestion) };
+  const raw = yaml.parse(yamlStr) as
+    | Record<string, unknown>[]
+    | { questions: Record<string, unknown>[] }
+    | null;
+  if (Array.isArray(raw)) {
+    return { questions: raw.map(makeQuestion) };
+  }
+  if (raw && Array.isArray(raw.questions)) {
+    return { questions: raw.questions.map(makeQuestion) };
+  }
+  return { questions: [] };
+}
+
+export function resolveDefaultCumulativeQuiz(coursesDir: string, courseId: string): string | null {
+  const courseDir = join(coursesDir, courseId);
+  if (!existsSync(courseDir)) return null;
+  const files = readdirSync(courseDir, { withFileTypes: true }).filter(
+    (e) => e.isFile() && e.name.startsWith('cumulative_quiz') && e.name.endsWith('.yaml'),
+  );
+  if (files.some((e) => e.name === 'cumulative_quiz.yaml')) return 'cumulative_quiz.yaml';
+  const numbered = files
+    .filter((e) => /^cumulative_quiz_(\d+)(?:-(\d+))?\.yaml$/.test(e.name))
+    .sort((a, b) => {
+      const start = (n: string) => Number(n.match(/^cumulative_quiz_(\d+)/)?.[1] ?? Infinity);
+      return start(a.name) - start(b.name);
+    });
+  return numbered[0]?.name ?? null;
 }
 
 export function loadCumulativeQuiz(courseId: string, id?: string): CumulativeQuiz {
   const coursesDir = findSubjectsDir();
   if (!coursesDir) throw new Error('Courses directory not found');
-  const filename = id ?? 'cumulative_quiz.yaml';
+  const filename =
+    id ?? resolveDefaultCumulativeQuiz(coursesDir, courseId) ?? 'cumulative_quiz.yaml';
   const quizPath = join(coursesDir, courseId, filename);
   if (!existsSync(quizPath)) return { questions: [] };
   const content = readFileSync(quizPath, 'utf-8');

@@ -41,6 +41,7 @@ describe('ClozeQuizPage', () => {
     clearMocks();
     void i18n.changeLanguage('en-US');
     useSettingsStore.setState({ focusMode: false });
+    mockResponse('coursesList', []);
     mockResponse('loadClozeQuiz', []);
     mockResponse('getLastQuizSession', null);
   });

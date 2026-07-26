@@ -1,9 +1,7 @@
-import { CheckSquare, Layers, Type } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { CheckCircle2, Play } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import type { Course } from '../../../bun/types';
-import { api } from '../../api';
 import { countCompleted, useCompletionStore } from '../../stores/completionStore';
 import { useViewStore } from '../../stores/viewStore';
 import CourseTags from './CourseTags';
@@ -17,35 +15,10 @@ export default function CourseCard({ course }: { course: Course }) {
   const total = totalModules[course.id] ?? course.modules.length;
   const done = countCompleted(completed, course.id);
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-  const [hasCloze, setHasCloze] = useState(false);
-  const [hasCumulative, setHasCumulative] = useState(false);
-
-  useEffect(() => {
-    const moduleId = course.modules[0]?.id;
-    if (moduleId) {
-      api.quiz
-        .hasCloze(course.id, moduleId)
-        .then(setHasCloze)
-        .catch(() => {});
-    }
-    api.quiz
-      .hasCumulative(course.id)
-      .then(setHasCumulative)
-      .catch(() => {});
-  }, [course.id, course.modules]);
+  const isComplete = total > 0 && done === total;
 
   const handleClick = () => {
-    void api.session.getCourseModuleSessions(course.id).then((sessions) => {
-      if (sessions.length > 0) {
-        const last = sessions[0];
-        const mod = course.modules.find((m) => m.id === last.moduleId);
-        if (mod) {
-          push({ type: 'lesson', course, module: mod, sectionID: last.sectionId || undefined });
-          return;
-        }
-      }
-      push({ type: 'lesson', course, module: course.modules[0] });
-    });
+    push({ type: 'syllabus', course });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -55,8 +28,9 @@ export default function CourseCard({ course }: { course: Course }) {
     }
   };
 
-  const quizBtnClass =
-    'flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-gray-700/50 text-gray-400 hover:text-gray-200 hover:bg-gray-600/50 transition-colors cursor-pointer';
+  const btnColor = isComplete
+    ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/25'
+    : 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/25';
 
   return (
     <div
@@ -64,54 +38,40 @@ export default function CourseCard({ course }: { course: Course }) {
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      className="text-left bg-gray-800 hover:bg-gray-750 border border-gray-700 hover:border-indigo-500/30 rounded-lg p-5 transition-all duration-200 group cursor-pointer"
+      className="text-left bg-[#131620] border border-white/[0.06] hover:border-indigo-500/25 rounded-lg p-5 transition-all duration-200 group cursor-pointer flex flex-col h-full justify-between"
     >
-      <h2 className="text-lg font-semibold text-white group-hover:text-indigo-400 transition-colors">
-        {course.displayName}
-      </h2>
-      <CourseTags
-        targetLevel={course.targetLevel}
-        timeHours={course.timeBudgetHours}
-        moduleCount={course.modules.length}
-      />
-      {total > 0 && <ProgressBar pct={pct} />}
-      <div className="mt-3 flex items-center gap-2">
+      <div>
+        <h2 className="text-lg font-semibold text-white group-hover:text-indigo-400 transition-colors line-clamp-2">
+          {course.displayName}
+        </h2>
+        <CourseTags
+          targetLevel={course.targetLevel}
+          timeHours={course.timeBudgetHours}
+          moduleCount={course.modules.length}
+        />
+        {total > 0 && <ProgressBar pct={pct} />}
+      </div>
+
+      <div className="flex items-center gap-2 pt-4">
         <button
           onClick={(e) => {
             e.stopPropagation();
-            push({ type: 'quiz', course, module: course.modules[0] });
+            handleClick();
           }}
-          className={quizBtnClass}
-          title={t('lesson.quizMCQ', 'MCQ')}
+          className={`flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all min-w-[92px] ${btnColor}`}
         >
-          <CheckSquare className="w-3 h-3" />
-          {t('lesson.quizMCQ', 'MCQ')}
+          {isComplete ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+          {isComplete
+            ? t('dashboard.complete', 'Complete')
+            : done > 0
+              ? t('dashboard.continue', 'Continue')
+              : t('dashboard.start', 'Start')}
         </button>
-        {hasCloze && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              push({ type: 'clozeQuiz', course, module: course.modules[0] });
-            }}
-            className={quizBtnClass}
-            title={t('lesson.quizCloze', 'Cloze')}
-          >
-            <Type className="w-3 h-3" />
-            {t('lesson.quizCloze', 'Cloze')}
-          </button>
-        )}
-        {hasCumulative && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              push({ type: 'cumulativeQuiz', course });
-            }}
-            className={quizBtnClass}
-            title={t('lesson.quizCumulative', 'Cumulative')}
-          >
-            <Layers className="w-3 h-3" />
-            {t('lesson.quizCumulative', 'Cumulative')}
-          </button>
+
+        {done > 0 && !isComplete && (
+          <span className="text-[11px] text-gray-500">
+            {done}/{total} {t('dashboard.modulesDone')}
+          </span>
         )}
       </div>
     </div>

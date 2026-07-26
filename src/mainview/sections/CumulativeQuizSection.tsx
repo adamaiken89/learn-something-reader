@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useState } from 'react';
+import { useEffect, useEffectEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { Course, QuizQuestion } from '../../bun/types';
@@ -40,8 +40,8 @@ export default function CumulativeQuizSection({ course, cumulativeQuizId }: Prop
   const skipQuestion = useQuizStore((s) => s.skipQuestion);
   const retry = useQuizStore((s) => s.retry);
   const hasAnswer = useQuizStore((s) => s.hasAnswer);
-
-  const [highlightedIdx, setHighlightedIdx] = useState(-1);
+  const highlightedIdx = useQuizStore((s) => s.highlightedIdx);
+  const setHighlightedIdx = useQuizStore((s) => s.setHighlightedIdx);
 
   const handleRetry = () => {
     retry();

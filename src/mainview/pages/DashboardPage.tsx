@@ -13,6 +13,13 @@ import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
 import { useViewStore } from '../stores/viewStore';
 
+function greetingKey(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'dashboard.greetingMorning';
+  if (h < 18) return 'dashboard.greetingAfternoon';
+  return 'dashboard.greetingEvening';
+}
+
 export default function DashboardPage() {
   const { t } = useTranslation();
   const { courses, lastSession, globalStats, loading } = useDashboard();
@@ -23,7 +30,7 @@ export default function DashboardPage() {
     'p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/60 rounded-md transition-colors';
 
   const headerActions = (
-    <div className="flex items-center gap-0.5">
+    <div className="flex items-center gap-1.5">
       <button onClick={() => setSearchOpen(true)} className={iconBtn} title={t('app.search')}>
         <Search size={14} />
       </button>
@@ -46,7 +53,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <PageLayout>
+      <PageLayout className="dashboard-bg">
         <PageHeader title={t('dashboard.title')} actions={headerActions} />
         <PageContent className="px-6 py-4">
           <div className="animate-pulse space-y-4">
@@ -64,15 +71,24 @@ export default function DashboardPage() {
   }
 
   return (
-    <PageLayout>
+    <PageLayout className="dashboard-bg">
       <PageHeader title={t('dashboard.title')} actions={headerActions} />
       <PageContent className="px-6 py-4">
         <div className="anim-fade-in-up">
+          <p className="text-sm text-gray-400 mb-4">{t(greetingKey())}.</p>
           {lastSession && <ResumeCard lastSession={lastSession} />}
         </div>
 
         <div className="anim-fade-in-up" style={{ animationDelay: '80ms' }}>
-          {globalStats && <StatsBar stats={globalStats} />}
+          {globalStats && (
+            <StatsBar
+              stats={globalStats}
+              onSrsDueClick={() => {
+                const c = courses[0];
+                if (c) push({ type: 'review', course: c });
+              }}
+            />
+          )}
         </div>
 
         <div className="anim-fade-in-up" style={{ animationDelay: '160ms' }}>

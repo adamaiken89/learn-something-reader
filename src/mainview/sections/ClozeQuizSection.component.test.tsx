@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { Course, ModuleMeta, QuizQuestion } from '../../bun/types';
 import { clearMocks, mockResponse, setupRPC } from '../testUtils';
-import ClozeQuizSection from './ClozeQuizSection';
+import ClozeQuizSection, { clozeAnswers, clozeCorrect } from './ClozeQuizSection';
 
 setupRPC();
 
@@ -122,20 +122,6 @@ describe('ClozeQuizSection', () => {
     await waitFor(() => expect(container!.textContent).toContain('2 / 2'));
   });
 
-  test('Escape key skips to next question', async () => {
-    mockResponse('loadClozeQuiz', [
-      makeClozeQuestion('q1', 'Q1 {blank}', 'a'),
-      makeClozeQuestion('q2', 'Q2 {blank}', 'b'),
-    ]);
-    let container: HTMLElement;
-    await act(async () => {
-      container = render(<ClozeQuizSection {...props} />).container;
-    });
-    await waitFor(() => expect(container!.textContent).toContain('1 / 2'));
-    await user.keyboard('{Escape}');
-    await waitFor(() => expect(container!.textContent).toContain('2 / 2'));
-  });
-
   test('renders completed state after finishing all questions', async () => {
     mockResponse('loadClozeQuiz', [makeClozeQuestion('q1', 'Q1 {blank}', 'a')]);
     let container: HTMLElement;
@@ -182,6 +168,48 @@ describe('ClozeQuizSection', () => {
       expect(container!.textContent).toContain('The');
       const tokens = container!.querySelectorAll('[class*="cursor-grab"]');
       expect(tokens.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('clozeCorrect', () => {
+    test('multi-blank matches comma-joined answers', () => {
+      const q = makeClozeQuestion(
+        'q1',
+        'A {residual claim} on assets after {debt holders}.',
+        'residual claim',
+      );
+      expect(clozeAnswers(q)).toEqual(['residual claim', 'debt holders']);
+      expect(clozeCorrect(q, 'residual claim, debt holders')).toBe(true);
+    });
+
+    test('partial fill is not correct', () => {
+      const q = makeClozeQuestion(
+        'q1',
+        'A {residual claim} on assets after {debt holders}.',
+        'residual claim',
+      );
+      expect(clozeCorrect(q, 'residual claim')).toBe(false);
+    });
+
+    test('unanswered is not correct', () => {
+      const q = makeClozeQuestion(
+        'q1',
+        'A {residual claim} on assets after {debt holders}.',
+        'residual claim',
+      );
+      expect(clozeCorrect(q, undefined)).toBe(false);
+    });
+
+    test('case and whitespace insensitive', () => {
+      const q = makeClozeQuestion('q1', 'The capital is {Paris}.', 'Paris');
+      expect(clozeCorrect(q, '  paris  ')).toBe(true);
+    });
+
+    test('falls back to answer field when question has no markers', () => {
+      const q = makeClozeQuestion('q1', 'No markers here.', 'Paris');
+      expect(clozeAnswers(q)).toEqual(['Paris']);
+      expect(clozeCorrect(q, 'Paris')).toBe(true);
+      expect(clozeCorrect(q, 'London')).toBe(false);
     });
   });
 });

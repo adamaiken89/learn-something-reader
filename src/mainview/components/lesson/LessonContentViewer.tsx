@@ -10,7 +10,7 @@ import type { PluggableList } from 'unified';
 import { useShallow } from 'zustand/react/shallow';
 
 import { AI_SKILLS } from '../../ai/skills';
-import { copyPrompt } from '../../ai/utils';
+import { copyPrompt, stripContentForAI } from '../../ai/utils';
 import { api } from '../../api';
 import { useAutoCopy } from '../../hooks/useAutoCopy';
 import { useCurrentLesson } from '../../hooks/useCurrentLesson';
@@ -30,8 +30,9 @@ import { THEME_TOKENS, themeToCSSVars } from '../../themes';
 import { rehypeCloze } from '../rehypeCloze';
 import { rehypeHighlightText } from '../rehypeHighlightText';
 import { rehypeSearchText } from '../rehypeSearchText';
+import { Button } from '../ui/Button';
 import ClozeBlank from './ClozeBlank';
-import LessonContentCompletionButton from './LessonContentCompletionButton';
+import { handleToggle } from './LessonContentCompletionButton';
 import LessonContentHeader from './LessonContentHeader';
 import LessonWarmUpBar from './LessonWarmUpBar';
 import NotePopover from './NotePopover';
@@ -87,7 +88,8 @@ function PerplexityButton({ skillId }: { skillId: string }) {
     const skill = AI_SKILLS.find((s) => s.id === skillId);
     if (!skill) return;
     const hint = content ? extractSkillSection(content, skill.label) : undefined;
-    const prompt = skill.buildPrompt(content || '', hint);
+    const cleaned = content ? stripContentForAI(content) : '';
+    const prompt = skill.buildPrompt(cleaned, hint);
     void copyPrompt(prompt);
   };
 
@@ -104,6 +106,8 @@ function PerplexityButton({ skillId }: { skillId: string }) {
 
 interface LessonContentViewerProps {
   search: UseLessonSearchReturn;
+  hasNext?: boolean;
+  onNextChapter?: () => void;
 }
 
 function ClozeBlockquote({ children, ...props }: React.BlockquoteHTMLAttributes<HTMLQuoteElement>) {
@@ -127,7 +131,11 @@ function ClozeBlockquote({ children, ...props }: React.BlockquoteHTMLAttributes<
   );
 }
 
-export default function LessonContentViewer({ search }: LessonContentViewerProps) {
+export default function LessonContentViewer({
+  search,
+  hasNext,
+  onNextChapter,
+}: LessonContentViewerProps) {
   const { t } = useTranslation();
   const { course, module } = useCurrentLesson();
   const push = useViewStore((s) => s.push);
@@ -271,39 +279,57 @@ export default function LessonContentViewer({ search }: LessonContentViewerProps
 
             <div style={{ height: '50vh' }} />
 
-            <div className="flex items-center justify-center gap-4 mt-8">
-              <LessonContentCompletionButton />
+            <div className="flex items-center justify-center gap-4 mt-8 font-sans">
               {course && module && (
-                <div className="flex items-center bg-gray-800/50 border border-gray-700/60 rounded-lg overflow-hidden font-sans">
-                  <button
-                    onClick={() => push({ type: 'quiz', course, module })}
-                    className="px-3 py-1.5 text-[11px] font-medium bg-indigo-600/80 text-indigo-100 hover:bg-indigo-500/80 transition-colors"
-                  >
-                    {t('lesson.quizMCQ', 'MCQ')}
-                  </button>
-                  {hasCloze && (
-                    <>
-                      <div className="h-4 w-px bg-gray-600/50" />
-                      <button
-                        onClick={() => push({ type: 'clozeQuiz', course, module })}
-                        className="px-3 py-1.5 text-[11px] text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors"
-                      >
-                        {t('lesson.quizCloze', 'Cloze')}
-                      </button>
-                    </>
+                <>
+                  <div className="flex items-center bg-gray-800/50 border border-gray-700/60 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => push({ type: 'quiz', course, module })}
+                      className="px-3 py-1.5 text-[11px] font-medium bg-indigo-600/80 text-indigo-100 hover:bg-indigo-500/80 transition-colors"
+                    >
+                      {t('lesson.quizMCQ', 'MCQ')}
+                    </button>
+                    {hasCloze && (
+                      <>
+                        <div className="h-4 w-px bg-gray-600/50" />
+                        <button
+                          onClick={() => push({ type: 'clozeQuiz', course, module })}
+                          className="px-3 py-1.5 text-[11px] text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors"
+                        >
+                          {t('lesson.quizCloze', 'Cloze')}
+                        </button>
+                      </>
+                    )}
+                    {hasCumulative && (
+                      <>
+                        <div className="h-4 w-px bg-gray-600/50" />
+                        <button
+                          onClick={() => push({ type: 'cumulativeQuiz', course })}
+                          className="px-3 py-1.5 text-[11px] text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors"
+                        >
+                          {t('lesson.quizCumulative', 'Cumulative')}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {hasNext && onNextChapter && (
+                    <button
+                      onClick={onNextChapter}
+                      className="px-4 py-2 text-xs font-medium bg-indigo-600/80 text-indigo-100 hover:bg-indigo-500/80 transition-colors rounded-lg"
+                    >
+                      {t('lesson.completeAndNext', 'Complete & Next →')}
+                    </button>
                   )}
-                  {hasCumulative && (
-                    <>
-                      <div className="h-4 w-px bg-gray-600/50" />
-                      <button
-                        onClick={() => push({ type: 'cumulativeQuiz', course })}
-                        className="px-3 py-1.5 text-[11px] text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors"
-                      >
-                        {t('lesson.quizCumulative', 'Cumulative')}
-                      </button>
-                    </>
+                  {!hasNext && (
+                    <Button
+                      onClick={() => void handleToggle()}
+                      variant="outline"
+                      className="font-sans"
+                    >
+                      {t('lesson.markAsComplete', 'Mark as Complete')}
+                    </Button>
                   )}
-                </div>
+                </>
               )}
             </div>
           </div>

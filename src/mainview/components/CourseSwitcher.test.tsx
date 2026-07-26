@@ -39,9 +39,10 @@ describe('CourseSwitcher', () => {
       <CourseSwitcher currentCourseId="math" onSelect={() => {}} />,
     );
     await user.click(getByText('Mathematics'));
-    const meta = container.querySelector('.text-indigo-400');
+    const meta = container.querySelector('.text-indigo-400\\/90');
     expect(meta).toBeTruthy();
-    expect(meta!.textContent).toMatch(/0.*2/);
+    const parts = meta!.textContent!.split('(');
+    expect(parts.length).toBe(2);
   });
 
   test('selects course from dropdown', async () => {

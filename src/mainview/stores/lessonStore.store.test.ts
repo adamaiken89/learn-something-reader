@@ -8,7 +8,6 @@ beforeEach(() => {
   useSelectionStore.setState({
     showToolbar: false,
     showNoteEditor: false,
-    showCardEditor: false,
     noteText: '',
     selection: null,
     pickerPos: { x: 0, y: 0, selectionTop: 0 },
@@ -48,7 +47,6 @@ describe('selectionStore', () => {
     const s = useSelectionStore.getState();
     expect(s.showToolbar).toBe(false);
     expect(s.showNoteEditor).toBe(false);
-    expect(s.showCardEditor).toBe(false);
     expect(s.noteText).toBe('');
     expect(s.selection).toBeNull();
     expect(s.selectedHighlightId).toBeNull();
@@ -66,17 +64,6 @@ describe('selectionStore', () => {
     useSelectionStore.getState().openNoteEditor();
     useSelectionStore.getState().closeNoteEditor();
     expect(useSelectionStore.getState().showNoteEditor).toBe(false);
-  });
-
-  test('openCardEditor shows card editor', () => {
-    useSelectionStore.getState().openCardEditor();
-    expect(useSelectionStore.getState().showCardEditor).toBe(true);
-  });
-
-  test('closeCardEditor hides card editor', () => {
-    useSelectionStore.getState().openCardEditor();
-    useSelectionStore.getState().closeCardEditor();
-    expect(useSelectionStore.getState().showCardEditor).toBe(false);
   });
 
   test('setSelectedHighlight updates id', () => {

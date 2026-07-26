@@ -28,7 +28,6 @@ beforeEach(() => {
     popoverNote: null,
     showToolbar: false,
     showNoteEditor: false,
-    showCardEditor: false,
     noteText: '',
     selection: null,
     pickerPos: { x: 0, y: 0, selectionTop: 0 },

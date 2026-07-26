@@ -44,7 +44,6 @@ function setupStore() {
     pickerPos: { x: 200, y: 300, selectionTop: 280 },
     noteText: '',
     showToolbar: false,
-    showCardEditor: false,
     selectedHighlightId: null,
   });
 }
@@ -52,7 +51,6 @@ function setupStore() {
 beforeEach(() => {
   useSelectionStore.setState({
     showNoteEditor: false,
-    showCardEditor: false,
     showToolbar: false,
     noteText: '',
     selection: null,

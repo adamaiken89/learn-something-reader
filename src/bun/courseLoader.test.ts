@@ -399,4 +399,26 @@ describe('parseCumulativeQuiz', () => {
   test('returns empty array for invalid YAML', () => {
     expect(parseCumulativeQuiz('[[[').questions).toEqual([]);
   });
+
+  test('parses hybrid mapping with source_modules + questions key', () => {
+    const yaml = `
+source_modules: [1, 2, 3, 4]
+questions:
+  - id: cm.1
+    type: mcq
+    question: What is X?
+    options:
+      A: "1"
+      B: "2"
+    answer: A
+  - type: cloze
+    question: The {answer} is 42
+    answer: answer
+`;
+    const result = parseCumulativeQuiz(yaml);
+    expect(result.questions).toHaveLength(2);
+    expect(result.questions[0].id).toBe('cm.1');
+    expect(result.questions[0].type).toBeUndefined();
+    expect(result.questions[1].type).toBe('cloze');
+  });
 });

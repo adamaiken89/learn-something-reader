@@ -147,16 +147,6 @@ export const api = {
     clearAll: () => request(() => _rpcRequest.clearAllData()),
     clearLogs: () => request(() => _rpcRequest.clearLogs()),
   },
-  usercards: {
-    list: (courseId?: string, moduleId?: string) =>
-      request(() => _rpcRequest.getUserCards({ courseId, moduleId })),
-    create: (courseId: string, moduleId: string, front: string, back: string) =>
-      request(() => _rpcRequest.addUserCard({ courseId, moduleId, front, back })),
-    delete: (id: string) => request(() => _rpcRequest.deleteUserCard({ id })),
-    review: (id: string, correct: boolean) =>
-      request(() => _rpcRequest.reviewUserCard({ id, correct })),
-    toggleStar: (id: string) => request(() => _rpcRequest.toggleUserCardStar({ id })),
-  },
   sync: {
     status: () => request(() => _rpcRequest.getSyncStatus()),
     start: (force?: boolean) => request(() => _rpcRequest.syncStart({ force })),

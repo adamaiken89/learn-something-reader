@@ -45,6 +45,14 @@ export function useLessonKeyboardShortcuts({
       const current = useSettingsStore.getState().rightPanel;
       setRightPanel(current === 'sections' ? false : 'sections');
     },
+    toggleNotes: () => {
+      const current = useSettingsStore.getState().rightPanel;
+      setRightPanel(current === 'notes' ? false : 'notes');
+    },
+    toggleAI: () => {
+      const current = useSettingsStore.getState().rightPanel;
+      setRightPanel(current === 'ai' ? false : 'ai');
+    },
     findInPage: () =>
       useLessonViewStore
         .getState()

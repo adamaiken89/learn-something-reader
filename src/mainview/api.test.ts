@@ -152,28 +152,6 @@ describe('api', () => {
     expect(result.color).toBe('green');
   });
 
-  test('usercards.list', async () => {
-    const data = [
-      {
-        id: 'uc1',
-        courseId: 'math',
-        moduleId: '01',
-        front: 'Q?',
-        back: 'A.',
-        easeFactor: 2.5,
-        interval: 0,
-        repetitions: 0,
-        nextReviewDate: new Date().toISOString(),
-        lastReviewed: null,
-        isStarred: false,
-        createdAt: new Date().toISOString(),
-      },
-    ];
-    mockResponse('getUserCards', data);
-    const result = await api.usercards.list('math');
-    expect(result).toHaveLength(1);
-  });
-
   test('sync.status', async () => {
     const data = {
       lastSyncTime: '2024-01-01T00:00:00Z',

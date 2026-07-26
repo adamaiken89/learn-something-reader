@@ -54,7 +54,6 @@ function setupStore() {
     pickerPos: { x: 200, y: 300, selectionTop: 280 },
     selectedHighlightId: null,
     showNoteEditor: false,
-    showCardEditor: false,
     noteText: '',
   });
   useHighlightsStore.setState({ byModule: { 'cs101:mod-01': [] }, loading: {} });
@@ -71,19 +70,12 @@ describe('SelectionToolbar', () => {
   test('renders action buttons', () => {
     const { getByText } = render(<SelectionToolbar />);
     expect(getByText('Add Note')).toBeInTheDocument();
-    expect(getByText('Create Card')).toBeInTheDocument();
   });
 
   test('clicking note button opens note editor', async () => {
     const { getByText } = render(<SelectionToolbar />);
     await user.click(getByText('Add Note'));
     expect(useSelectionStore.getState().showNoteEditor).toBe(true);
-  });
-
-  test('clicking create card opens card editor', async () => {
-    const { getByText } = render(<SelectionToolbar />);
-    await user.click(getByText('Create Card'));
-    expect(useSelectionStore.getState().showCardEditor).toBe(true);
   });
 
   test('returns null when showToolbar is false', () => {

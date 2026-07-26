@@ -10,7 +10,6 @@ interface TextSelection {
 interface SelectionState {
   showToolbar: boolean;
   showNoteEditor: boolean;
-  showCardEditor: boolean;
   noteText: string;
   selection: TextSelection | null;
   pickerPos: { x: number; y: number; selectionTop: number };
@@ -20,11 +19,9 @@ interface SelectionState {
   updatePickerPos: () => void;
   setSelectedHighlight: (id: string | null) => void;
   openNoteEditor: () => void;
-  openCardEditor: () => void;
   setNoteText: (text: string) => void;
   closeToolbar: () => void;
   closeNoteEditor: () => void;
-  closeCardEditor: () => void;
   resetSelection: () => void;
   setPopoverNote: (note: { note: Note; x: number; y: number } | null) => void;
 }
@@ -32,7 +29,6 @@ interface SelectionState {
 export const useSelectionStore = create<SelectionState>((set, get) => ({
   showToolbar: false,
   showNoteEditor: false,
-  showCardEditor: false,
   noteText: '',
   selection: null,
   pickerPos: { x: 0, y: 0, selectionTop: 0 },
@@ -76,14 +72,7 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
   openNoteEditor: () =>
     set((state) => ({
       showNoteEditor: !state.showNoteEditor,
-      showCardEditor: false,
       noteText: '',
-    })),
-
-  openCardEditor: () =>
-    set((state) => ({
-      showCardEditor: !state.showCardEditor,
-      showNoteEditor: false,
     })),
 
   setNoteText: (text) => set({ noteText: text }),
@@ -95,8 +84,6 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
 
   closeNoteEditor: () =>
     set({ showNoteEditor: false, noteText: '', showToolbar: false, selection: null }),
-
-  closeCardEditor: () => set({ showCardEditor: false, showToolbar: false, selection: null }),
 
   resetSelection: () => set({ showToolbar: false, selection: null }),
 }));

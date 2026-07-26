@@ -9,7 +9,16 @@ export const ACCENT_INDIGO_LIGHT = '#818cf8';
 // Warning
 export const BOOKMARK_AMBER = '#fbbf24';
 
-// Dashboard
+// Dashboard brand palette
+export const DASHBOARD_BG = '#0b0d14';
+export const DASHBOARD_CARD_BG = '#131620';
+export const DASHBOARD_CARD_BORDER = 'rgba(255, 255, 255, 0.06)';
+export const DASHBOARD_CARD_HOVER_BORDER = 'rgba(99, 102, 241, 0.25)';
+export const DASHBOARD_ACCENT = '#818cf8';
+export const DASHBOARD_GRADIENT =
+  'radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.06), transparent 60%)';
+
+// Dashboard shell
 export const DASHBOARD_DEFAULT_TEXT = '#e2e8f0';
 
 // Toast

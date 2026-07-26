@@ -1,10 +1,10 @@
+import { useTranslation } from 'react-i18next';
+
 import type { Course, ModuleMeta } from '../../bun/types';
-import CourseSwitcher from '../components/CourseSwitcher';
+import QuizHeader from '../components/QuizHeader';
 import PageContent from '../layouts/PageContent';
-import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
 import QuizSection from '../sections/QuizSection';
-import { useViewStore } from '../stores/viewStore';
 
 interface QuizPageProps {
   course: Course;
@@ -13,17 +13,13 @@ interface QuizPageProps {
 }
 
 export default function QuizPage({ course, module, onBack }: QuizPageProps) {
-  const replace = useViewStore((s) => s.replace);
+  const { t } = useTranslation();
   return (
     <PageLayout>
-      <PageHeader
+      <QuizHeader
         onBack={onBack}
-        center={
-          <CourseSwitcher
-            currentCourseId={course.id}
-            onSelect={(c) => replace({ type: 'lesson', course: c, module: c.modules[0] })}
-          />
-        }
+        currentCourseId={course.id}
+        title={`${module.name} — ${t('common.quiz')}`}
       />
       <PageContent className="px-6 quiz-bg">
         <QuizSection course={course} module={module} />

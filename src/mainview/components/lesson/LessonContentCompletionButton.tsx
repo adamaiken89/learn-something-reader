@@ -29,7 +29,7 @@ export default function LessonContentCompletionButton() {
   );
 }
 
-async function handleToggle() {
+export async function handleToggle() {
   const courseId = useLessonViewStore.getState().courseId;
   const moduleId = useLessonViewStore.getState().moduleId;
   const wasCompleted = useCompletionStore.getState().getEffectiveCompleted(courseId, moduleId);

@@ -8,7 +8,6 @@ import type {
   CompletedModule,
   ModuleSession,
   StudySession,
-  UserCard,
   LastSession,
 } from './types';
 
@@ -21,7 +20,6 @@ export interface StorageData {
   bookmarks: Bookmark[];
   completedModules: CompletedModule[];
   studySessions: StudySession[];
-  userCards: UserCard[];
   remoteRepoURL?: string;
   lastSyncedCommit?: string | null;
   lastSyncTime?: string | null;
@@ -39,13 +37,11 @@ function _loadFresh(): StorageData {
       bookmarks: [],
       completedModules: [],
       studySessions: [],
-      userCards: [],
     };
   try {
     const data = JSON.parse(readFileSync(DB_FILE, 'utf-8'));
     if (!data.completedModules) data.completedModules = [];
     if (!data.studySessions) data.studySessions = [];
-    if (!data.userCards) data.userCards = [];
     return data;
   } catch (e) {
     logger.warn(
@@ -58,7 +54,6 @@ function _loadFresh(): StorageData {
       bookmarks: [],
       completedModules: [],
       studySessions: [],
-      userCards: [],
     };
   }
 }
@@ -85,6 +80,5 @@ export function clearAllData(): void {
     bookmarks: [],
     completedModules: [],
     studySessions: [],
-    userCards: [],
   });
 }

@@ -3,14 +3,14 @@ export type AISkillId = 'feynman' | 'reframe' | 'drill';
 export interface AISkill {
   id: AISkillId;
   label: string;
-  buildPrompt(context: string, hint?: string): string;
+  buildPrompt(context: string, hint?: string, userExplanation?: string): string;
 }
 
-const feynmanPrompt = (context: string, hint?: string) =>
+const feynmanPrompt = (context: string, hint?: string, userExplanation?: string) =>
   [
-    'You are a curious 12-year-old. Student just learned this topic and needs to teach you to expose gaps in understanding.',
+    userExplanation ? `${userExplanation}\n` : '',
+    'You are a curious 12-year-old. Read my explanation above and the lesson below. Ask 3-5 clarifying questions to expose gaps in my understanding. Target jargon, assumptions, and logical leaps.',
     hint ? `\nTopic hint: ${hint}` : '',
-    'Output 2-3 clarifying questions a real 12-year-old would ask. Target jargon, assumptions, leaps. Bullet list.',
     '\n--- Lesson ---',
     context,
   ].join('\n');

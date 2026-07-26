@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next';
+
 import type { Course, ModuleMeta } from '../../bun/types';
+import QuizHeader from '../components/QuizHeader';
 import PageContent from '../layouts/PageContent';
-import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
 import ClozeQuizSection from '../sections/ClozeQuizSection';
 
@@ -11,13 +13,13 @@ interface Props {
 }
 
 export default function ClozeQuizPage({ course, module, onBack }: Props) {
+  const { t } = useTranslation();
   return (
     <PageLayout>
-      <PageHeader
+      <QuizHeader
         onBack={onBack}
-        center={
-          <span className="text-sm font-medium text-gray-300">{module.name} — Cloze Drill</span>
-        }
+        currentCourseId={course.id}
+        title={`${module.name} — ${t('lesson.clozeQuiz')}`}
       />
       <PageContent className="px-6 quiz-bg">
         <ClozeQuizSection course={course} module={module} />

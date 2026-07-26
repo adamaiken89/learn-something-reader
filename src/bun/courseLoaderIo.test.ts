@@ -293,3 +293,63 @@ describe('getQuizIndex', () => {
     expect(index.cumulativeQuizzes).toEqual([]);
   });
 });
+
+describe('resolveDefaultCumulativeQuiz', () => {
+  beforeEach(() => {
+    Object.assign(fsMockImpl, {
+      existsSync: () => true,
+      readdirSync: () => [],
+      readFileSync: () => '',
+    });
+  });
+
+  test('returns plain cumulative_quiz.yaml when present', () => {
+    Object.assign(fsMockImpl, {
+      readdirSync: () => [
+        { name: 'cumulative_quiz_1-4.yaml', isFile: () => true, isDirectory: () => false },
+        { name: 'cumulative_quiz.yaml', isFile: () => true, isDirectory: () => false },
+      ],
+    });
+    expect(loader.resolveDefaultCumulativeQuiz('/courses', 'test')).toBe('cumulative_quiz.yaml');
+  });
+
+  test('returns first numbered quiz when no plain file', () => {
+    Object.assign(fsMockImpl, {
+      readdirSync: () => [
+        { name: 'cumulative_quiz_5-8.yaml', isFile: () => true, isDirectory: () => false },
+        { name: 'cumulative_quiz_1-4.yaml', isFile: () => true, isDirectory: () => false },
+      ],
+    });
+    expect(loader.resolveDefaultCumulativeQuiz('/courses', 'test')).toBe(
+      'cumulative_quiz_1-4.yaml',
+    );
+  });
+
+  test('returns null when no cumulative quiz files', () => {
+    Object.assign(fsMockImpl, {
+      readdirSync: () => [
+        { name: 'syllabus.yaml', isFile: () => true, isDirectory: () => false },
+        { name: 'modules', isFile: () => false, isDirectory: () => true },
+      ],
+    });
+    expect(loader.resolveDefaultCumulativeQuiz('/courses', 'test')).toBeNull();
+  });
+
+  test('returns null when course dir missing', () => {
+    Object.assign(fsMockImpl, { existsSync: () => false });
+    expect(loader.resolveDefaultCumulativeQuiz('/courses', 'test')).toBeNull();
+  });
+
+  test('loadCumulativeQuiz uses resolved default id', () => {
+    Object.assign(fsMockImpl, {
+      readdirSync: () => [
+        { name: 'cumulative_quiz_1-4.yaml', isFile: () => true, isDirectory: () => false },
+      ],
+      readFileSync: () =>
+        '- type: mcq\n  question: X?\n  options:\n    A: "1"\n    B: "2"\n  answer: A\n',
+    });
+    const result = loader.loadCumulativeQuiz('test', undefined);
+    expect(result.questions).toHaveLength(1);
+    expect(result.questions[0].question).toBe('X?');
+  });
+});

@@ -37,7 +37,6 @@ beforeEach(() => {
   useSelectionStore.setState({
     showToolbar: false,
     showNoteEditor: false,
-    showCardEditor: false,
     noteText: '',
     selection: null,
     pickerPos: { x: 0, y: 0, selectionTop: 0 },
@@ -55,7 +54,6 @@ describe('useSelection', () => {
     const { result } = renderHook(() => useSelection());
     expect(result.current.showToolbar).toBe(false);
     expect(result.current.showNoteEditor).toBe(false);
-    expect(result.current.showCardEditor).toBe(false);
     expect(result.current.noteText).toBe('');
     expect(result.current.selection).toBeNull();
     expect(result.current.selectedHighlightId).toBeNull();
@@ -302,21 +300,6 @@ describe('useSelection', () => {
       act(() => result.current.closeNoteEditor());
       expect(result.current.showNoteEditor).toBe(false);
       expect(result.current.noteText).toBe('');
-    });
-  });
-
-  describe('openCardEditor', () => {
-    test('shows card editor', () => {
-      const { result } = renderHook(() => useSelection());
-      act(() => result.current.openCardEditor());
-      expect(result.current.showCardEditor).toBe(true);
-    });
-
-    test('closeCardEditor hides card editor', () => {
-      const { result } = renderHook(() => useSelection());
-      act(() => result.current.openCardEditor());
-      act(() => result.current.closeCardEditor());
-      expect(result.current.showCardEditor).toBe(false);
     });
   });
 

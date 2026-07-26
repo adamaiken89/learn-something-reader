@@ -95,26 +95,6 @@ export interface Note {
   updatedAt: string;
 }
 
-export interface UserCard {
-  id: string;
-  courseId: string;
-  moduleId: string;
-  front: string;
-  back: string;
-  easeFactor: number;
-  interval: number;
-  repetitions: number;
-  nextReviewDate: string;
-  lastReviewed: string | null;
-  isStarred: boolean;
-  createdAt: string;
-  /** FSRS-5 fields */
-  stability?: number;
-  difficulty?: number;
-  lapses?: number;
-  state?: string;
-}
-
 export interface Bookmark {
   id: string;
   courseID: string;

@@ -31,7 +31,6 @@ beforeEach(() => {
     bookmarks: [],
     completedModules: [],
     studySessions: [],
-    userCards: [],
   };
 
   Object.assign(fsMockImpl, {

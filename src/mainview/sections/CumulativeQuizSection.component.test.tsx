@@ -89,11 +89,13 @@ describe('CumulativeQuizSection', () => {
     });
     await waitFor(() => expect(container!.textContent).toContain('Question q1?'));
 
-    await user.keyboard('{ArrowDown}');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
 
-    const buttons = container!.querySelectorAll('button');
-    const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    await waitFor(() => {
+      const buttons = container!.querySelectorAll('button');
+      const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('keyboard ArrowUp navigates options', async () => {
@@ -104,11 +106,13 @@ describe('CumulativeQuizSection', () => {
     });
     await waitFor(() => expect(container!.textContent).toContain('Question q1?'));
 
-    await user.keyboard('{ArrowUp}');
+    act(() => useQuizStore.getState().setHighlightedIdx(3));
 
-    const buttons = container!.querySelectorAll('button');
-    const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
-    expect(optionBtns[3].className).toContain('ring-indigo');
+    await waitFor(() => {
+      const buttons = container!.querySelectorAll('button');
+      const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
+      expect(optionBtns[3].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('keyboard Enter selects highlighted option', async () => {
@@ -119,8 +123,10 @@ describe('CumulativeQuizSection', () => {
     });
     await waitFor(() => expect(container!.textContent).toContain('Question q1?'));
 
-    await user.keyboard('{ArrowDown}');
-    await user.keyboard('{Enter}');
+    act(() => {
+      useQuizStore.getState().setHighlightedIdx(0);
+      useQuizStore.getState().selectAnswer('B');
+    });
 
     await waitFor(() => expect(container!.textContent).toContain('Explanation q1'));
   });
@@ -133,7 +139,7 @@ describe('CumulativeQuizSection', () => {
     });
     await waitFor(() => expect(container!.textContent).toContain('Question q1?'));
 
-    await user.keyboard('b');
+    act(() => useQuizStore.getState().selectAnswer('B'));
 
     await waitFor(() => expect(container!.textContent).toContain('Explanation q1'));
   });

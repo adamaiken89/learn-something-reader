@@ -8,7 +8,6 @@ import type {
   Note,
   QuizQuestion,
   Section,
-  UserCard,
 } from '../../bun/types';
 
 const courses: Course[] = [
@@ -674,24 +673,6 @@ function getMockNote(): Note {
   };
 }
 
-function getMockUserCard(): UserCard {
-  const now = new Date().toISOString();
-  return {
-    id: 'mock-card-1',
-    courseId: 'intro-programming',
-    moduleId: '01-getting-started',
-    front: 'What is a variable?',
-    back: 'A named container that stores data in memory.',
-    easeFactor: 2.5,
-    interval: 1,
-    repetitions: 1,
-    nextReviewDate: new Date(Date.now() + 86400000).toISOString(),
-    lastReviewed: null,
-    isStarred: false,
-    createdAt: now,
-  };
-}
-
 export {
   courses,
   getModules,
@@ -704,5 +685,4 @@ export {
   getMockHighlight,
   getMockBookmark,
   getMockNote,
-  getMockUserCard,
 };

@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next';
+
 import type { Course } from '../../bun/types';
+import QuizHeader from '../components/QuizHeader';
 import PageContent from '../layouts/PageContent';
-import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
 import CumulativeQuizSection from '../sections/CumulativeQuizSection';
 
@@ -20,15 +22,13 @@ function displayLabel(id?: string): string {
 }
 
 export default function CumulativeQuizPage({ course, cumulativeQuizId, onBack }: Props) {
+  const { t } = useTranslation();
   return (
     <PageLayout>
-      <PageHeader
+      <QuizHeader
         onBack={onBack}
-        center={
-          <span className="text-sm font-medium text-gray-300">
-            {course.displayName} — Cumulative Review{displayLabel(cumulativeQuizId)}
-          </span>
-        }
+        currentCourseId={course.id}
+        title={`${course.displayName} — ${t('lesson.cumulativeQuiz')}${displayLabel(cumulativeQuizId)}`}
       />
       <PageContent className="px-6 quiz-bg">
         <CumulativeQuizSection course={course} cumulativeQuizId={cumulativeQuizId} />

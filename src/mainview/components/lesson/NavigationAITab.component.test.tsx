@@ -36,7 +36,27 @@ describe('NavigationAITab', () => {
     expect(getByPlaceholderText('Ask a question about this lesson...')).toBeInTheDocument();
   });
 
-  test('click skill copies prompt and opens browser', async () => {
+  test('click skill copies Feynman prompt after user types explanation', async () => {
+    let copiedText = '';
+    Object.assign(navigator.clipboard, {
+      writeText: (t: string) => {
+        copiedText = t;
+        return Promise.resolve();
+      },
+    });
+    const { getByText, getByPlaceholderText } = render(<NavigationAITab />);
+    await user.click(getByText('Feynman Explain'));
+    const textarea = getByPlaceholderText(
+      'Type your explanation of the key concept in simple terms...',
+    );
+    await user.type(textarea, 'Gravity pulls objects toward Earth');
+    await user.click(getByText('Send to Perplexity'));
+    expect(copiedText).toContain('Gravity pulls objects toward Earth');
+    expect(copiedText).toContain('curious 12-year-old');
+    Object.assign(navigator.clipboard, { writeText: originalWriteText });
+  });
+
+  test('click Reframe copies prompt directly without textarea', async () => {
     let copiedText = '';
     Object.assign(navigator.clipboard, {
       writeText: (t: string) => {
@@ -45,9 +65,8 @@ describe('NavigationAITab', () => {
       },
     });
     const { getByText } = render(<NavigationAITab />);
-    await user.click(getByText('Feynman Explain'));
-    expect(copiedText).toContain('curious 12-year-old');
-    expect(copiedText).toContain('clarifying questions');
+    await user.click(getByText('Reframe'));
+    expect(copiedText).toContain('Socratic coach');
     Object.assign(navigator.clipboard, { writeText: originalWriteText });
   });
 });

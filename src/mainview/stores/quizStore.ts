@@ -25,7 +25,7 @@ interface QuizState {
   skipQuestion: () => void;
   retry: () => void;
   setTextInput: (v: string) => void;
-  setHighlightedIdx: (i: number) => void;
+  setHighlightedIdx: (i: number | ((prev: number) => number)) => void;
   reset: () => void;
 }
 
@@ -124,7 +124,13 @@ export const useQuizStore = create<QuizState>((set, get) => ({
 
   setTextInput: (v) => set({ textInput: v }),
 
-  setHighlightedIdx: (i) => set({ highlightedIdx: i }),
+  setHighlightedIdx: (i) => {
+    if (typeof i === 'function') {
+      set((state) => ({ highlightedIdx: i(state.highlightedIdx) }));
+    } else {
+      set({ highlightedIdx: i });
+    }
+  },
 
   reset: () => {
     set({

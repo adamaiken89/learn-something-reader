@@ -1,4 +1,4 @@
-import { Layers, Pencil } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -10,7 +10,6 @@ import { useLessonViewStore } from '../../stores/lessonViewStore';
 import { useSelectionStore } from '../../stores/selectionStore';
 import BottomSheet from '../ui/BottomSheet';
 import { Button } from '../ui/Button';
-import CardEditor from './CardEditor';
 import { ColorPickerRow } from './ColorPickerRow';
 import NoteEditor from './NoteEditor';
 
@@ -24,9 +23,7 @@ export default function SelectionToolbar() {
       pickerPos: s.pickerPos,
       selectedHighlightId: s.selectedHighlightId,
       showNoteEditor: s.showNoteEditor,
-      showCardEditor: s.showCardEditor,
       openNoteEditor: s.openNoteEditor,
-      openCardEditor: s.openCardEditor,
     })),
   );
   const closeToolbar = useSelectionStore((s) => s.closeToolbar);
@@ -108,13 +105,7 @@ export default function SelectionToolbar() {
         <span className="truncate">{t('lesson.addNote')}</span>
       </Button>
 
-      <Button variant="ghost" size="md" onClick={store.openCardEditor} className="justify-start">
-        <Layers size={16} className="text-gray-400 shrink-0" />
-        <span className="truncate">{t('lesson.createCard')}</span>
-      </Button>
-
       {store.showNoteEditor && <NoteEditor />}
-      {store.showCardEditor && <CardEditor />}
     </div>
   );
 

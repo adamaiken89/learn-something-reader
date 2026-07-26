@@ -31,7 +31,12 @@
     "browseCourses": "Browse Courses →"
   },
   "courseSwitcher": {
-    "noCourses": "No courses found"
+    "noCourses": "No courses found",
+    "search": "Search courses...",
+    "noResults": "No courses match",
+    "inProgress": "In Progress",
+    "notStarted": "Not Started",
+    "completed": "Completed"
   },
   "lesson": {
     "loadingLesson": "Loading lesson...",
@@ -74,6 +79,10 @@
     "quizMCQ": "MCQ",
     "quizCloze": "Cloze",
     "quizCumulative": "Cumulative",
+    "quizMCQComplete": "Complete & MCQ",
+    "quizClozeComplete": "Complete & Cloze",
+    "quizCumulativeComplete": "Complete & Cumulative",
+    "completeAndNext": "Complete & Next \u2192",
     "warmUpCount_one": "{{count}} card due for review",
     "warmUpCount_other": "{{count}} cards due for review",
     "warmUpReview": "Review Now",
@@ -142,13 +151,6 @@
     "flipHint": "Space to flip",
     "forgotHint": "F to forget",
     "rememberedHint": "R to remember"
-  },
-  "userCardReview": {
-    "noCards": "No cards yet",
-    "noCardsHint": "Select text in a lesson to create flashcards.",
-    "front": "Front",
-    "back": "Back",
-    "cardCounter": "{{current}} / {{total}}"
   },
   "settings": {
     "preferences": "Preferences",
@@ -282,6 +284,16 @@
     "sectionLabel": " — Section",
     "moduleLabel": " — Module"
   },
+  "syllabus": {
+    "startLearning": "Start Learning",
+    "resume": "Resume",
+    "prerequisites": "Prerequisites",
+    "learningObjectives": "Learning Objectives",
+    "modules": "Modules",
+    "prereqOf": "Prereq:",
+    "continue": "Continue",
+    "complete": "Course Complete"
+  },
   "search": {
     "placeholder": "Search across courses...",
     "placeholderCourse": "Search in {{course}}...",
@@ -335,7 +347,14 @@
     "courseComplete": "Course complete! 🎉",
     "continueLearning": "Continue",
     "srsDue_one": "{{count}} card due for review",
-    "srsDue_other": "{{count}} cards due for review"
+    "srsDue_other": "{{count}} cards due for review",
+    "cards": "Cards",
+    "continue": "Continue",
+    "start": "Start",
+    "complete": "Complete",
+    "greetingMorning": "Good morning",
+    "greetingAfternoon": "Good afternoon",
+    "greetingEvening": "Good evening"
   },
   "icons": {
     "themeDark": "🌙",
@@ -365,6 +384,9 @@
     "syncComplete": "Sync complete",
     "syncFailed": "Sync failed",
     "clipboardFailed": "Clipboard access denied"
+  },
+  "cards": {
+    "openInLesson": "Open in lesson"
   },
   "mermaid": {
     "expand": "Click to expand",

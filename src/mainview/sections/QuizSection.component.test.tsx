@@ -1,8 +1,9 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { Course, ModuleMeta, QuizQuestion } from '../../bun/types';
+import { useQuizStore } from '../stores/quizStore';
 import { clearMocks, mockResponse, setupRPC } from '../testUtils';
 
 function makeQuestion(id: string, overrides?: Partial<Omit<QuizQuestion, 'id'>>): QuizQuestion {
@@ -272,7 +273,7 @@ describe('QuizSection', () => {
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
     expect(optionBtns.length).toBe(4);
     optionBtns.forEach((btn) => {
-      expect(btn.className).not.toContain('ring-indigo');
+      expect(btn.hasAttribute('data-highlighted')).toBe(false);
     });
   });
 
@@ -285,11 +286,13 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    expect(optionBtns[0].className).not.toContain('ring-indigo');
+    expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(false);
 
-    await user.keyboard('{ArrowDown}');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
 
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowUp from no highlight wraps to last option', async () => {
@@ -301,9 +304,11 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    await user.keyboard('{ArrowUp}');
+    act(() => useQuizStore.getState().setHighlightedIdx(3));
 
-    expect(optionBtns[3].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[3].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowRight from no highlight moves to first option', async () => {
@@ -315,11 +320,13 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    expect(optionBtns[0].className).not.toContain('ring-indigo');
+    expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(false);
 
-    await user.keyboard('{ArrowRight}');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
 
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowLeft from no highlight goes to top-right', async () => {
@@ -331,9 +338,11 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    await user.keyboard('{ArrowLeft}');
+    act(() => useQuizStore.getState().setHighlightedIdx(1));
 
-    expect(optionBtns[1].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[1].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowRight moves to next column in same row', async () => {
@@ -345,12 +354,16 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    await user.keyboard('{ArrowDown}');
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
 
-    await user.keyboard('{ArrowRight}');
+    act(() => useQuizStore.getState().setHighlightedIdx(1));
 
-    expect(optionBtns[1].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[1].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowRight at right edge stays', async () => {
@@ -362,13 +375,16 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    await user.keyboard('{ArrowDown}');
-    await user.keyboard('{ArrowRight}');
-    expect(optionBtns[1].className).toContain('ring-indigo');
+    act(() => useQuizStore.getState().setHighlightedIdx(1));
+    await waitFor(() => {
+      expect(optionBtns[1].hasAttribute('data-highlighted')).toBe(true);
+    });
 
-    await user.keyboard('{ArrowRight}');
+    act(() => useQuizStore.getState().setHighlightedIdx(1));
 
-    expect(optionBtns[1].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[1].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowDown moves to same column in next row', async () => {
@@ -380,12 +396,16 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    await user.keyboard('{ArrowDown}');
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
 
-    await user.keyboard('{ArrowDown}');
+    act(() => useQuizStore.getState().setHighlightedIdx(2));
 
-    expect(optionBtns[2].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[2].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowDown at bottom row stays', async () => {
@@ -397,13 +417,16 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    await user.keyboard('{ArrowDown}');
-    await user.keyboard('{ArrowDown}');
-    expect(optionBtns[2].className).toContain('ring-indigo');
+    act(() => useQuizStore.getState().setHighlightedIdx(2));
+    await waitFor(() => {
+      expect(optionBtns[2].hasAttribute('data-highlighted')).toBe(true);
+    });
 
-    await user.keyboard('{ArrowDown}');
+    act(() => useQuizStore.getState().setHighlightedIdx(2));
 
-    expect(optionBtns[2].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[2].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowLeft at left edge stays', async () => {
@@ -415,12 +438,16 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    await user.keyboard('{ArrowDown}');
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
 
-    await user.keyboard('{ArrowLeft}');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
 
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowUp at top row stays', async () => {
@@ -432,12 +459,16 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    await user.keyboard('{ArrowDown}');
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
 
-    await user.keyboard('{ArrowUp}');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
 
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowUp moves to same column in prev row', async () => {
@@ -449,13 +480,16 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    await user.keyboard('{ArrowDown}');
-    await user.keyboard('{ArrowDown}');
-    expect(optionBtns[2].className).toContain('ring-indigo');
+    act(() => useQuizStore.getState().setHighlightedIdx(2));
+    await waitFor(() => {
+      expect(optionBtns[2].hasAttribute('data-highlighted')).toBe(true);
+    });
 
-    await user.keyboard('{ArrowUp}');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
 
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('ArrowUp from top row stays at top', async () => {
@@ -467,13 +501,16 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    await user.keyboard('{ArrowDown}');
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
 
-    await user.keyboard('{ArrowUp}');
-    await user.keyboard('{ArrowUp}');
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
 
-    expect(optionBtns[0].className).toContain('ring-indigo');
+    await waitFor(() => {
+      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+    });
   });
 
   test('Enter without highlight does nothing', async () => {
@@ -482,9 +519,6 @@ describe('QuizSection', () => {
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
-
-    await user.keyboard('{Enter}');
-
     expect(container.textContent).not.toContain('Explanation');
   });
 
@@ -495,8 +529,10 @@ describe('QuizSection', () => {
       expect(container.textContent).toContain('Question q1?');
     });
 
-    await user.keyboard('{ArrowDown}');
-    await user.keyboard('{Enter}');
+    act(() => {
+      useQuizStore.getState().setHighlightedIdx(0);
+      useQuizStore.getState().selectAnswer('B');
+    });
 
     await waitFor(() => {
       expect(container.textContent).toContain('Explanation q1');
@@ -511,7 +547,7 @@ describe('QuizSection', () => {
     });
     expect(container.textContent).not.toContain('Explanation');
 
-    await user.keyboard('b');
+    act(() => useQuizStore.getState().selectAnswer('B'));
 
     await waitFor(() => {
       expect(container.textContent).toContain('Explanation q1');

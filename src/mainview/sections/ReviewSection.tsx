@@ -1,10 +1,12 @@
-import { Star } from 'lucide-react';
+import { ExternalLink, Star } from 'lucide-react';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import ProgressBar from '../components/dashboard/ProgressBar';
 import FilterBar from '../components/FilterBar';
 import { useReviewState } from '../hooks/useReviewState';
+import { useCourseStore } from '../stores/courseStore';
+import { useViewStore } from '../stores/viewStore';
 
 interface Props {
   courseId: string;
@@ -12,6 +14,8 @@ interface Props {
 
 export default function ReviewSection({ courseId }: Props) {
   const { t } = useTranslation();
+  const push = useViewStore((s) => s.push);
+  const courses = useCourseStore((s) => s.courses);
   const {
     cards,
     loading,
@@ -24,6 +28,8 @@ export default function ReviewSection({ courseId }: Props) {
     setFilter,
     handleReview,
     handleToggleStar,
+    goPrev,
+    goNext,
   } = useReviewState(courseId);
 
   const [tossClass, setTossClass] = useState('');
@@ -62,6 +68,12 @@ export default function ReviewSection({ courseId }: Props) {
     } else if (e.key === 's') {
       e.preventDefault();
       void handleToggleStar();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      goPrev();
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      goNext();
     }
   });
 
@@ -217,6 +229,19 @@ export default function ReviewSection({ courseId }: Props) {
                     {t('review.star')}
                   </button>
                 )}
+                <button
+                  onClick={() => {
+                    const course = courses.find((c) => c.id === courseId);
+                    if (course) {
+                      const module = course.modules.find((m) => m.id === currentCard.moduleId);
+                      if (module) push({ type: 'lesson', course, module });
+                    }
+                  }}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+                >
+                  <ExternalLink size={12} />
+                  {t('cards.openInLesson')}
+                </button>
               </div>
             </div>
           )

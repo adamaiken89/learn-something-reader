@@ -1,9 +1,7 @@
-import CourseSwitcher from '../components/CourseSwitcher';
+import QuizHeader from '../components/QuizHeader';
 import PageContent from '../layouts/PageContent';
-import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
 import ReviewSection from '../sections/ReviewSection';
-import { useViewStore } from '../stores/viewStore';
 
 interface ReviewPageProps {
   courseId: string;
@@ -11,18 +9,9 @@ interface ReviewPageProps {
 }
 
 export default function ReviewPage({ courseId, onBack }: ReviewPageProps) {
-  const replace = useViewStore((s) => s.replace);
   return (
     <PageLayout>
-      <PageHeader
-        onBack={onBack}
-        center={
-          <CourseSwitcher
-            currentCourseId={courseId}
-            onSelect={(course) => replace({ type: 'lesson', course, module: course.modules[0] })}
-          />
-        }
-      />
+      <QuizHeader onBack={onBack} currentCourseId={courseId} />
       <PageContent className="px-6 quiz-bg py-8">
         <ReviewSection courseId={courseId} />
       </PageContent>
