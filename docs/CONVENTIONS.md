@@ -13,3 +13,9 @@ This file exists for discoverability only. See `AGENTS.md` for:
 - Lesson → Quiz user flow + content area button conventions
 - Test conventions
 - Quirks and edge cases
+
+Deep-dive docs (linked from AGENTS.md):
+
+- [`architecture.md`](architecture.md) — full per-file tree, Mermaid zoom/pan overlay internals
+- [`ai-integration.md`](ai-integration.md) — AI decision rationale, pedagogical notes, prompt maintenance
+- [`highlights.md`](highlights.md) — highlight offset algorithm walkthrough
