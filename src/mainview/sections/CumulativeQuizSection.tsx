@@ -1,10 +1,11 @@
-import { useEffect, useEffectEvent } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Course, QuizQuestion } from '../../bun/types';
+import type { Course, QuizIndex, QuizQuestion } from '../../bun/types';
 import { api } from '../api';
 import QuizBottomNav from '../components/quiz/QuizBottomNav';
 import QuizClozeInput from '../components/quiz/QuizClozeInput';
+import QuizClozeQuestion from '../components/quiz/QuizClozeQuestion';
 import QuizCompletionView from '../components/quiz/QuizCompletionView';
 import QuizExplanation from '../components/quiz/QuizExplanation';
 import QuizMCQGrid from '../components/quiz/QuizMCQGrid';
@@ -12,6 +13,8 @@ import QuizProgressBar from '../components/quiz/QuizProgressBar';
 import { loadingIndicator } from '../components/ui/variants/loading';
 import { quizCompletionContainer } from '../components/ui/variants/quiz';
 import { useQuizEngine } from '../hooks/useQuizEngine';
+import { nextQuizAfter, presenceFromIndex, targetToView } from '../quizDrive';
+import { clozeCorrect } from '../quizUtil';
 import { useQuizStore } from '../stores/quizStore';
 import { useViewStore } from '../stores/viewStore';
 
@@ -46,6 +49,21 @@ export default function CumulativeQuizSection({ course, cumulativeQuizId }: Prop
   const handleRetry = () => {
     retry();
   };
+
+  const [quizIndex, setQuizIndex] = useState<QuizIndex | null>(null);
+
+  useEffect(() => {
+    api.quiz
+      .index(course.id)
+      .then(setQuizIndex)
+      .catch(() => {});
+  }, [course.id]);
+
+  const cumulativeKey = cumulativeQuizId ?? quizIndex?.cumulativeQuizzes[0]?.id ?? '';
+  const nextQuiz =
+    quizIndex && cumulativeKey
+      ? nextQuizAfter(course, presenceFromIndex(quizIndex), `cumulative:${cumulativeKey}`)
+      : null;
 
   const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
     if (status !== 'ready' || !currentQuestion) return;
@@ -135,10 +153,7 @@ export default function CumulativeQuizSection({ course, cumulativeQuizId }: Prop
   if (status === 'completed') {
     const questionResults = questions.map((q: QuizQuestion) => {
       const ua = selectedAnswers[q.id];
-      const correct =
-        q.type === 'cloze'
-          ? ua?.trim().toLowerCase() === q.answer.trim().toLowerCase()
-          : ua === q.answer;
+      const correct = q.type === 'cloze' ? clozeCorrect(q, ua) : ua === q.answer;
       return { question: q, isCorrect: correct, userAnswer: ua };
     });
 
@@ -149,7 +164,8 @@ export default function CumulativeQuizSection({ course, cumulativeQuizId }: Prop
         previousSession={null}
         questionResults={questionResults}
         onRetry={handleRetry}
-        onBackToDashboard={() => push({ type: 'dashboard' })}
+        onNextQuiz={nextQuiz ? () => push(targetToView(course, nextQuiz)) : undefined}
+        onBackToDashboard={!nextQuiz ? () => push({ type: 'dashboard' }) : undefined}
       />
     );
   }
@@ -176,7 +192,10 @@ export default function CumulativeQuizSection({ course, cumulativeQuizId }: Prop
               </span>
             </div>
             <h2 className="text-[24px] font-semibold text-white leading-snug tracking-tight">
-              {currentQuestion?.question}
+              <QuizClozeQuestion
+                question={currentQuestion?.question ?? ''}
+                type={currentQuestion?.type}
+              />
             </h2>
           </div>
 

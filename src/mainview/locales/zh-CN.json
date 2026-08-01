@@ -43,6 +43,7 @@
     "decreaseFontSize": "缩小字体",
     "increaseFontSize": "放大字体",
     "wide": "宽版",
+    "full": "全宽",
     "standard": "标准",
     "narrow": "窄版",
     "toggleWideMode": "切换宽版模式",
@@ -123,8 +124,28 @@
     "nextChapter": "下一章 →",
     "backToDashboard": "返回仪表盘",
     "reviewCourse": "复习卡片",
-    "previousPassed": "已通过",
-    "previousFailed": "未通过"
+    "previousPassed": "上一次尝试：已通过",
+    "previousFailed": "上一次尝试：未通过",
+    "nextQuiz": "下一个测验",
+    "allQuizzes": "所有测验",
+    "clozePlaceholder": "输入缺失的术语",
+    "clozeCheck": "检查",
+    "clozeTryAgain": "再试一次 — 第二次失败将显示答案",
+    "clozeWrongAnswer": "你的答案 \"{{user}}\" — 正确答案：{{answer}}"
+  },
+  "quizHub": {
+    "title": "测验中心",
+    "subtitle": "按顺序完成测验以复习",
+    "startReview": "开始复习",
+    "due": "到期",
+    "moduleQuizzes": "单元测验",
+    "cumulativeReviews": "累积复习",
+    "notAttempted": "尚未作答"
+  },
+  "notification": {
+    "quizDue": {
+      "statusSplit": "{{ready}} 个可复习 · {{overdue}} 个已逾期"
+    }
   },
   "review": {
     "loadingCards": "正在加载复习卡片...",
@@ -352,7 +373,15 @@
     "complete": "已完成",
     "greetingMorning": "早上好",
     "greetingAfternoon": "下午好",
-    "greetingEvening": "晚上好"
+    "greetingEvening": "晚上好",
+    "quizDue": {
+      "statusSplit": "{{ready}} 个可复习 · {{overdue}} 个已逾期",
+      "start": "开始",
+      "more": "+{{count}} 更多",
+      "less": "显示更少",
+      "readyBadge": "{{count}} 可复习",
+      "overdueBadge": "{{count}} 已逾期"
+    }
   },
   "icons": {
     "themeDark": "🌙",

@@ -236,7 +236,7 @@ describe('saveSRSDeck', () => {
 });
 
 describe('getQuizIndex', () => {
-  test('returns modules with mcq/cloze flags + cumulative quizzes', async () => {
+  test('returns modules with hasQuiz flags + cumulative quizzes', async () => {
     loader = await import('./courseLoader');
     mockState.modulesDirEntries = [
       { name: '01-intro', isDirectory: () => true },
@@ -268,9 +268,9 @@ describe('getQuizIndex', () => {
     });
     const index = loader.getQuizIndex('test');
     expect(index.modules).toEqual({
-      '01-intro': { mcq: true, cloze: false },
-      '02-variables': { mcq: true, cloze: true },
-      '03-control-flow': { mcq: false, cloze: true },
+      '01-intro': true,
+      '02-variables': true,
+      '03-control-flow': true,
     });
     expect(index.cumulativeQuizzes).toContainEqual({
       id: 'cumulative_quiz_05.yaml',

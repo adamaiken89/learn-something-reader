@@ -274,12 +274,20 @@ body {
   border-radius: 4px;
 }
 
-.book-content.book-content-wide {
-  max-width: none;
+.book-content.book-content-narrow {
+  max-width: min(720px, calc(100% - 96px));
 }
 
 .book-content.book-content-standard {
-  max-width: 960px;
+  max-width: min(960px, calc(100% - 64px));
+}
+
+.book-content.book-content-wide {
+  max-width: min(1280px, calc(100% - 32px));
+}
+
+.book-content.book-content-full {
+  max-width: none;
 }
 
 .book-content h1 {

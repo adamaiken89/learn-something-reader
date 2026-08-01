@@ -28,7 +28,6 @@ beforeEach(() => {
   });
   mockResponse('getNotes', []);
   mockResponse('getHighlights', []);
-  mockResponse('hasClozeQuiz', false);
   mockResponse('hasCumulativeQuiz', false);
 });
 

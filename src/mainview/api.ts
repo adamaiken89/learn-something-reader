@@ -73,14 +73,11 @@ export const api = {
   quiz: {
     start: (courseId: string, moduleId: string) =>
       request(() => _rpcRequest.quizStart({ courseId, moduleId })),
-    cloze: (courseId: string, moduleId: string) =>
-      request(() => _rpcRequest.loadClozeQuiz({ courseId, moduleId })),
-    hasCloze: (courseId: string, moduleId: string) =>
-      request(() => _rpcRequest.hasClozeQuiz({ courseId, moduleId })),
     cumulative: (courseId: string, id?: string) =>
       request(() => _rpcRequest.loadCumulativeQuiz({ courseId, id })),
     hasCumulative: (courseId: string) => request(() => _rpcRequest.hasCumulativeQuiz({ courseId })),
     index: (courseId: string) => request(() => _rpcRequest.quizIndex({ courseId })),
+    status: (courseId: string) => request(() => _rpcRequest.quizStatus({ courseId })),
   },
   storage: {
     highlights: (courseID: string, moduleID: string) =>

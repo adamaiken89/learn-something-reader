@@ -43,6 +43,7 @@
     "decreaseFontSize": "縮小字型",
     "increaseFontSize": "放大字型",
     "wide": "寬版",
+    "full": "全寬",
     "standard": "標準",
     "narrow": "窄版",
     "toggleWideMode": "切換寬版模式",
@@ -123,8 +124,28 @@
     "nextChapter": "下一章 →",
     "backToDashboard": "返回儀表板",
     "reviewCourse": "複習卡片",
-    "previousPassed": "已通過",
-    "previousFailed": "未通過"
+    "previousPassed": "上一次嘗試：已通過",
+    "previousFailed": "上一次嘗試：未通過",
+    "nextQuiz": "下一個測驗",
+    "allQuizzes": "所有測驗",
+    "clozePlaceholder": "輸入缺失的術語",
+    "clozeCheck": "檢查",
+    "clozeTryAgain": "再試一次 — 第二次失敗將顯示答案",
+    "clozeWrongAnswer": "你的答案 \"{{user}}\" — 正確答案：{{answer}}"
+  },
+  "quizHub": {
+    "title": "測驗中心",
+    "subtitle": "按順序完成測驗以複習",
+    "startReview": "開始複習",
+    "due": "到期",
+    "moduleQuizzes": "單元測驗",
+    "cumulativeReviews": "累積複習",
+    "notAttempted": "尚未作答"
+  },
+  "notification": {
+    "quizDue": {
+      "statusSplit": "{{ready}} 個可複習 · {{overdue}} 個已逾期"
+    }
   },
   "review": {
     "loadingCards": "正在載入複習卡片...",
@@ -352,7 +373,15 @@
     "complete": "已完成",
     "greetingMorning": "早安",
     "greetingAfternoon": "午安",
-    "greetingEvening": "晚安"
+    "greetingEvening": "晚安",
+    "quizDue": {
+      "statusSplit": "{{ready}} 個可複習 · {{overdue}} 個已逾期",
+      "start": "開始",
+      "more": "+{{count}} 更多",
+      "less": "顯示較少",
+      "readyBadge": "{{count}} 可複習",
+      "overdueBadge": "{{count}} 已逾期"
+    }
   },
   "icons": {
     "themeDark": "🌙",

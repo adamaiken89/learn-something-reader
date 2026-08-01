@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
@@ -26,7 +26,6 @@ const mod = course.modules[0];
 beforeEach(() => {
   useViewStore.setState({ views: [] });
   clearMocks();
-  mockResponse('hasClozeQuiz', false);
   mockResponse('hasCumulativeQuiz', false);
 });
 
@@ -54,23 +53,14 @@ describe('QuizReviewButtons', () => {
     expect(views[views.length - 1].type).toBe('review');
   });
 
-  test('quiz popover shows cloze when available', async () => {
-    mockResponse('hasClozeQuiz', true);
-    useViewStore.setState({
-      views: [{ type: 'lesson', course, module: mod }],
-    });
-    const { getByText } = render(<QuizReviewButtons />);
-    await user.click(getByText('Quiz'));
-    expect(getByText('Cloze')).toBeTruthy();
-  });
-
-  test('quiz popover hides cloze when not available', async () => {
-    mockResponse('hasClozeQuiz', false);
+  test('quiz popover shows cumulative when available', async () => {
+    mockResponse('hasCumulativeQuiz', true);
     useViewStore.setState({
       views: [{ type: 'lesson', course, module: mod }],
     });
     const { getByText, queryByText } = render(<QuizReviewButtons />);
     await user.click(getByText('Quiz'));
+    await waitFor(() => expect(getByText('Cumulative')).toBeTruthy());
     expect(queryByText('Cloze')).toBeNull();
   });
 });

@@ -3,16 +3,16 @@ import {
   CheckCircle2,
   Clock,
   Layers,
+  LayoutGrid,
   ListChecks,
   Play,
   RotateCcw,
   Target,
-  Type,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Course } from '../../bun/types';
+import type { Course, QuizIndex } from '../../bun/types';
 import { api } from '../api';
 import CourseSwitcher from '../components/CourseSwitcher';
 import CourseTags from '../components/dashboard/CourseTags';
@@ -46,21 +46,17 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const isComplete = total > 0 && done === total;
   const hasProgress = done > 0;
-  const [hasCloze, setHasCloze] = useState(false);
+  const [quizIndex, setQuizIndex] = useState<QuizIndex | null>(null);
   const [hasCumulative, setHasCumulative] = useState(false);
   useEffect(() => {
-    const moduleId = course.modules[0]?.id;
-    if (moduleId) {
-      api.quiz
-        .hasCloze(course.id, moduleId)
-        .then(setHasCloze)
-        .catch(() => {});
-    }
     api.quiz
-      .hasCumulative(course.id)
-      .then(setHasCumulative)
+      .index(course.id)
+      .then((i) => {
+        setQuizIndex(i);
+        setHasCumulative(i.cumulativeQuizzes.length > 0);
+      })
       .catch(() => {});
-  }, [course.id, course.modules]);
+  }, [course.id]);
 
   const handleStart = () => {
     const firstIncomplete = course.modules.find((m) => !completed[`${course.id}:${m.id}`]);
@@ -90,36 +86,16 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
   };
 
   const practiceTagClass = 'px-2 py-1 text-[10px] rounded-md font-medium cursor-pointer';
-  const activePracticeClass = 'bg-indigo-600/80 text-indigo-100 hover:bg-indigo-500/80';
   const inactivePracticeClass = 'bg-gray-700/30 text-gray-300 hover:bg-gray-600/50';
+  const quizModuleIds = new Set(
+    Object.keys(quizIndex?.modules ?? {}).map((dir) => dir.split('-')[0]),
+  );
 
   const quickActions = (
     <div className="flex items-center gap-1.5">
       <span className="text-[10px] text-gray-500 uppercase tracking-wider mr-0.5">
         {t('lesson.practice', 'Practice')}
       </span>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          push({ type: 'quiz', course, module: course.modules[0] });
-        }}
-        className={`${practiceTagClass} ${activePracticeClass}`}
-      >
-        <ListChecks size={11} className="inline mr-1" />
-        {t('lesson.quizMCQ', 'MCQ')}
-      </button>
-      {hasCloze && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            push({ type: 'clozeQuiz', course, module: course.modules[0] });
-          }}
-          className={`${practiceTagClass} ${inactivePracticeClass}`}
-        >
-          <Type size={11} className="inline mr-1" />
-          {t('lesson.quizCloze', 'Cloze')}
-        </button>
-      )}
       {hasCumulative && (
         <button
           onClick={(e) => {
@@ -132,6 +108,16 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
           {t('lesson.quizCumulative', 'Cumulative')}
         </button>
       )}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          push({ type: 'quizHub', course });
+        }}
+        className={`${practiceTagClass} ${inactivePracticeClass}`}
+      >
+        <LayoutGrid size={11} className="inline mr-1" />
+        {t('quiz.allQuizzes')}
+      </button>
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -253,11 +239,12 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
               {course.modules.map((mod, idx) => {
                 const modKey = `${course.id}:${mod.id}`;
                 const isCompleted = !!completed[modKey];
+                const hasQuiz = quizModuleIds.has(mod.id);
                 return (
-                  <button
+                  <div
                     key={mod.id}
                     onClick={() => handleModuleClick(mod)}
-                    className="w-full text-left group flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-700/50 hover:border-indigo-500/30 bg-gray-800/30 hover:bg-gray-800/60 transition-all duration-150 cursor-pointer"
+                    className="group flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-700/50 hover:border-indigo-500/30 bg-gray-800/30 hover:bg-gray-800/60 transition-all duration-150 cursor-pointer"
                   >
                     <span
                       className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
@@ -306,7 +293,20 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
                         </div>
                       )}
                     </div>
-                  </button>
+                    {hasQuiz && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          push({ type: 'quiz', course, module: mod });
+                        }}
+                        title={t('quiz.allQuizzes')}
+                        className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600/40 border border-indigo-500/20 hover:border-indigo-500/40 transition-colors"
+                      >
+                        <ListChecks size={13} />
+                        {t('lesson.quizMCQ', 'MCQ')}
+                      </button>
+                    )}
+                  </div>
                 );
               })}
             </div>

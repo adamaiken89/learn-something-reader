@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import type { QuizQuestion } from '../../bun/types';
+import { clozeCorrect } from '../quizUtil';
 
 export type QuizStatus = 'loading' | 'ready' | 'completed';
 
@@ -11,6 +12,8 @@ interface QuizState {
   selectedAnswers: Record<string, string>;
   textInput: string;
   highlightedIdx: number;
+  /** Number of submitted attempts per cloze question. Max 2: a wrong 1st attempt allows one retry, then reveal + fixed score. */
+  clozeAttempts: Record<string, number>;
 
   // Derived (via selectors)
   currentQuestion: QuizQuestion | undefined;
@@ -36,7 +39,13 @@ const INITIAL = {
   selectedAnswers: {},
   textInput: '',
   highlightedIdx: -1,
+  clozeAttempts: {},
 };
+
+function isCorrect(q: QuizQuestion, ua: string | undefined): boolean {
+  if (ua === undefined) return false;
+  return q.type === 'cloze' ? clozeCorrect(q, ua) : ua === q.answer;
+}
 
 export const useQuizStore = create<QuizState>((set, get) => ({
   ...INITIAL,
@@ -53,6 +62,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       selectedAnswers: {},
       textInput: '',
       highlightedIdx: -1,
+      clozeAttempts: {},
       currentQuestion: qs[0],
       hasAnswer: false,
       score: 0,
@@ -60,20 +70,49 @@ export const useQuizStore = create<QuizState>((set, get) => ({
   },
 
   loadFailed: () => {
-    set({ ...INITIAL, status: 'ready', currentQuestion: undefined, hasAnswer: false, score: 0 });
+    set({
+      ...INITIAL,
+      status: 'ready',
+      currentQuestion: undefined,
+      hasAnswer: false,
+      score: 0,
+    });
   },
 
   selectAnswer: (answer) => {
     const state = get();
     const q = state.questions[state.currentIndex];
     if (!q) return;
+    const scoreFor = (selected: Record<string, string>) =>
+      state.questions.filter((qq) => isCorrect(qq, selected[qq.id])).length;
+
+    if (q.type === 'cloze') {
+      const attempt = (state.clozeAttempts[q.id] ?? 0) + 1;
+      const clozeAttempts = { ...state.clozeAttempts, [q.id]: attempt };
+      const correct = isCorrect(q, answer);
+      if (correct || attempt >= 2) {
+        // 1st attempt correct, or 2nd attempt: resolve (reveal + fixed score).
+        const selectedAnswers = { ...state.selectedAnswers, [q.id]: answer };
+        set({
+          selectedAnswers,
+          clozeAttempts,
+          textInput: answer,
+          hasAnswer: true,
+          score: scoreFor(selectedAnswers),
+        });
+      } else {
+        // 1st attempt wrong: warn, keep editable, nothing scored yet.
+        set({ clozeAttempts, textInput: answer, hasAnswer: false });
+      }
+      return;
+    }
+
     const selectedAnswers = { ...state.selectedAnswers, [q.id]: answer };
-    const score = state.questions.filter((q) => selectedAnswers[q.id] === q.answer).length;
     set({
       selectedAnswers,
-      textInput: q.type === 'cloze' ? answer : state.textInput,
+      textInput: state.textInput,
       hasAnswer: true,
-      score,
+      score: scoreFor(selectedAnswers),
     });
   },
 
@@ -116,6 +155,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       selectedAnswers: {},
       textInput: '',
       highlightedIdx: -1,
+      clozeAttempts: {},
       currentQuestion: get().questions[0],
       hasAnswer: false,
       score: 0,

@@ -59,7 +59,6 @@ function setupDefaultMocks() {
   mockResponse('getNotes', []);
   mockResponse('getSections', []);
   mockResponse('getCourseModuleSessions', []);
-  mockResponse('hasClozeQuiz', false);
   mockResponse('hasCumulativeQuiz', false);
 }
 
@@ -258,6 +257,38 @@ describe('LessonSection', () => {
 
     await waitFor(() => {
       expect(useCompletionStore.getState().completed).toHaveProperty('cs101:mod-01', true);
+    });
+  });
+
+  test('last module shows Mark as Complete that flips to Completed', async () => {
+    mockResponse('toggleModuleCompleted', true);
+    mockResponse('logSession', undefined);
+
+    const course: Course = {
+      ...mockCourse,
+      modules: [mockModuleMeta, { ...mockModuleMeta, id: 'mod-02', name: 'Module 2' }],
+    };
+    const lastModule: ModuleMeta = course.modules[1];
+    useViewStore.setState({ views: [{ type: 'lesson', course, module: lastModule }] });
+
+    let getByTestId: ReturnType<typeof render>['getByTestId'];
+    let getByText: ReturnType<typeof render>['getByText'];
+    let queryByText: ReturnType<typeof render>['queryByText'];
+    await act(async () => {
+      const r = render(<LessonSection course={course} module={lastModule} />);
+      getByTestId = r.getByTestId;
+      getByText = r.getByText;
+      queryByText = r.queryByText;
+    });
+
+    await waitFor(() => expect(queryByText!('Complete & Next')).toBeNull());
+    await user.click(getByText!('Mark as Complete'));
+
+    await waitFor(() => {
+      expect(useCompletionStore.getState().completed).toHaveProperty('cs101:mod-02', true);
+    });
+    await waitFor(() => {
+      expect(getByTestId!('complete-btn').textContent).toContain('Completed');
     });
   });
 

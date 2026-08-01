@@ -16,6 +16,7 @@ const WIDTH_LABELS: Record<ContentWidth, string> = {
   narrow: 'lesson.narrow',
   standard: 'lesson.standard',
   wide: 'lesson.wide',
+  full: 'lesson.full',
 };
 
 function Pill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
@@ -115,7 +116,7 @@ export default function AppearanceSection() {
           {t('settings.contentWidth')}
         </div>
         <div className="flex gap-2">
-          {(['narrow', 'standard', 'wide'] as ContentWidth[]).map((w) => (
+          {(['narrow', 'standard', 'wide', 'full'] as ContentWidth[]).map((w) => (
             <Pill
               key={w}
               label={t(WIDTH_LABELS[w])}

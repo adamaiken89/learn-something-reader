@@ -11,6 +11,7 @@ beforeEach(() => {
   clearMocks();
   mockResponse('logSession', { ok: true });
   useQuizStore.getState().reset();
+  Math.random = () => 0.999;
 });
 
 const aQuestion = {

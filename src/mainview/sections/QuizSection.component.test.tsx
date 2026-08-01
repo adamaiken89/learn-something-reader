@@ -25,6 +25,7 @@ beforeEach(() => {
   mockResponse('quizStart', []);
   mockResponse('logSession', undefined);
   mockResponse('getLastQuizSession', null);
+  Math.random = () => 0.999;
 });
 
 import QuizSection from './QuizSection';
@@ -552,5 +553,114 @@ describe('QuizSection', () => {
     await waitFor(() => {
       expect(container.textContent).toContain('Explanation q1');
     });
+  });
+
+  const clozeQ = (): QuizQuestion => ({
+    id: 'c1',
+    question: 'The {quick} brown fox',
+    type: 'cloze',
+    options: {},
+    answer: 'quick',
+    difficulty: 1,
+    tags: [],
+    explanation: 'Cloze explanation',
+  });
+
+  test('cloze first wrong shows try-again warn and stays editable', async () => {
+    mockResponse('quizStart', [clozeQ()]);
+    const { container } = render(<QuizSection {...props} />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('brown fox');
+    });
+    const input = container.querySelector('input')!;
+    await user.clear(input);
+    await user.type(input, 'slow');
+    await user.click(container.querySelector('button')!);
+    await waitFor(() => {
+      expect(container.textContent).toContain('Try again');
+      expect(container.textContent).not.toContain('Cloze explanation');
+    });
+    expect(container.querySelector('input')!.hasAttribute('disabled')).toBe(false);
+  });
+
+  test('cloze second wrong reveals answer and scores 0', async () => {
+    mockResponse('quizStart', [clozeQ()]);
+    const { container, getByText } = render(<QuizSection {...props} />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('brown fox');
+    });
+    const input = container.querySelector('input')!;
+    await user.clear(input);
+    await user.type(input, 'slow');
+    await getByText('Check').click();
+    await user.clear(input);
+    await user.type(input, 'slow again');
+    await getByText('Check').click();
+    await waitFor(() => {
+      expect(container.textContent).toContain('Cloze explanation');
+    });
+    const finish = getByText('Finish Quiz');
+    await finish.click();
+    await waitFor(() => {
+      expect(container.textContent).toContain('Quiz Complete');
+      expect(container.textContent).toContain('0%');
+    });
+  });
+
+  test('cloze correct on second attempt scores full marks', async () => {
+    mockResponse('quizStart', [clozeQ()]);
+    const { container, getByText } = render(<QuizSection {...props} />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('brown fox');
+    });
+    const input = container.querySelector('input')!;
+    await user.clear(input);
+    await user.type(input, 'slow');
+    await getByText('Check').click();
+    await user.clear(input);
+    await user.type(input, 'quick');
+    await getByText('Check').click();
+    await waitFor(() => {
+      expect(container.textContent).toContain('Cloze explanation');
+    });
+    const finish = getByText('Finish Quiz');
+    await finish.click();
+    await waitFor(() => {
+      expect(container.textContent).toContain('Quiz Complete');
+      expect(container.textContent).toContain('100%');
+    });
+  });
+
+  test('cloze question renders blank placeholder, not answer in braces', async () => {
+    mockResponse('quizStart', [clozeQ()]);
+    const { container } = render(<QuizSection {...props} />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('brown fox');
+    });
+    expect(container.textContent).not.toContain('{quick}');
+    expect(container.textContent).not.toContain('{component blob}');
+    expect(container.querySelectorAll('.border-dashed')).not.toHaveLength(0);
+  });
+
+  test('cloze {blank} directive question renders placeholder and stays answerable', async () => {
+    const blankQ: QuizQuestion = {
+      id: 'c2',
+      question:
+        'A {blank} is put into the MDC and removed in a {blank} block so threads are not contaminated across requests.',
+      type: 'cloze',
+      options: {},
+      answer: 'trace_id, finally',
+      difficulty: 1,
+      tags: [],
+      explanation: 'Cloze explanation',
+    };
+    mockResponse('quizStart', [blankQ]);
+    const { container } = render(<QuizSection {...props} />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('MDC');
+    });
+    expect(container.textContent).not.toContain('{blank}');
+    expect(container.textContent).not.toContain('{');
+    expect(container.textContent).not.toContain('trace_id');
   });
 });

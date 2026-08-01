@@ -29,6 +29,32 @@ function setLesson(mod: string, content: string | null) {
   mockLessons[mod] = content;
 }
 
+function validNote(id: string, courseID: string, content: string) {
+  return {
+    id,
+    courseID,
+    moduleID: '01',
+    highlightID: null,
+    sectionID: null,
+    content,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    updatedAt: '2024-01-01T00:00:00.000Z',
+  };
+}
+
+function validHighlight(id: string, courseID: string, selectedText: string) {
+  return {
+    id,
+    courseID,
+    moduleID: '01',
+    selectedText,
+    startOffset: 0,
+    endOffset: selectedText.length,
+    color: 'yellow',
+    createdAt: '2024-01-01T00:00:00.000Z',
+  };
+}
+
 type Search = typeof import('./search');
 let search: Search;
 
@@ -168,9 +194,7 @@ describe('searchAll', () => {
 
   test('searches notes from storage', async () => {
     addCourse('math', 'Math', ['Intro']);
-    mockStorageData.notes = [
-      { id: 'n1', courseID: 'math', moduleID: '01', content: 'my calculus note' },
-    ];
+    mockStorageData.notes = [validNote('n1', 'math', 'my calculus note')];
     search = await import('./search');
     const results = search.searchAll('calculus');
     expect(results).toHaveLength(1);
@@ -181,9 +205,7 @@ describe('searchAll', () => {
 
   test('searches highlights from storage', async () => {
     addCourse('math', 'Math', ['Intro']);
-    mockStorageData.highlights = [
-      { id: 'h1', courseID: 'math', moduleID: '01', selectedText: 'important calculus concept' },
-    ];
+    mockStorageData.highlights = [validHighlight('h1', 'math', 'important calculus concept')];
     search = await import('./search');
     const results = search.searchAll('calculus');
     expect(results).toHaveLength(1);
@@ -195,8 +217,8 @@ describe('searchAll', () => {
     addCourse('math', 'Math', ['Intro']);
     addCourse('physics', 'Physics', ['Intro']);
     mockStorageData.notes = [
-      { id: 'n1', courseID: 'math', moduleID: '01', content: 'calculus note' },
-      { id: 'n2', courseID: 'physics', moduleID: '01', content: 'calculus note' },
+      validNote('n1', 'math', 'calculus note'),
+      validNote('n2', 'physics', 'calculus note'),
     ];
     search = await import('./search');
     const results = search.searchAll('calculus', 'math');
@@ -208,8 +230,8 @@ describe('searchAll', () => {
     addCourse('math', 'Math', ['Intro']);
     addCourse('physics', 'Physics', ['Intro']);
     mockStorageData.highlights = [
-      { id: 'h1', courseID: 'math', moduleID: '01', selectedText: 'calculus highlight' },
-      { id: 'h2', courseID: 'physics', moduleID: '01', selectedText: 'calculus highlight' },
+      validHighlight('h1', 'math', 'calculus highlight'),
+      validHighlight('h2', 'physics', 'calculus highlight'),
     ];
     search = await import('./search');
     const results = search.searchAll('calculus', 'math');
@@ -220,9 +242,7 @@ describe('searchAll', () => {
   test('deduplicates results across note and highlight', async () => {
     addCourse('math', 'Math', ['Intro']);
     setLesson(modDir('01', 'Intro'), 'calculus lesson');
-    mockStorageData.notes = [
-      { id: 'n1', courseID: 'math', moduleID: '01', content: 'calculus note' },
-    ];
+    mockStorageData.notes = [validNote('n1', 'math', 'calculus note')];
     search = await import('./search');
     const results = search.searchAll('calculus');
     const types = results.map((r) => r.type);
@@ -231,9 +251,7 @@ describe('searchAll', () => {
   });
 
   test('note search handles course not in loaded courses', async () => {
-    mockStorageData.notes = [
-      { id: 'n1', courseID: 'unknown', moduleID: '01', content: 'some content' },
-    ];
+    mockStorageData.notes = [validNote('n1', 'unknown', 'some content')];
     search = await import('./search');
     const results = search.searchAll('content');
     expect(results).toHaveLength(1);
@@ -242,9 +260,7 @@ describe('searchAll', () => {
   });
 
   test('highlight search handles course not in loaded courses', async () => {
-    mockStorageData.highlights = [
-      { id: 'h1', courseID: 'unknown', moduleID: '01', selectedText: 'some highlight' },
-    ];
+    mockStorageData.highlights = [validHighlight('h1', 'unknown', 'some highlight')];
     search = await import('./search');
     const results = search.searchAll('highlight');
     expect(results).toHaveLength(1);
@@ -254,10 +270,8 @@ describe('searchAll', () => {
 
   test('handles non-matching notes and highlights', async () => {
     addCourse('math', 'Math', ['Intro']);
-    mockStorageData.notes = [{ id: 'n1', courseID: 'math', moduleID: '01', content: 'unrelated' }];
-    mockStorageData.highlights = [
-      { id: 'h1', courseID: 'math', moduleID: '01', selectedText: 'also unrelated' },
-    ];
+    mockStorageData.notes = [validNote('n1', 'math', 'unrelated')];
+    mockStorageData.highlights = [validHighlight('h1', 'math', 'also unrelated')];
     search = await import('./search');
     const results = search.searchAll('calculus');
     expect(results).toEqual([]);

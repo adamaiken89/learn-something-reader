@@ -34,7 +34,7 @@ export interface CumulativeQuiz {
 }
 
 export interface QuizIndex {
-  modules: Record<string, { mcq: boolean; cloze: boolean }>;
+  modules: Record<string, boolean>;
   cumulativeQuizzes: Array<{ id: string; milestone: number }>;
 }
 
@@ -135,4 +135,23 @@ export interface StudySession {
   type: 'reading' | 'quiz' | 'review';
   score?: number;
   total?: number;
+}
+
+export interface QuizSchedule {
+  intervalDays: number;
+  nextDue: string;
+}
+
+export interface StorageData {
+  highlights: Highlight[];
+  notes: Note[];
+  bookmarks: Bookmark[];
+  completedModules: CompletedModule[];
+  studySessions: StudySession[];
+  remoteRepoURL?: string;
+  lastSyncedCommit?: string | null;
+  lastSyncTime?: string | null;
+  lastSession?: LastSession | null;
+  moduleSessions?: Record<string, ModuleSession>;
+  quizSchedule?: Record<string, QuizSchedule>;
 }

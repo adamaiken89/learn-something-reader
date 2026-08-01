@@ -1,4 +1,4 @@
-import { CheckSquare, Layers, Type } from 'lucide-react';
+import { CheckSquare, Layers } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -13,21 +13,16 @@ export default function QuizPopover() {
   const btnRef = useRef<HTMLButtonElement>(null);
   const { course, module } = useCurrentLesson();
   const push = useViewStore((s) => s.push);
-  const [hasCloze, setHasCloze] = useState(false);
   const [hasCumulative, setHasCumulative] = useState(false);
 
   useEffect(() => {
-    if (course && module) {
-      api.quiz
-        .hasCloze(course.id, module.id)
-        .then(setHasCloze)
-        .catch(() => {});
+    if (course) {
       api.quiz
         .hasCumulative(course.id)
         .then(setHasCumulative)
         .catch(() => {});
     }
-  }, [course, module]);
+  }, [course]);
 
   useEffect(() => {
     if (!open) return;
@@ -47,7 +42,7 @@ export default function QuizPopover() {
     return btnRect.left - wrapperRect.left;
   };
 
-  const handleQuiz = (type: 'quiz' | 'clozeQuiz' | 'cumulativeQuiz') => {
+  const handleQuiz = (type: 'quiz' | 'cumulativeQuiz') => {
     if (!course || !module) return;
     setOpen(false);
     if (type === 'cumulativeQuiz') {
@@ -80,14 +75,8 @@ export default function QuizPopover() {
           <div className="absolute -top-1.5 left-4 w-3 h-3 bg-gray-900/95 border-l border-t border-gray-700/50 rotate-45" />
           <button onClick={() => handleQuiz('quiz')} className={btnClass}>
             <CheckSquare className="w-3.5 h-3.5" />
-            {t('lesson.quizMCQ', 'MCQ')}
+            {t('lesson.quizMCQ', 'Quiz')}
           </button>
-          {hasCloze && (
-            <button onClick={() => handleQuiz('clozeQuiz')} className={btnClass}>
-              <Type className="w-3.5 h-3.5" />
-              {t('lesson.quizCloze', 'Cloze')}
-            </button>
-          )}
           {hasCumulative && (
             <button onClick={() => handleQuiz('cumulativeQuiz')} className={btnClass}>
               <Layers className="w-3.5 h-3.5" />

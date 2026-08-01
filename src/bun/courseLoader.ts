@@ -138,12 +138,22 @@ export function loadClozeQuiz(courseId: string, moduleId: string): QuizQuestion[
   }));
 }
 
-export function hasClozeQuiz(courseId: string, moduleId: string): boolean {
-  const coursesDir = findSubjectsDir();
-  if (!coursesDir) return false;
-  const modDir = findModuleDir(coursesDir, courseId, moduleId);
-  if (!modDir) return false;
-  return existsSync(join(modDir, 'cloze.yaml'));
+/// Answers for a cloze question are ALL `{term}` markers; multi-blank questions
+/// need the full set comma-joined so generic `ua === q.answer` scoring works.
+export function normalizedClozeAnswer(questionText: string, rawAnswer: string): string {
+  const terms = [...questionText.matchAll(/\{([^{}]+)\}/g)]
+    .map((m) => m[1])
+    .filter((t) => t.trim().toLowerCase() !== 'blank');
+  return terms.length > 0 ? terms.join(', ') : rawAnswer;
+}
+
+export function loadCombinedQuiz(courseId: string, moduleId: string): QuizQuestion[] {
+  const mcq = loadQuiz(courseId, moduleId);
+  const cloze = loadClozeQuiz(courseId, moduleId).map((q) => ({
+    ...q,
+    answer: normalizedClozeAnswer(q.question, q.answer),
+  }));
+  return [...mcq, ...cloze];
 }
 
 export function parseCumulativeQuiz(yamlStr: string): CumulativeQuiz {
@@ -199,17 +209,17 @@ export function getQuizIndex(courseId: string): QuizIndex {
   if (!coursesDir) return { modules: {}, cumulativeQuizzes: [] };
 
   const modulesDir = join(coursesDir, courseId, 'modules');
-  const modules: Record<string, { mcq: boolean; cloze: boolean }> = {};
+  const modules: Record<string, boolean> = {};
 
   if (existsSync(modulesDir)) {
     const entries = readdirSync(modulesDir, { withFileTypes: true });
     for (const entry of entries) {
       if (!entry.isDirectory()) continue;
       const modPath = join(modulesDir, entry.name);
-      const mcq = existsSync(join(modPath, 'quiz.yaml'));
-      const cloze = existsSync(join(modPath, 'cloze.yaml'));
-      if (mcq || cloze) {
-        modules[entry.name] = { mcq, cloze };
+      const hasQuiz =
+        existsSync(join(modPath, 'quiz.yaml')) || existsSync(join(modPath, 'cloze.yaml'));
+      if (hasQuiz) {
+        modules[entry.name] = true;
       }
     }
   }

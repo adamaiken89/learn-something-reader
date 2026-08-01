@@ -1,6 +1,6 @@
 import { cva } from 'class-variance-authority';
 import clsx from 'clsx';
-import { Check, Lightbulb, X } from 'lucide-react';
+import { ArrowRight, Check, Lightbulb, X } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -35,6 +35,7 @@ interface Props {
   onBackToLesson?: () => void;
   onNextChapter?: () => void;
   onBackToDashboard?: () => void;
+  onNextQuiz?: () => void;
 }
 
 export default function QuizCompletionView({
@@ -46,6 +47,7 @@ export default function QuizCompletionView({
   onBackToLesson,
   onNextChapter,
   onBackToDashboard,
+  onNextQuiz,
 }: Props) {
   const { t } = useTranslation();
   const [filter, setFilter] = useState<'all' | 'correct' | 'wrong'>('all');
@@ -215,7 +217,11 @@ export default function QuizCompletionView({
               {t('quiz.backToDashboard')}
             </button>
           ) : null}
-          {onNextChapter ? (
+          {onNextQuiz ? (
+            <button onClick={onNextQuiz} className={completionBtn({ color: 'success' })}>
+              {t('quiz.nextQuiz')} <ArrowRight size={14} className="inline" />
+            </button>
+          ) : onNextChapter ? (
             <button onClick={onNextChapter} className={completionBtn({ color: 'success' })}>
               {t('quiz.nextChapter')}
             </button>

@@ -1,60 +1,64 @@
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { logger } from './logger';
-import type {
-  Highlight,
-  Note,
-  Bookmark,
-  CompletedModule,
-  ModuleSession,
-  StudySession,
-  LastSession,
-} from './types';
+import { sanitizeStorageData } from './schema';
+import type { StorageData } from './types';
 
 const DATA_DIR = join(process.env.HOME || '', '.coursereader');
 const DB_FILE = join(DATA_DIR, 'data.json');
 
-export interface StorageData {
-  highlights: Highlight[];
-  notes: Note[];
-  bookmarks: Bookmark[];
-  completedModules: CompletedModule[];
-  studySessions: StudySession[];
-  remoteRepoURL?: string;
-  lastSyncedCommit?: string | null;
-  lastSyncTime?: string | null;
-  lastSession?: LastSession | null;
-  moduleSessions?: Record<string, ModuleSession>;
-}
+const EMPTY_STORAGE: StorageData = {
+  highlights: [],
+  notes: [],
+  bookmarks: [],
+  completedModules: [],
+  studySessions: [],
+};
 
 let _cache: StorageData | null = null;
 
 function _loadFresh(): StorageData {
-  if (!existsSync(DB_FILE))
-    return {
-      highlights: [],
-      notes: [],
-      bookmarks: [],
-      completedModules: [],
-      studySessions: [],
-    };
+  if (!existsSync(DB_FILE)) return { ...EMPTY_STORAGE };
+  let raw = '';
   try {
-    const data = JSON.parse(readFileSync(DB_FILE, 'utf-8'));
-    if (!data.completedModules) data.completedModules = [];
-    if (!data.studySessions) data.studySessions = [];
-    return data;
+    raw = readFileSync(DB_FILE, 'utf-8');
   } catch (e) {
     logger.warn(
       { err: (e as Error).message, file: DB_FILE },
-      'Failed to load data.json, using defaults',
+      'Failed to read data.json, using defaults',
     );
-    return {
-      highlights: [],
-      notes: [],
-      bookmarks: [],
-      completedModules: [],
-      studySessions: [],
-    };
+    return { ...EMPTY_STORAGE };
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    const bakPath = backupCorruptFile(raw);
+    logger.warn(
+      { err: (e as Error).message, file: DB_FILE, backup: bakPath },
+      'Failed to parse data.json, backed up original and using defaults',
+    );
+    return { ...EMPTY_STORAGE };
+  }
+  const { data, dropped } = sanitizeStorageData(parsed);
+  if (dropped > 0) {
+    logger.warn(
+      { dropped, file: DB_FILE },
+      'data.json contained invalid records, repaired on load',
+    );
+  }
+  return data;
+}
+
+function backupCorruptFile(raw: string): string | null {
+  try {
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const bakPath = join(DATA_DIR, `data.json.bak-${stamp}`);
+    writeFileSync(bakPath, raw);
+    return bakPath;
+  } catch (e) {
+    logger.warn({ err: (e as Error).message }, 'Failed to back up corrupt data.json');
+    return null;
   }
 }
 
@@ -74,11 +78,5 @@ export function invalidateCache(): void {
 }
 
 export function clearAllData(): void {
-  save({
-    highlights: [],
-    notes: [],
-    bookmarks: [],
-    completedModules: [],
-    studySessions: [],
-  });
+  save({ ...EMPTY_STORAGE });
 }

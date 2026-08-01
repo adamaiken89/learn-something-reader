@@ -5,6 +5,7 @@ import QuizHeader from '../components/QuizHeader';
 import PageContent from '../layouts/PageContent';
 import PageLayout from '../layouts/PageLayout';
 import CumulativeQuizSection from '../sections/CumulativeQuizSection';
+import { useViewStore } from '../stores/viewStore';
 
 interface Props {
   course: Course;
@@ -23,12 +24,14 @@ function displayLabel(id?: string): string {
 
 export default function CumulativeQuizPage({ course, cumulativeQuizId, onBack }: Props) {
   const { t } = useTranslation();
+  const push = useViewStore((s) => s.push);
   return (
     <PageLayout>
       <QuizHeader
         onBack={onBack}
         currentCourseId={course.id}
         title={`${course.displayName} — ${t('lesson.cumulativeQuiz')}${displayLabel(cumulativeQuizId)}`}
+        onAllQuizzes={() => push({ type: 'quizHub', course })}
       />
       <PageContent className="px-6 quiz-bg">
         <CumulativeQuizSection course={course} cumulativeQuizId={cumulativeQuizId} />

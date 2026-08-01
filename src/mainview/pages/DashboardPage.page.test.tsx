@@ -48,7 +48,6 @@ describe('DashboardPage', () => {
     });
     mockResponse('getLastSession', null);
     mockResponse('quizIndex', { modules: {}, cumulativeQuizzes: [] });
-    mockResponse('hasClozeQuiz', false);
     mockResponse('hasCumulativeQuiz', false);
   });
 
@@ -162,5 +161,68 @@ describe('DashboardPage', () => {
       expect(container.textContent).toContain('Intro to CS');
     });
     expect(container.querySelector('.animate-pulse')).toBeNull();
+  });
+
+  test('shows due quiz card with split counts below course grid', async () => {
+    useCourseStore.setState({ courses: [mockCourse] });
+    mockResponse('quizStatus', {
+      courseID: 'cs101',
+      modules: [
+        {
+          moduleId: 'mod-01',
+          moduleName: 'Module 1',
+          attempt: {
+            attempted: true,
+            score: 9,
+            total: 10,
+            date: '2026-07-01',
+            due: true,
+            overdue: true,
+            ready: false,
+          },
+        },
+      ],
+      cumulativeQuizzes: [],
+    });
+    const { container } = render(<DashboardPage />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('ready');
+    });
+    expect(container.textContent).toContain('0 ready');
+    expect(container.textContent).toContain('1 overdue');
+    expect(container.textContent).toContain('Intro to CS');
+    expect(container.textContent).toContain('Start');
+    const startBtn = Array.from(container.querySelectorAll('button')).find(
+      (b) => b.textContent === 'Start',
+    )!;
+    expect(startBtn).toBeTruthy();
+  });
+
+  test('hides due card when nothing due', async () => {
+    useCourseStore.setState({ courses: [mockCourse] });
+    mockResponse('quizStatus', {
+      courseID: 'cs101',
+      modules: [
+        {
+          moduleId: 'mod-01',
+          moduleName: 'Module 1',
+          attempt: {
+            attempted: true,
+            score: 9,
+            total: 10,
+            date: '2026-08-14',
+            due: false,
+            overdue: false,
+            ready: false,
+          },
+        },
+      ],
+      cumulativeQuizzes: [],
+    });
+    const { container } = render(<DashboardPage />);
+    await waitFor(() => {
+      expect(container.textContent).toContain('Intro to CS');
+    });
+    expect(container.textContent).not.toContain('ready ·');
   });
 });

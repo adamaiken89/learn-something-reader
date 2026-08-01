@@ -36,7 +36,12 @@ export function useLessonToolbarShortcuts(course: Course, module: ModuleMeta): v
     incFontSize,
     cycleTheme,
     toggleWidth: () => {
-      const order: Array<'narrow' | 'standard' | 'wide'> = ['narrow', 'standard', 'wide'];
+      const order: Array<'narrow' | 'standard' | 'wide' | 'full'> = [
+        'narrow',
+        'standard',
+        'wide',
+        'full',
+      ];
       const next = order[(order.indexOf(contentWidth) + 1) % order.length];
       setContentWidth(next);
     },

@@ -1,6 +1,6 @@
 import type { RPCSchema } from 'electrobun/bun';
 import type { MetaField } from './lessonMarkdown';
-import type { CourseStats, GlobalStats } from './stats';
+import type { CourseQuizStatus, CourseStats, GlobalStats } from './stats';
 import type { SearchResult } from './search';
 import type {
   Bookmark,
@@ -46,14 +46,13 @@ type CourseRequests = {
   modulesList: { params: { courseId: string }; response: ModuleMeta[] };
   loadLesson: { params: { courseId: string; moduleId: string }; response: LessonResponse };
   loadQuiz: { params: { courseId: string; moduleId: string }; response: QuizQuestion[] };
-  loadClozeQuiz: { params: { courseId: string; moduleId: string }; response: QuizQuestion[] };
-  hasClozeQuiz: { params: { courseId: string; moduleId: string }; response: boolean };
   loadCumulativeQuiz: {
     params: { courseId: string; id?: string };
     response: CumulativeQuiz;
   };
   hasCumulativeQuiz: { params: { courseId: string }; response: boolean };
   quizIndex: { params: { courseId: string }; response: QuizIndex };
+  quizStatus: { params: { courseId: string }; response: CourseQuizStatus };
   getSections: { params: { courseId: string; moduleId: string }; response: Section[] };
   search: { params: { query: string; courseID?: string }; response: SearchResult[] };
   quizStart: { params: { courseId: string; moduleId: string }; response: QuizQuestion[] };

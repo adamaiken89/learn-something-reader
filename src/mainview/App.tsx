@@ -6,13 +6,14 @@ import { api } from './api';
 import SearchOverlay from './components/SearchOverlay';
 import { useAppInit } from './hooks/useAppInit';
 import { useClipboardFallback } from './hooks/useClipboardFallback';
+import { useQuizDueNotification } from './hooks/useQuizDueNotification';
 import { useShortcuts } from './hooks/useShortcuts';
 import { useWindowTitle } from './hooks/useWindowTitle';
 import BookmarksPage from './pages/BookmarksPage';
-import ClozeQuizPage from './pages/ClozeQuizPage';
 import CumulativeQuizPage from './pages/CumulativeQuizPage';
 import DashboardPage from './pages/DashboardPage';
 import LessonPage from './pages/LessonPage';
+import QuizHubPage from './pages/QuizHubPage';
 import QuizPage from './pages/QuizPage';
 import ReviewPage from './pages/ReviewPage';
 import SettingsPage from './pages/SettingsPage';
@@ -31,6 +32,7 @@ export default function App() {
 
   useAppInit();
   useClipboardFallback();
+  useQuizDueNotification();
   useWindowTitle();
 
   useEffect(() => {
@@ -80,11 +82,6 @@ export default function App() {
       case 'quiz':
         return <QuizPage course={currentView.course} module={currentView.module} onBack={pop} />;
 
-      case 'clozeQuiz':
-        return (
-          <ClozeQuizPage course={currentView.course} module={currentView.module} onBack={pop} />
-        );
-
       case 'cumulativeQuiz':
         return (
           <CumulativeQuizPage
@@ -96,6 +93,9 @@ export default function App() {
 
       case 'review':
         return <ReviewPage courseId={currentView.course.id} onBack={pop} />;
+
+      case 'quizHub':
+        return <QuizHubPage course={currentView.course} onBack={pop} />;
 
       case 'settings':
         return <SettingsPage onBack={pop} />;

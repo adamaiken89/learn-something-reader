@@ -2,7 +2,8 @@ import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import * as CourseLoader from './courseLoader';
 import { processLessonMarkdown } from './lessonMarkdown';
-import type { Course } from './types';
+import { sanitizeStorageData } from './schema';
+import type { Course, Highlight, Note } from './types';
 
 export interface SearchResult {
   type: 'lesson' | 'note' | 'highlight';
@@ -18,31 +19,13 @@ export interface SearchResult {
 const DATA_DIR = join(process.env.HOME || '', '.coursereader');
 const DB_FILE = join(DATA_DIR, 'data.json');
 
-interface StoredNote {
-  id: string;
-  courseID: string;
-  moduleID: string;
-  content: string;
-}
-
-interface StoredHighlight {
-  id: string;
-  courseID: string;
-  moduleID: string;
-  selectedText: string;
-}
-
-interface StorageData {
-  notes?: StoredNote[];
-  highlights?: StoredHighlight[];
-}
-
-function loadStorage(): StorageData {
-  if (!existsSync(DB_FILE)) return {};
+function loadStorage(): { notes: Note[]; highlights: Highlight[] } {
+  if (!existsSync(DB_FILE)) return { notes: [], highlights: [] };
   try {
-    return JSON.parse(readFileSync(DB_FILE, 'utf-8'));
+    const { data } = sanitizeStorageData(JSON.parse(readFileSync(DB_FILE, 'utf-8')));
+    return { notes: data.notes, highlights: data.highlights };
   } catch {
-    return {};
+    return { notes: [], highlights: [] };
   }
 }
 

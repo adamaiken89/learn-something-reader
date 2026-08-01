@@ -49,14 +49,14 @@ items:
     expect(result).toEqual({ items: ['first', 'second'] });
   });
 
-  test('greater indent skipped in sequence', () => {
+  test('greater indented line folds into preceding sequence scalar', () => {
     const result = parse(`
 items:
   - first
-    should be skipped
+    should be joined
   - second
 `);
-    expect(result).toEqual({ items: ['first', 'second'] });
+    expect(result).toEqual({ items: ['first should be joined', 'second'] });
   });
 
   test('inline array in sequence entry', () => {
@@ -120,13 +120,13 @@ parent:
 });
 
 describe('yaml parse - mapping edge cases', () => {
-  test('skips orphan indented lines in mapping', () => {
+  test('orphan indented line folds into preceding scalar', () => {
     const result = parse(`
 key: value
-  orphan indented
+  orphan continuation
 otherkey: otherval
 `);
-    expect(result).toEqual({ key: 'value', otherkey: 'otherval' });
+    expect(result).toEqual({ key: 'value orphan continuation', otherkey: 'otherval' });
   });
 
   test('empty mapping value with no sub-indent returns null', () => {
@@ -167,6 +167,16 @@ key: value
     expect(result).toBeNull();
   });
 
+  test('whitespace-only string returns null', () => {
+    const result = parse('   \n  ');
+    expect(result).toBeNull();
+  });
+
+  test('comment-only doc returns null', () => {
+    const result = parse('# just a comment\n');
+    expect(result).toBeNull();
+  });
+
   test('inline array with empty brackets', () => {
     const result = parse('[]');
     expect(result).toEqual([]);
@@ -179,5 +189,62 @@ data:
   name: test
 `);
     expect(result).toEqual({ data: { tags: [], name: 'test' } });
+  });
+});
+
+describe('yaml parse - multi-line scalars (regression)', () => {
+  test('wrapped explanation folds into single string', () => {
+    const result = parse(`
+explanation: A state management library built for React,
+  using Zustand with proxies for efficient reactivity and
+  selector-based subscriptions.
+`);
+    expect(result).toEqual({
+      explanation:
+        'A state management library built for React, using Zustand with proxies for efficient reactivity and selector-based subscriptions.',
+    });
+  });
+
+  test('wrapped string in sequence folds', () => {
+    const result = parse(`
+items:
+  - Zustand with
+    proxies under the hood
+`);
+    expect(result).toEqual({ items: ['Zustand with proxies under the hood'] });
+  });
+
+  test('url with fragment preserved', () => {
+    const result = parse('url: https://example.com/path#section');
+    expect(result).toEqual({ url: 'https://example.com/path#section' });
+  });
+
+  test('url with port preserved', () => {
+    const result = parse('url: https://example.com:8080/path');
+    expect(result).toEqual({ url: 'https://example.com:8080/path' });
+  });
+});
+
+describe('yaml parse - js-yaml strictness', () => {
+  test('duplicate keys last-wins', () => {
+    const result = parse(`
+a: 1
+b: 2
+a: 3
+`);
+    expect(result).toEqual({ a: 3, b: 2 });
+  });
+
+  test('date-like scalar stays string', () => {
+    const result = parse('d: 2024-01-01');
+    expect(result).toEqual({ d: '2024-01-01' });
+  });
+
+  test('yes/no scalars stay strings', () => {
+    const result = parse(`
+a: yes
+b: no
+`);
+    expect(result).toEqual({ a: 'yes', b: 'no' });
   });
 });

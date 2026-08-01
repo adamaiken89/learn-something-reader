@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import type { TransitionStyle } from '../../stores/settingsStore';
+import type { ContentWidth, TransitionStyle } from '../../stores/settingsStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { Button } from '../ui/Button';
 
@@ -23,7 +23,7 @@ function WidthTransitionControl() {
         variant="secondary"
         size="sm"
         onClick={() => {
-          const order: Array<'narrow' | 'standard' | 'wide'> = ['narrow', 'standard', 'wide'];
+          const order: ContentWidth[] = ['narrow', 'standard', 'wide', 'full'];
           const next = order[(order.indexOf(contentWidth) + 1) % order.length];
           setContentWidth(next);
         }}
@@ -33,7 +33,9 @@ function WidthTransitionControl() {
           ? t('lesson.narrow')
           : contentWidth === 'standard'
             ? t('lesson.standard')
-            : t('lesson.wide')}
+            : contentWidth === 'wide'
+              ? t('lesson.wide')
+              : t('lesson.full')}
       </Button>
       <Button
         variant="secondary"

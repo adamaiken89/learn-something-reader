@@ -31,6 +31,12 @@ export function getCompletedModuleCount(courseID: string): number {
   return data.completedModules.filter((m) => m.courseID === courseID).length;
 }
 
+export function getModuleCompletedAt(courseID: string, moduleID: string): string | null {
+  const data = load();
+  const m = data.completedModules.find((c) => c.courseID === courseID && c.moduleID === moduleID);
+  return m?.completedAt ?? null;
+}
+
 export function addStudySession(
   session: Omit<StudySession, 'date'> & { date?: string },
 ): StudySession {

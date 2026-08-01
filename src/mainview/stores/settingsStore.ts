@@ -5,7 +5,7 @@ import type { Theme } from '../themes';
 import { THEMES } from '../themes';
 import { getStored, store } from './storageUtils';
 
-export type ContentWidth = 'narrow' | 'standard' | 'wide';
+export type ContentWidth = 'narrow' | 'standard' | 'wide' | 'full';
 export type TransitionStyle = 'none' | 'flip' | 'slide' | 'fade';
 export type ReadingMode = 'normal' | 'active';
 export type RightPanel = false | 'sections' | 'ai' | 'notes';
@@ -36,7 +36,8 @@ interface SettingsState {
 
 const migrateWidth = (): ContentWidth => {
   const saved = getStored<unknown>('coursereader-width', undefined);
-  if (saved === 'narrow' || saved === 'standard' || saved === 'wide') return saved;
+  if (saved === 'narrow' || saved === 'standard' || saved === 'wide' || saved === 'full')
+    return saved;
   const legacy = getStored<boolean | undefined>('coursereader-wide', undefined);
   if (legacy === true) return 'wide';
   if (legacy === false) return 'narrow';

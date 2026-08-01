@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import type { QuizQuestion } from '../../bun/types';
 import { api } from '../api';
 import { logger } from '../logger';
+import { clozeCorrect, normalizeClozeBlanks, shuffleQuestions } from '../quizUtil';
 import { useQuizStore } from '../stores/quizStore';
 import { showToast } from '../toast';
 
@@ -24,7 +25,7 @@ export function useQuizEngine(courseId: string, moduleId: string, loader?: QuizL
     const loadFn = loaderRef.current ?? api.quiz.start;
     loadFn(courseId, moduleId)
       .then((qs) => {
-        setQuestions(qs);
+        setQuestions(normalizeClozeBlanks(shuffleQuestions(qs)));
       })
       .catch((err) => {
         logger.warn({ err }, 'Quiz load failed');
@@ -39,7 +40,7 @@ export function useQuizEngine(courseId: string, moduleId: string, loader?: QuizL
         const userAnswer = selectedAnswers[q.id];
         if (userAnswer === undefined) return false;
         if (q.type === 'cloze') {
-          return userAnswer.trim().toLowerCase() === q.answer.trim().toLowerCase();
+          return clozeCorrect(q, userAnswer);
         }
         return userAnswer === q.answer;
       }).length;

@@ -8,7 +8,6 @@ import AppearancePopover from '../components/lesson/AppearancePopover';
 import CardsButton from '../components/lesson/CardsButton';
 import LessonToolbar from '../components/lesson/LessonToolbar';
 import ProgressBadge from '../components/lesson/ProgressBadge';
-import QuizOverlay from '../components/lesson/QuizOverlay';
 import QuizReviewButtons from '../components/lesson/QuizReviewButtons';
 import ShortcutHelp from '../components/lesson/ShortcutHelp';
 import SearchOverlay from '../components/SearchOverlay';
@@ -21,6 +20,7 @@ import PageLayout from '../layouts/PageLayout';
 import LessonSection from '../sections/LessonSection';
 import { useLessonUIStore } from '../stores/lessonUIStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useViewStore } from '../stores/viewStore';
 
 interface LessonFeatureProps {
   course: Course;
@@ -36,12 +36,12 @@ export default function LessonPage({
   onBack,
 }: LessonFeatureProps) {
   const { t } = useTranslation();
+  const push = useViewStore((s) => s.push);
   const searchCourseOpen = useLessonUIStore((s) => s.searchCourseOpen);
   const setSearchCourseOpen = useLessonUIStore((s) => s.setSearchCourseOpen);
   const transitionStyle = useSettingsStore((s) => s.transitionStyle);
   const isMobile = useIsMobile();
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
-  const [quizOverlayOpen, setQuizOverlayOpen] = useState(false);
 
   const focusMode = useSettingsStore((s) => s.focusMode);
   useLessonToolbarShortcuts(course, module);
@@ -122,7 +122,7 @@ export default function LessonPage({
             )}
             <div className="ml-auto flex items-center gap-1">
               <button
-                onClick={() => setQuizOverlayOpen(true)}
+                onClick={() => push({ type: 'quizHub', course })}
                 className={headerBtnClass}
                 title={t('lesson.quizAccess', 'Quiz Access')}
               >
@@ -173,7 +173,7 @@ export default function LessonPage({
                         <QuizReviewButtons />
                         <button
                           onClick={() => {
-                            setQuizOverlayOpen(true);
+                            push({ type: 'quizHub', course });
                             setShowOverflowMenu(false);
                           }}
                           className="w-full text-left px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-700/50 hover:text-gray-200 transition-colors"
@@ -212,7 +212,6 @@ export default function LessonPage({
       {searchCourseOpen && (
         <SearchOverlay initialCourseIDs={[course.id]} onClose={() => setSearchCourseOpen(false)} />
       )}
-      {quizOverlayOpen && <QuizOverlay onClose={() => setQuizOverlayOpen(false)} />}
     </PageLayout>
   );
 }

@@ -26,10 +26,10 @@ describe('WidthTransitionControl', () => {
     expect(useSettingsStore.getState().contentWidth).toBe('wide');
   });
 
-  test('wraps from wide to narrow', async () => {
-    useSettingsStore.setState({ contentWidth: 'wide' });
+  test('wraps from full to narrow', async () => {
+    useSettingsStore.setState({ contentWidth: 'full' });
     const { getByText } = render(<WidthTransitionControl />);
-    await user.click(getByText('Wide'));
+    await user.click(getByText('Full'));
     expect(useSettingsStore.getState().contentWidth).toBe('narrow');
   });
 

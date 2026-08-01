@@ -83,16 +83,9 @@ const HANDLERS: Record<string, MockHandler> = {
   getCourseModuleSessions: () => [],
 
   // Quiz availability checks
-  hasClozeQuiz: () => false,
   hasCumulativeQuiz: () => false,
   setWindowTitle: () => undefined,
   openExternal: () => ({ ok: true }),
-
-  // Cloze quiz
-  loadClozeQuiz: (params) => {
-    const { courseId, moduleId } = p<{ courseId: string; moduleId: string }>(params);
-    return mockData.getQuiz(courseId, moduleId).filter((q) => q.type === 'cloze');
-  },
 
   // Cumulative quiz
   loadCumulativeQuiz: () => ({
@@ -100,11 +93,39 @@ const HANDLERS: Record<string, MockHandler> = {
   }),
   quizIndex: () => ({
     modules: {
-      '01-getting-started': { mcq: true, cloze: false },
-      '02-variables': { mcq: true, cloze: true },
-      '03-control-flow': { mcq: true, cloze: false },
+      '01-getting-started': true,
+      '02-variables': true,
+      '03-control-flow': true,
     },
     cumulativeQuizzes: [{ id: 'cumulative_quiz.yaml', milestone: 10 }],
+  }),
+  quizStatus: () => ({
+    courseID: 'test',
+    modules: [
+      {
+        moduleId: '1',
+        moduleName: 'Getting Started',
+        attempt: { attempted: true, score: 9, total: 10, date: '2026-08-01', due: true },
+      },
+      {
+        moduleId: '2',
+        moduleName: 'Variables & Types',
+        attempt: { attempted: true, score: 7, total: 10, date: '2026-08-10', due: false },
+      },
+      {
+        moduleId: '3',
+        moduleName: 'Control Flow',
+        attempt: null,
+      },
+    ],
+    cumulativeQuizzes: [
+      {
+        id: 'cumulative_quiz.yaml',
+        milestone: 10,
+        displayLabel: '',
+        attempt: { attempted: true, score: 8, total: 10, date: '2026-08-05', due: true },
+      },
+    ],
   }),
 
   // Data

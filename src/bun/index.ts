@@ -41,15 +41,13 @@ const rpc = BrowserView.defineRPC<AppSchema>({
 
       loadQuiz: ({ courseId, moduleId }) => CourseLoader.loadQuiz(courseId, moduleId),
 
-      loadClozeQuiz: ({ courseId, moduleId }) => CourseLoader.loadClozeQuiz(courseId, moduleId),
-
-      hasClozeQuiz: ({ courseId, moduleId }) => CourseLoader.hasClozeQuiz(courseId, moduleId),
-
       loadCumulativeQuiz: ({ courseId, id }) => CourseLoader.loadCumulativeQuiz(courseId, id),
 
       hasCumulativeQuiz: ({ courseId }) => CourseLoader.hasCumulativeQuiz(courseId),
 
       quizIndex: ({ courseId }) => CourseLoader.getQuizIndex(courseId),
+
+      quizStatus: ({ courseId }) => Stats.getQuizStatus(courseId),
 
       getSections: ({ courseId, moduleId }) => {
         const content = CourseLoader.loadLesson(courseId, moduleId);
@@ -102,7 +100,7 @@ const rpc = BrowserView.defineRPC<AppSchema>({
         return card;
       },
 
-      quizStart: ({ courseId, moduleId }) => CourseLoader.loadQuiz(courseId, moduleId),
+      quizStart: ({ courseId, moduleId }) => CourseLoader.loadCombinedQuiz(courseId, moduleId),
 
       getHighlights: ({ courseID, moduleID }) =>
         Annotations.getHighlightsForModule(courseID, moduleID),
@@ -170,6 +168,9 @@ const rpc = BrowserView.defineRPC<AppSchema>({
 
       logSession: async ({ courseID, moduleID, durationMinutes, type, score, total }) => {
         Progress.addStudySession({ courseID, moduleID, durationMinutes, type, score, total });
+        if (type === 'quiz' && score != null && total != null) {
+          Stats.recordQuizResult(courseID, moduleID, score, total);
+        }
         return { ok: true as const };
       },
 
@@ -254,7 +255,7 @@ try {
     url: mainViewUrl,
     rpc,
     frame: {
-      width: 1100,
+      width: 1280,
       height: 800,
       x: 200,
       y: 200,

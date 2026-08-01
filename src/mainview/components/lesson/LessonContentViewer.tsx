@@ -30,9 +30,8 @@ import { THEME_TOKENS, themeToCSSVars } from '../../themes';
 import { rehypeCloze } from '../rehypeCloze';
 import { rehypeHighlightText } from '../rehypeHighlightText';
 import { rehypeSearchText } from '../rehypeSearchText';
-import { Button } from '../ui/Button';
 import ClozeBlank from './ClozeBlank';
-import { handleToggle } from './LessonContentCompletionButton';
+import LessonContentCompletionButton from './LessonContentCompletionButton';
 import LessonContentHeader from './LessonContentHeader';
 import LessonWarmUpBar from './LessonWarmUpBar';
 import NotePopover from './NotePopover';
@@ -146,15 +145,10 @@ export default function LessonContentViewer({
   const sections = useLessonViewStore((s) => s.sections);
   const courseId = useLessonViewStore((s) => s.courseId);
   const moduleId = useLessonViewStore((s) => s.moduleId);
-  const [hasCloze, setHasCloze] = useState(false);
   const [hasCumulative, setHasCumulative] = useState(false);
 
   useEffect(() => {
     if (courseId && moduleId) {
-      api.quiz
-        .hasCloze(courseId, moduleId)
-        .then(setHasCloze)
-        .catch(() => {});
       api.quiz
         .hasCumulative(courseId)
         .then(setHasCumulative)
@@ -232,8 +226,10 @@ export default function LessonContentViewer({
           <div
             className={clsx(
               'px-3 sm:px-6 book-content',
-              contentWidth === 'wide' && 'book-content-wide',
+              contentWidth === 'narrow' && 'book-content-narrow',
               contentWidth === 'standard' && 'book-content-standard',
+              contentWidth === 'wide' && 'book-content-wide',
+              contentWidth === 'full' && 'book-content-full',
             )}
             data-testid="book-content-area"
             style={{ fontSize: `${fontSize}px`, ...themeVars }}
@@ -287,19 +283,8 @@ export default function LessonContentViewer({
                       onClick={() => push({ type: 'quiz', course, module })}
                       className="px-3 py-1.5 text-[11px] font-medium bg-indigo-600/80 text-indigo-100 hover:bg-indigo-500/80 transition-colors"
                     >
-                      {t('lesson.quizMCQ', 'MCQ')}
+                      {t('lesson.quizMCQ', 'Quiz')}
                     </button>
-                    {hasCloze && (
-                      <>
-                        <div className="h-4 w-px bg-gray-600/50" />
-                        <button
-                          onClick={() => push({ type: 'clozeQuiz', course, module })}
-                          className="px-3 py-1.5 text-[11px] text-gray-300 hover:text-white hover:bg-gray-700/50 transition-colors"
-                        >
-                          {t('lesson.quizCloze', 'Cloze')}
-                        </button>
-                      </>
-                    )}
                     {hasCumulative && (
                       <>
                         <div className="h-4 w-px bg-gray-600/50" />
@@ -320,15 +305,7 @@ export default function LessonContentViewer({
                       {t('lesson.completeAndNext', 'Complete & Next →')}
                     </button>
                   )}
-                  {!hasNext && (
-                    <Button
-                      onClick={() => void handleToggle()}
-                      variant="outline"
-                      className="font-sans"
-                    >
-                      {t('lesson.markAsComplete', 'Mark as Complete')}
-                    </Button>
-                  )}
+                  {!hasNext && <LessonContentCompletionButton />}
                 </>
               )}
             </div>

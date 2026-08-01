@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-import { parseCourse, parseCumulativeQuiz, parseQuiz, parseSections } from './courseLoader';
+import {
+  normalizedClozeAnswer,
+  parseCourse,
+  parseCumulativeQuiz,
+  parseQuiz,
+  parseSections,
+} from './courseLoader';
 import { createSRSCard, performReview } from './srs';
 import type { QuizQuestion, SRSCard } from './types';
 
@@ -109,6 +115,26 @@ describe('parseQuiz', () => {
 
   test('returns empty array for non-array YAML', () => {
     expect(parseQuiz('key: value')).toEqual([]);
+  });
+
+  test('folds wrapped explanation across lines', () => {
+    const yaml = `
+- id: q1
+  question: What is Zustand?
+  answer: B
+  explanation: A state management library built for React,
+    using Zustand with proxies for efficient reactivity
+- id: q2
+  question: What is 2+2?
+  answer: B
+  explanation: Basic math
+`;
+    const result = parseQuiz(yaml);
+    expect(result).toHaveLength(2);
+    expect(result[0].explanation).toBe(
+      'A state management library built for React, using Zustand with proxies for efficient reactivity',
+    );
+    expect(result[1].explanation).toBe('Basic math');
   });
 
   test('returns empty array for empty input', () => {
@@ -397,7 +423,7 @@ describe('parseCumulativeQuiz', () => {
   });
 
   test('returns empty array for invalid YAML', () => {
-    expect(parseCumulativeQuiz('[[[').questions).toEqual([]);
+    expect(() => parseCumulativeQuiz('[[[')).toThrow();
   });
 
   test('parses hybrid mapping with source_modules + questions key', () => {
@@ -420,5 +446,45 @@ questions:
     expect(result.questions[0].id).toBe('cm.1');
     expect(result.questions[0].type).toBeUndefined();
     expect(result.questions[1].type).toBe('cloze');
+  });
+});
+
+describe('normalizedClozeAnswer', () => {
+  test('joins inline {term} markers comma-separated', () => {
+    expect(normalizedClozeAnswer('...called a {component blob}.', 'component blob')).toBe(
+      'component blob',
+    );
+  });
+
+  test('joins multi-blank inline terms', () => {
+    expect(normalizedClozeAnswer('Add {a} and {b}.', 'a, b')).toBe('a, b');
+  });
+
+  test('preserves rawAnswer when {blank} directive used', () => {
+    expect(
+      normalizedClozeAnswer(
+        'A {blank} is put into the MDC and removed in a {blank} block so threads are not contaminated.',
+        'trace_id, finally',
+      ),
+    ).toBe('trace_id, finally');
+  });
+
+  test('preserves rawAnswer for single {blank} directive', () => {
+    expect(
+      normalizedClozeAnswer(
+        'Spring Security 7 enables {blank} protection for all endpoints.',
+        'CSRF',
+      ),
+    ).toBe('CSRF');
+  });
+
+  test('preserves rawAnswer when no brace markers at all', () => {
+    expect(normalizedClozeAnswer('The ___ process removes duplicates.', 'deduplication')).toBe(
+      'deduplication',
+    );
+  });
+
+  test('does not include {blank} markers when mixed with real terms', () => {
+    expect(normalizedClozeAnswer('Use {blank} plus {realTerm}.', 'realTerm')).toBe('realTerm');
   });
 });

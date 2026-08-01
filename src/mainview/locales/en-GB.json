@@ -43,6 +43,7 @@
     "decreaseFontSize": "Decrease font size",
     "increaseFontSize": "Increase font size",
     "wide": "Wide",
+    "full": "Full",
     "standard": "Standard",
     "narrow": "Narrow",
     "toggleWideMode": "Toggle wide mode",
@@ -124,8 +125,28 @@
     "nextChapter": "Next Chapter →",
     "backToDashboard": "Back to Dashboard",
     "reviewCourse": "Review Cards",
-    "previousPassed": "Passed",
-    "previousFailed": "Failed"
+    "previousPassed": "Previous attempt: Passed",
+    "previousFailed": "Previous attempt: Failed",
+    "nextQuiz": "Next Quiz",
+    "allQuizzes": "All Quizzes",
+    "clozePlaceholder": "Type the missing term",
+    "clozeCheck": "Check",
+    "clozeTryAgain": "Try again — you'll get a second chance before the answer is shown",
+    "clozeWrongAnswer": "Your answer \"{{user}}\" — correct: {{answer}}"
+  },
+  "quizHub": {
+    "title": "Quiz Hub",
+    "subtitle": "Revise by working through quizzes in order",
+    "startReview": "Start Review",
+    "due": "Due",
+    "moduleQuizzes": "Module Quizzes",
+    "cumulativeReviews": "Cumulative Reviews",
+    "notAttempted": "Not attempted"
+  },
+  "notification": {
+    "quizDue": {
+      "statusSplit": "{{ready}} ready · {{overdue}} overdue"
+    }
   },
   "review": {
     "loadingCards": "Loading review cards...",
@@ -354,7 +375,15 @@
     "complete": "Complete",
     "greetingMorning": "Good morning",
     "greetingAfternoon": "Good afternoon",
-    "greetingEvening": "Good evening"
+    "greetingEvening": "Good evening",
+    "quizDue": {
+      "statusSplit": "{{ready}} ready · {{overdue}} overdue",
+      "start": "Start",
+      "more": "+{{count}} more",
+      "less": "Show less",
+      "readyBadge": "{{count}} ready",
+      "overdueBadge": "{{count}} overdue"
+    }
   },
   "icons": {
     "themeDark": "🌙",

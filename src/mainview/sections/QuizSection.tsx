@@ -1,10 +1,11 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Course, ModuleMeta, StudySession } from '../../bun/types';
+import type { Course, ModuleMeta, QuizIndex, StudySession } from '../../bun/types';
 import { api } from '../api';
 import QuizBottomNav from '../components/quiz/QuizBottomNav';
 import QuizClozeInput from '../components/quiz/QuizClozeInput';
+import QuizClozeQuestion from '../components/quiz/QuizClozeQuestion';
 import QuizCompletionView from '../components/quiz/QuizCompletionView';
 import QuizExplanation from '../components/quiz/QuizExplanation';
 import QuizMCQGrid from '../components/quiz/QuizMCQGrid';
@@ -12,6 +13,8 @@ import QuizProgressBar from '../components/quiz/QuizProgressBar';
 import { loadingIndicator } from '../components/ui/variants/loading';
 import { quizCompletionContainer } from '../components/ui/variants/quiz';
 import { useQuizEngine } from '../hooks/useQuizEngine';
+import { nextQuizAfter, presenceFromIndex, targetToView } from '../quizDrive';
+import { clozeCorrect } from '../quizUtil';
 import { useQuizStore } from '../stores/quizStore';
 import { useViewStore } from '../stores/viewStore';
 
@@ -43,6 +46,7 @@ export default function QuizSection({ course, module }: Props) {
   const highlightedIdx = useQuizStore((s) => s.highlightedIdx);
   const setHighlightedIdx = useQuizStore((s) => s.setHighlightedIdx);
   const [previousSession, setPreviousSession] = useState<StudySession | null>(null);
+  const [quizIndex, setQuizIndex] = useState<QuizIndex | null>(null);
 
   useEffect(() => {
     api.stats
@@ -50,6 +54,17 @@ export default function QuizSection({ course, module }: Props) {
       .then(setPreviousSession)
       .catch(() => {});
   }, [course.id, module.id]);
+
+  useEffect(() => {
+    api.quiz
+      .index(course.id)
+      .then(setQuizIndex)
+      .catch(() => {});
+  }, [course.id]);
+
+  const nextQuiz = quizIndex
+    ? nextQuizAfter(course, presenceFromIndex(quizIndex), `module:${module.id}`)
+    : null;
 
   const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
     if (status !== 'ready' || !currentQuestion) return;
@@ -136,10 +151,7 @@ export default function QuizSection({ course, module }: Props) {
   if (status === 'completed') {
     const questionResults = questions.map((q) => {
       const ua = selectedAnswers[q.id];
-      const correct =
-        q.type === 'cloze'
-          ? ua?.trim().toLowerCase() === q.answer.trim().toLowerCase()
-          : ua === q.answer;
+      const correct = q.type === 'cloze' ? clozeCorrect(q, ua) : ua === q.answer;
       return { question: q, isCorrect: correct, userAnswer: ua };
     });
 
@@ -151,10 +163,13 @@ export default function QuizSection({ course, module }: Props) {
         questionResults={questionResults}
         onRetry={retry}
         onBackToLesson={() => push({ type: 'lesson', course, module })}
+        onNextQuiz={nextQuiz ? () => push(targetToView(course, nextQuiz)) : undefined}
         onNextChapter={
-          nextModule ? () => push({ type: 'lesson', course, module: nextModule }) : undefined
+          !nextQuiz && nextModule
+            ? () => push({ type: 'lesson', course, module: nextModule })
+            : undefined
         }
-        onBackToDashboard={!nextModule ? () => push({ type: 'dashboard' }) : undefined}
+        onBackToDashboard={!nextQuiz && !nextModule ? () => push({ type: 'dashboard' }) : undefined}
       />
     );
   }
@@ -181,7 +196,10 @@ export default function QuizSection({ course, module }: Props) {
               </span>
             </div>
             <h2 className="text-[24px] font-semibold text-white leading-snug tracking-tight">
-              {currentQuestion?.question}
+              <QuizClozeQuestion
+                question={currentQuestion?.question ?? ''}
+                type={currentQuestion?.type}
+              />
             </h2>
           </div>
 
