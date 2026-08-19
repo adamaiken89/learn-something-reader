@@ -158,9 +158,7 @@ export function loadCombinedQuiz(courseId: string, moduleId: string): QuizQuesti
 
 export function parseCumulativeQuiz(yamlStr: string): CumulativeQuiz {
   const raw = yaml.parse(yamlStr) as
-    | Record<string, unknown>[]
-    | { questions: Record<string, unknown>[] }
-    | null;
+    Record<string, unknown>[] | { questions: Record<string, unknown>[] } | null;
   if (Array.isArray(raw)) {
     return { questions: raw.map(makeQuestion) };
   }
