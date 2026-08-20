@@ -83,7 +83,7 @@
     "quizMCQComplete": "完成并答题",
     "quizClozeComplete": "完成并填空",
     "quizCumulativeComplete": "完成并综合测验",
-    "completeAndNext": "完成并下一章 \u2192",
+    "completeAndNext": "完成并下一章 →",
     "warmUpCount": "有 {{count}} 张卡片待复习",
     "warmUpReview": "立即复习",
     "warmUpDismiss": "忽略"
@@ -312,7 +312,11 @@
     "modules": "单元",
     "prereqOf": "先修：",
     "continue": "继续",
-    "complete": "课程完成"
+    "complete": "课程完成",
+    "quizOverdue": "测验逾期",
+    "quizReady": "测验到期",
+    "srsDue_one": "{{count}} 张卡片到期",
+    "srsDue_other": "{{count}} 张卡片到期"
   },
   "search": {
     "placeholder": "搜索所有课程...",
@@ -347,7 +351,7 @@
     "inProgress": "进行中",
     "modulesDone": "单元",
     "avgQuizScore": "平均测验分数",
-    "srsDue": "待复习卡片",
+    "srsDue": "有 {{count}} 张卡片待复习",
     "srsTotal": "卡片总数",
     "streak": "连续天数",
     "studyTime": "学习时间",
@@ -366,7 +370,6 @@
     "nextModule": "下一步：{{module}}",
     "courseComplete": "课程完成！🎉",
     "continueLearning": "继续学习",
-    "srsDue": "有 {{count}} 张卡片待复习",
     "cards": "卡片",
     "continue": "继续",
     "start": "开始",
@@ -381,7 +384,26 @@
       "less": "显示更少",
       "readyBadge": "{{count}} 可复习",
       "overdueBadge": "{{count}} 已逾期"
-    }
+    },
+    "tabAll": "全部",
+    "tabInProgress": "进行中",
+    "tabNotStarted": "未开始",
+    "tabCompleted": "已完成",
+    "searchPlaceholder": "搜索课程",
+    "noMatch": "没有匹配的课程。",
+    "courseCompleteShort": "课程完成",
+    "reviewNowTitle": "立即复习",
+    "reviewNowSub": "巩固即将遗忘的内容",
+    "reviewNowReview": "复习",
+    "reviewNowMore": "还有 {{count}} 个",
+    "reviewNowLess": "收起",
+    "reviewNowSrs_one": "{{count}} 张卡片到期",
+    "reviewNowSrs_other": "{{count}} 张卡片到期",
+    "reviewNowQuizOverdue_one": "{{count}} 个测验逾期",
+    "reviewNowQuizOverdue_other": "{{count}} 个测验逾期",
+    "reviewNowQuizReady_one": "{{count}} 个测验到期",
+    "reviewNowQuizReady_other": "{{count}} 个测验到期",
+    "noCoursesFilter": "此分类下暂无课程。"
   },
   "icons": {
     "themeDark": "🌙",

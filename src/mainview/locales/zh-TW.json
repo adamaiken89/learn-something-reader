@@ -83,7 +83,7 @@
     "quizMCQComplete": "完成並選擇題",
     "quizClozeComplete": "完成並填空題",
     "quizCumulativeComplete": "完成並綜合測驗",
-    "completeAndNext": "完成並下一章 \u2192",
+    "completeAndNext": "完成並下一章 →",
     "warmUpCount": "有 {{count}} 張卡片待複習",
     "warmUpReview": "立即複習",
     "warmUpDismiss": "忽略"
@@ -312,7 +312,11 @@
     "modules": "單元",
     "prereqOf": "先修：",
     "continue": "繼續",
-    "complete": "課程完成"
+    "complete": "課程完成",
+    "quizOverdue": "測驗逾期",
+    "quizReady": "測驗到期",
+    "srsDue_one": "{{count}} 張卡片到期",
+    "srsDue_other": "{{count}} 張卡片到期"
   },
   "search": {
     "placeholder": "搜尋所有課程...",
@@ -347,7 +351,7 @@
     "inProgress": "進行中",
     "modulesDone": "單元",
     "avgQuizScore": "平均測驗分數",
-    "srsDue": "待複習卡片",
+    "srsDue": "有 {{count}} 張卡片待複習",
     "srsTotal": "卡片總數",
     "streak": "連續天數",
     "studyTime": "學習時間",
@@ -366,7 +370,6 @@
     "nextModule": "下一步：{{module}}",
     "courseComplete": "課程完成！🎉",
     "continueLearning": "繼續學習",
-    "srsDue": "有 {{count}} 張卡片待複習",
     "cards": "卡片",
     "continue": "繼續",
     "start": "開始",
@@ -381,7 +384,26 @@
       "less": "顯示較少",
       "readyBadge": "{{count}} 可複習",
       "overdueBadge": "{{count}} 已逾期"
-    }
+    },
+    "tabAll": "全部",
+    "tabInProgress": "進行中",
+    "tabNotStarted": "未開始",
+    "tabCompleted": "已完成",
+    "searchPlaceholder": "搜尋課程",
+    "noMatch": "沒有符合的課程。",
+    "courseCompleteShort": "課程完成",
+    "reviewNowTitle": "立即複習",
+    "reviewNowSub": "鞏固即將遺忘的內容",
+    "reviewNowReview": "複習",
+    "reviewNowMore": "還有 {{count}} 個",
+    "reviewNowLess": "收起",
+    "reviewNowSrs_one": "{{count}} 張卡片到期",
+    "reviewNowSrs_other": "{{count}} 張卡片到期",
+    "reviewNowQuizOverdue_one": "{{count}} 個測驗逾期",
+    "reviewNowQuizOverdue_other": "{{count}} 個測驗逾期",
+    "reviewNowQuizReady_one": "{{count}} 個測驗到期",
+    "reviewNowQuizReady_other": "{{count}} 個測驗到期",
+    "noCoursesFilter": "此分類下暫無課程。"
   },
   "icons": {
     "themeDark": "🌙",

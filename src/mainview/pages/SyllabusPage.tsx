@@ -12,6 +12,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import type { CourseQuizStatus, CourseStats } from '../../bun/stats';
 import type { Course, QuizIndex } from '../../bun/types';
 import { api } from '../api';
 import CourseSwitcher from '../components/CourseSwitcher';
@@ -47,6 +48,8 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
   const isComplete = total > 0 && done === total;
   const hasProgress = done > 0;
   const [quizIndex, setQuizIndex] = useState<QuizIndex | null>(null);
+  const [quizStatus, setQuizStatus] = useState<CourseQuizStatus | null>(null);
+  const [courseStats, setCourseStats] = useState<CourseStats | null>(null);
   const [hasCumulative, setHasCumulative] = useState(false);
   useEffect(() => {
     api.quiz
@@ -55,6 +58,14 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
         setQuizIndex(i);
         setHasCumulative(i.cumulativeQuizzes.length > 0);
       })
+      .catch(() => {});
+    api.quiz
+      .status(course.id)
+      .then(setQuizStatus)
+      .catch(() => {});
+    api.stats
+      .course(course.id)
+      .then(setCourseStats)
       .catch(() => {});
   }, [course.id]);
 
@@ -240,6 +251,11 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
                 const modKey = `${course.id}:${mod.id}`;
                 const isCompleted = !!completed[modKey];
                 const hasQuiz = quizModuleIds.has(mod.id);
+                const attempt = quizStatus?.modules.find((m) => m.moduleId === mod.id)?.attempt;
+                const quizDue = attempt?.due ?? false;
+                const quizOverdue = attempt?.overdue ?? false;
+                const srsDue = courseStats?.moduleSrsDue[mod.id] ?? 0;
+                const showDue = quizDue || srsDue > 0;
                 return (
                   <div
                     key={mod.id}
@@ -293,6 +309,26 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
                         </div>
                       )}
                     </div>
+                    {showDue && (
+                      <span className="flex items-center gap-1.5 shrink-0">
+                        {quizDue && (
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${
+                              quizOverdue
+                                ? 'bg-rose-500/10 text-rose-300 border-rose-500/20'
+                                : 'bg-amber-500/10 text-amber-300 border-amber-500/20'
+                            }`}
+                          >
+                            {quizOverdue ? t('syllabus.quizOverdue') : t('syllabus.quizReady')}
+                          </span>
+                        )}
+                        {srsDue > 0 && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                            {t('syllabus.srsDue', { count: srsDue })}
+                          </span>
+                        )}
+                      </span>
+                    )}
                     {hasQuiz && (
                       <button
                         onClick={(e) => {

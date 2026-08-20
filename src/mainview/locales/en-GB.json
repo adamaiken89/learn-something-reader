@@ -83,7 +83,7 @@
     "quizMCQComplete": "Complete & MCQ",
     "quizClozeComplete": "Complete & Cloze",
     "quizCumulativeComplete": "Complete & Cumulative",
-    "completeAndNext": "Complete & Next \u2192",
+    "completeAndNext": "Complete & Next →",
     "warmUpCount_one": "{{count}} card due for review",
     "warmUpCount_other": "{{count}} cards due for review",
     "warmUpReview": "Review Now",
@@ -313,7 +313,11 @@
     "modules": "Modules",
     "prereqOf": "Prereq:",
     "continue": "Continue",
-    "complete": "Course Complete"
+    "complete": "Course Complete",
+    "quizOverdue": "Quiz overdue",
+    "quizReady": "Quiz ready",
+    "srsDue_one": "{{count}} card due",
+    "srsDue_other": "{{count}} cards due"
   },
   "search": {
     "placeholder": "Search across courses...",
@@ -383,7 +387,26 @@
       "less": "Show less",
       "readyBadge": "{{count}} ready",
       "overdueBadge": "{{count}} overdue"
-    }
+    },
+    "tabAll": "All",
+    "tabInProgress": "In Progress",
+    "tabNotStarted": "Not Started",
+    "tabCompleted": "Completed",
+    "searchPlaceholder": "Search courses",
+    "noMatch": "No courses match your search.",
+    "courseCompleteShort": "Course complete",
+    "reviewNowTitle": "Review now",
+    "reviewNowSub": "Reinforce what's fading",
+    "reviewNowReview": "Review",
+    "reviewNowMore": "+{{count}} more",
+    "reviewNowLess": "Show less",
+    "reviewNowSrs_one": "{{count}} SRS card",
+    "reviewNowSrs_other": "{{count}} SRS cards",
+    "reviewNowQuizOverdue_one": "{{count}} quiz overdue",
+    "reviewNowQuizOverdue_other": "{{count}} quizzes overdue",
+    "reviewNowQuizReady_one": "{{count}} quiz ready",
+    "reviewNowQuizReady_other": "{{count}} quizzes ready",
+    "noCoursesFilter": "No courses in this category."
   },
   "icons": {
     "themeDark": "🌙",

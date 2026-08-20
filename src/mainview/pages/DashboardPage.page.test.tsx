@@ -25,6 +25,13 @@ const mockCourse = {
   modules: [mockModule],
 };
 
+function makeInProgress() {
+  useCompletionStore.setState({
+    completed: { 'cs101:mod-01': true },
+    totalModules: { cs101: 2 },
+  });
+}
+
 describe('DashboardPage', () => {
   const user = userEvent.setup();
   beforeEach(() => {
@@ -66,6 +73,7 @@ describe('DashboardPage', () => {
 
   test('renders course grid', async () => {
     useCourseStore.setState({ courses: [mockCourse] });
+    makeInProgress();
     const { container } = render(<DashboardPage />);
     await waitFor(() => {
       expect(container.textContent).toContain('Intro to CS');
@@ -111,6 +119,7 @@ describe('DashboardPage', () => {
 
   test('snapshot — loaded with courses', async () => {
     useCourseStore.setState({ courses: [mockCourse] });
+    makeInProgress();
     mockResponse('getGlobalStats', {
       totalCourses: 1,
       totalModules: 1,
@@ -156,6 +165,7 @@ describe('DashboardPage', () => {
 
   test('renders course grid when courses exist', async () => {
     useCourseStore.setState({ courses: [mockCourse] });
+    makeInProgress();
     const { container } = render(<DashboardPage />);
     await waitFor(() => {
       expect(container.textContent).toContain('Intro to CS');
@@ -163,8 +173,27 @@ describe('DashboardPage', () => {
     expect(container.querySelector('.animate-pulse')).toBeNull();
   });
 
-  test('shows due quiz card with split counts below course grid', async () => {
+  test('shows review-now panel with due quizzes', async () => {
     useCourseStore.setState({ courses: [mockCourse] });
+    mockResponse('getGlobalStats', {
+      totalCourses: 1,
+      totalModules: 1,
+      totalCompletedModules: 1,
+      totalStudyMinutes: 60,
+      streak: 3,
+      totalSrsDueCount: 0,
+      courseSummaries: [
+        {
+          courseID: 'cs101',
+          courseName: 'Intro to CS',
+          completed: 0,
+          total: 1,
+          lastStudied: null,
+          srsDueCount: 0,
+          srsTotalCards: 0,
+        },
+      ],
+    });
     mockResponse('quizStatus', {
       courseID: 'cs101',
       modules: [
@@ -186,20 +215,19 @@ describe('DashboardPage', () => {
     });
     const { container } = render(<DashboardPage />);
     await waitFor(() => {
-      expect(container.textContent).toContain('ready');
+      expect(container.textContent).toContain('Review now');
     });
-    expect(container.textContent).toContain('0 ready');
-    expect(container.textContent).toContain('1 overdue');
     expect(container.textContent).toContain('Intro to CS');
-    expect(container.textContent).toContain('Start');
-    const startBtn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent === 'Start',
-    )!;
-    expect(startBtn).toBeTruthy();
+    expect(container.textContent).toContain('1 quiz overdue');
+    const row = Array.from(container.querySelectorAll('button')).find(
+      (b) => b.textContent?.includes('Review') && b.textContent?.includes('Intro to CS'),
+    );
+    expect(row).toBeTruthy();
   });
 
-  test('hides due card when nothing due', async () => {
+  test('hides review-now panel when nothing due', async () => {
     useCourseStore.setState({ courses: [mockCourse] });
+    makeInProgress();
     mockResponse('quizStatus', {
       courseID: 'cs101',
       modules: [
@@ -223,6 +251,6 @@ describe('DashboardPage', () => {
     await waitFor(() => {
       expect(container.textContent).toContain('Intro to CS');
     });
-    expect(container.textContent).not.toContain('ready ·');
+    expect(container.textContent).not.toContain('Review now');
   });
 });

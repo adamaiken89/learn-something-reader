@@ -45,6 +45,7 @@ export interface CourseStats {
   quizAttempts: number;
   srsDueCount: number;
   srsTotalCards: number;
+  moduleSrsDue: Record<string, number>;
   totalStudyMinutes: number;
   streak: number;
   recentSessions: {
@@ -69,6 +70,8 @@ export interface GlobalStats {
     completed: number;
     total: number;
     lastStudied: string | null;
+    srsDueCount: number;
+    srsTotalCards: number;
   }[];
 }
 
@@ -105,6 +108,10 @@ export function getCourseStats(courseID: string): CourseStats {
     quizAttempts: quizSessions.length,
     srsDueCount: dueCards.length,
     srsTotalCards: allCards.length,
+    moduleSrsDue: dueCards.reduce<Record<string, number>>((acc, c) => {
+      acc[c.moduleId] = (acc[c.moduleId] ?? 0) + 1;
+      return acc;
+    }, {}),
     totalStudyMinutes,
     streak: StorageProgress.getDailyStreak(),
     recentSessions: sessions.slice(0, 20).map((s) => ({
@@ -131,16 +138,20 @@ export function getGlobalStats(): GlobalStats {
     totalCompletedModules += completed;
     const sessions = StorageProgress.getStudySessions(course.id, 90);
     const lastStudied = sessions.length > 0 ? sessions[0].date : null;
+    const deck = CourseLoader.loadSRSDeck(course.id);
+    const srsDueCount = SRS.getDueCardsForCourse(deck, course.id).length;
+    const srsTotalCards = SRS.getCardsForCourse(deck, course.id).length;
     courseSummaries.push({
       courseID: course.id,
       courseName: course.displayName,
       completed,
       total: course.modules.length,
       lastStudied,
+      srsDueCount,
+      srsTotalCards,
     });
 
-    const deck = CourseLoader.loadSRSDeck(course.id);
-    totalSrsDueCount += SRS.getDueCardsForCourse(deck, course.id).length;
+    totalSrsDueCount += srsDueCount;
   }
 
   return {

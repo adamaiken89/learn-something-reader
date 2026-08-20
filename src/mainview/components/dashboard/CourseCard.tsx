@@ -4,8 +4,14 @@ import { useTranslation } from 'react-i18next';
 import type { Course } from '../../../bun/types';
 import { countCompleted, useCompletionStore } from '../../stores/completionStore';
 import { useViewStore } from '../../stores/viewStore';
-import CourseTags from './CourseTags';
 import ProgressBar from './ProgressBar';
+
+function formatTargetLevel(level: string): string {
+  return level
+    .split('-')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ');
+}
 
 export default function CourseCard({ course }: { course: Course }) {
   const { t } = useTranslation();
@@ -38,41 +44,49 @@ export default function CourseCard({ course }: { course: Course }) {
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      className="text-left bg-[#131620] border border-white/[0.06] hover:border-indigo-500/25 rounded-lg p-5 transition-all duration-200 group cursor-pointer flex flex-col h-full justify-between"
+      className="text-left bg-[#131620] border border-white/[0.06] hover:border-indigo-500/25 rounded-lg p-4 transition-all duration-200 group cursor-pointer flex flex-col h-full justify-between"
     >
-      <div>
-        <h2 className="text-lg font-semibold text-white group-hover:text-indigo-400 transition-colors line-clamp-2">
+      <div className="min-w-0">
+        <h2 className="text-base font-semibold text-white group-hover:text-indigo-400 transition-colors line-clamp-1 truncate">
           {course.displayName}
         </h2>
-        <CourseTags
-          targetLevel={course.targetLevel}
-          timeHours={course.timeBudgetHours}
-          moduleCount={course.modules.length}
-        />
-        {total > 0 && <ProgressBar pct={pct} />}
+        <div className="flex items-center gap-2 mt-1">
+          <span className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-md text-[11px] font-medium">
+            {formatTargetLevel(course.targetLevel)}
+          </span>
+          <span className="text-[11px] text-gray-500">
+            {course.timeBudgetHours}h · {t('dashboard.modules', { count: course.modules.length })}
+          </span>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 pt-4">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleClick();
-          }}
-          className={`flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all min-w-[92px] ${btnColor}`}
-        >
-          {isComplete ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-          {isComplete
-            ? t('dashboard.complete', 'Complete')
-            : done > 0
-              ? t('dashboard.continue', 'Continue')
-              : t('dashboard.start', 'Start')}
-        </button>
-
-        {done > 0 && !isComplete && (
-          <span className="text-[11px] text-gray-500">
-            {done}/{total} {t('dashboard.modulesDone')}
-          </span>
-        )}
+      <div className="pt-3">
+        {total > 0 && <ProgressBar pct={pct} size="sm" />}
+        <div className="flex items-center justify-between mt-2">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleClick();
+            }}
+            className={`flex items-center justify-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-all ${btnColor}`}
+          >
+            {isComplete ? (
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            ) : (
+              <Play className="w-3.5 h-3.5" />
+            )}
+            {isComplete
+              ? t('dashboard.complete', 'Complete')
+              : done > 0
+                ? t('dashboard.continue', 'Continue')
+                : t('dashboard.start', 'Start')}
+          </button>
+          {done > 0 && !isComplete && (
+            <span className="text-[11px] text-gray-500">
+              {done}/{total}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

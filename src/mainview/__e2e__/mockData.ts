@@ -574,6 +574,7 @@ function getCourseStats(courseId: string): CourseStats {
     quizAttempts: 2,
     srsDueCount: 0,
     srsTotalCards: 0,
+    moduleSrsDue: {},
     totalStudyMinutes: 120,
     streak: 3,
     recentSessions: [
@@ -598,6 +599,8 @@ function getGlobalStats(): GlobalStats {
         completed: 1,
         total: 4,
         lastStudied: '2026-07-03T10:00:00Z',
+        srsDueCount: 3,
+        srsTotalCards: 12,
       },
       {
         courseID: 'advanced-algorithms',
@@ -605,6 +608,8 @@ function getGlobalStats(): GlobalStats {
         completed: 1,
         total: 4,
         lastStudied: '2026-07-01T09:00:00Z',
+        srsDueCount: 2,
+        srsTotalCards: 10,
       },
     ],
   };

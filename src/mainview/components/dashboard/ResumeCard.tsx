@@ -1,10 +1,9 @@
-import { ArrowRight, Target } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import type { LastSession } from '../../../bun/types';
 import { useCompletionStore } from '../../stores/completionStore';
 import { useViewStore } from '../../stores/viewStore';
-import CourseTags from './CourseTags';
 import ProgressBar from './ProgressBar';
 
 export default function ResumeCard({ lastSession }: { lastSession: LastSession }) {
@@ -31,60 +30,39 @@ export default function ResumeCard({ lastSession }: { lastSession: LastSession }
     });
 
   return (
-    <div className="w-full text-left bg-[#131620] hover:bg-[#151a28] border border-indigo-500/20 hover:border-indigo-500/35 rounded-lg p-5 mb-4 transition-all duration-200 ring-1 ring-indigo-500/5 hover:ring-indigo-500/10 shadow-lg shadow-indigo-500/5">
-      <div className="flex flex-col md:flex-row md:gap-6">
-        <div className="md:w-1/2 lg:w-1/3">
-          <p className="text-xs font-semibold text-indigo-400 mb-1">{t('dashboard.resume')}</p>
-          <h2 className="text-lg font-semibold text-white">{lastSession.course.displayName}</h2>
-          <p className="text-sm text-gray-400 mt-0.5">
-            {t('dashboard.moduleProgress', { module: lastSession.module.name })}
-          </p>
-          <CourseTags
-            targetLevel={lastSession.course.targetLevel}
-            timeHours={lastSession.course.timeBudgetHours}
-            moduleCount={modules.length}
-          />
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
-              <span>{t('dashboard.progress')}</span>
-              <span>
-                {done}/{total} ({pct}%)
-              </span>
-            </div>
-            <ProgressBar pct={pct} />
-          </div>
-        </div>
-
-        <div className="hidden md:block w-px bg-white/[0.06] self-stretch mx-2" />
-
-        <div className="mt-4 md:mt-0 md:flex-1 flex flex-col justify-between">
-          <div>
-            <p className="text-xs font-semibold text-gray-400 mb-2">
-              <Target size={12} className="inline mr-1" />
-              {t('dashboard.nextUp')}
-            </p>
-            {nextModule ? (
-              <p className="text-xs text-gray-300 leading-relaxed">
-                {t('dashboard.nextModule', { module: nextModule.name })}
-              </p>
-            ) : (
-              <p className="text-xs text-gray-500">{t('dashboard.courseComplete')}</p>
-            )}
-          </div>
-
-          <div className="mt-3 flex items-center">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleContinue();
-              }}
-              className="bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-sm px-6 py-2.5 rounded-lg shadow-lg shadow-indigo-500/15 transition-all duration-200 flex items-center gap-2"
-            >
-              {t('dashboard.continueLearning')} <ArrowRight size={16} />
-            </button>
-          </div>
-        </div>
+    <div className="w-full h-full text-left bg-[#131620] hover:bg-[#151a28] border border-indigo-500/20 hover:border-indigo-500/35 rounded-lg px-5 py-3 transition-all duration-200 ring-1 ring-indigo-500/5 hover:ring-indigo-500/10 shadow-lg shadow-indigo-500/5 flex items-center gap-4">
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-semibold text-indigo-400 mb-0.5 uppercase tracking-wider">
+          {t('dashboard.resume')}
+        </p>
+        <h2 className="text-base font-semibold text-white truncate">
+          {lastSession.course.displayName}
+        </h2>
+        <p className="text-xs text-gray-400 truncate">
+          {t('dashboard.moduleProgress', { module: lastSession.module.name })}
+          {nextModule && ` · ${t('dashboard.nextModule', { module: nextModule.name })}`}
+          {!nextModule && ` · ${t('dashboard.courseCompleteShort')}`}
+        </p>
       </div>
+
+      {total > 0 && (
+        <div className="hidden sm:block w-32 shrink-0">
+          <div className="flex items-center justify-between text-[11px] text-gray-400 mb-1">
+            <span>
+              {done}/{total}
+            </span>
+            <span>({pct}%)</span>
+          </div>
+          <ProgressBar pct={pct} />
+        </div>
+      )}
+
+      <button
+        onClick={handleContinue}
+        className="bg-indigo-500 hover:bg-indigo-400 text-white font-semibold text-xs px-4 py-2 rounded-lg shadow-lg shadow-indigo-500/15 transition-all duration-200 flex items-center gap-1.5 shrink-0"
+      >
+        {t('dashboard.continueLearning')} <ArrowRight size={14} />
+      </button>
     </div>
   );
 }
