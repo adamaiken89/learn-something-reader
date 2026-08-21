@@ -445,6 +445,7 @@
     "zoomIn": "放大",
     "zoomOut": "縮小",
     "fullscreen": "全螢幕",
+    "zoomToggle": "切換縮放控制",
     "loading": "圖表載入中..."
   }
 }

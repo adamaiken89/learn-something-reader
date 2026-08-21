@@ -82,15 +82,16 @@ export function computeWidthHome(
   if (availW <= 0 || content.w <= 0 || content.h <= 0) {
     return { zoom: 1, pan: { x: 0, y: 0 } };
   }
-  let zoom = availW / content.w;
+  let zoom = Math.max(1, availW / content.w);
   if (minFontSize && minFontSize > 0) {
     zoom = Math.max(zoom, LEGIBLE_PX / minFontSize);
   }
-  zoom = Math.max(0.5, Math.min(INLINE_MAX_ZOOM, zoom));
+  zoom = Math.min(INLINE_MAX_ZOOM, zoom);
+  const scaledW = content.w * zoom;
   return {
     zoom,
     pan: {
-      x: viewportW / 2 - (content.x + content.w / 2) * zoom,
+      x: scaledW <= availW ? viewportW / 2 - (content.x + content.w / 2) * zoom : 0,
       y: -(content.y * zoom) || 0,
     },
   };

@@ -1,4 +1,4 @@
-import { Maximize2 } from 'lucide-react';
+import { Maximize2, ZoomIn } from 'lucide-react';
 import mermaid from 'mermaid';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -47,6 +47,7 @@ export default function MermaidDiagram({ code, isDark }: Props) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [boxH, setBoxH] = useState<number | null>(null);
+  const [controlsOn, setControlsOn] = useState(false);
   const homeRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
   const contentHRef = useRef<number | null>(null);
 
@@ -102,7 +103,9 @@ export default function MermaidDiagram({ code, isDark }: Props) {
   };
 
   const handleWheel = (e: React.WheelEvent) => {
+    if (!controlsOn) return;
     e.preventDefault();
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
     const newZoom = Math.max(0.5, Math.min(5, zoom * Math.exp(-e.deltaY * 0.002)));
     const rect = containerRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -136,7 +139,7 @@ export default function MermaidDiagram({ code, isDark }: Props) {
       <div className="relative group">
         <div
           ref={containerRef}
-          className="mermaid-diagram overflow-hidden"
+          className="mermaid-diagram overflow-x-auto"
           data-testid="mermaid-diagram"
           style={{ height: boxH != null ? `${boxH}px` : undefined }}
           onWheel={handleWheel}
@@ -151,33 +154,40 @@ export default function MermaidDiagram({ code, isDark }: Props) {
           />
         </div>
         <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-          <button
-            onClick={() => applyZoom(Math.min(5, zoom * 1.25))}
-            className={TOOLBAR_BTN}
-            title={t('mermaid.zoomIn')}
-            data-testid="mermaid-zoom-in"
-          >
-            +
-          </button>
-          <span className="text-xs text-gray-400 w-10 text-center" data-testid="mermaid-zoom-pct">
-            {Math.round(zoom * 100)}%
-          </span>
-          <button
-            onClick={() => applyZoom(Math.max(0.5, zoom / 1.25))}
-            className={TOOLBAR_BTN}
-            title={t('mermaid.zoomOut')}
-            data-testid="mermaid-zoom-out"
-          >
-            −
-          </button>
-          <button
-            onClick={handleReset}
-            className={TOOLBAR_BTN}
-            title="1:1"
-            data-testid="mermaid-reset"
-          >
-            1:1
-          </button>
+          {controlsOn && (
+            <>
+              <button
+                onClick={() => applyZoom(Math.min(5, zoom * 1.25))}
+                className={TOOLBAR_BTN}
+                title={t('mermaid.zoomIn')}
+                data-testid="mermaid-zoom-in"
+              >
+                +
+              </button>
+              <span
+                className="text-xs text-gray-400 w-10 text-center"
+                data-testid="mermaid-zoom-pct"
+              >
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                onClick={() => applyZoom(Math.max(0.5, zoom / 1.25))}
+                className={TOOLBAR_BTN}
+                title={t('mermaid.zoomOut')}
+                data-testid="mermaid-zoom-out"
+              >
+                −
+              </button>
+              <button
+                onClick={handleReset}
+                className={TOOLBAR_BTN}
+                title="1:1"
+                data-testid="mermaid-reset"
+              >
+                1:1
+              </button>
+            </>
+          )}
           <button
             onClick={() => setShowOverlay(true)}
             className={TOOLBAR_BTN}
@@ -185,6 +195,15 @@ export default function MermaidDiagram({ code, isDark }: Props) {
             data-testid="mermaid-fullscreen"
           >
             <Maximize2 size={12} />
+          </button>
+          <button
+            onClick={() => setControlsOn((v) => !v)}
+            aria-pressed={controlsOn}
+            className={`${TOOLBAR_BTN} ${controlsOn ? 'text-indigo-300' : ''}`}
+            title={t('mermaid.zoomToggle')}
+            data-testid="mermaid-controls-toggle"
+          >
+            <ZoomIn size={12} />
           </button>
         </div>
       </div>

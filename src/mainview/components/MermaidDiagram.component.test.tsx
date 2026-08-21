@@ -27,6 +27,10 @@ async function openOverlay(utils: ReturnType<typeof renderDiagram>) {
   });
 }
 
+function enableControls(utils: ReturnType<typeof renderDiagram>) {
+  fireEvent.click(utils.getByTestId('mermaid-controls-toggle'));
+}
+
 describe('MermaidDiagram', () => {
   beforeEach(() => {
     mermaidMockImpl.render = (..._args: unknown[]) =>
@@ -57,6 +61,7 @@ describe('MermaidDiagram', () => {
   test('inline zoom in button increases zoom', async () => {
     const utils = renderDiagram();
     await waitForSvg(utils);
+    enableControls(utils);
 
     fireEvent.click(utils.getByTestId('mermaid-zoom-in'));
 
@@ -67,6 +72,7 @@ describe('MermaidDiagram', () => {
   test('inline zoom out button decreases zoom', async () => {
     const utils = renderDiagram();
     await waitForSvg(utils);
+    enableControls(utils);
 
     fireEvent.click(utils.getByTestId('mermaid-zoom-in'));
     fireEvent.click(utils.getByTestId('mermaid-zoom-out'));
@@ -78,12 +84,23 @@ describe('MermaidDiagram', () => {
   test('inline reset returns to 1x zoom', async () => {
     const utils = renderDiagram();
     await waitForSvg(utils);
+    enableControls(utils);
 
     fireEvent.click(utils.getByTestId('mermaid-zoom-in'));
     fireEvent.click(utils.getByTestId('mermaid-reset'));
 
     const pct = parseInt(utils.getByTestId('mermaid-zoom-pct').textContent || '');
     expect(pct).toBe(100);
+  });
+
+  test('zoom controls hidden until toggled on', async () => {
+    const utils = renderDiagram();
+    await waitForSvg(utils);
+    expect(utils.queryByTestId('mermaid-zoom-in')).toBeNull();
+    enableControls(utils);
+    expect(utils.getByTestId('mermaid-zoom-in')).toBeInTheDocument();
+    enableControls(utils);
+    expect(utils.queryByTestId('mermaid-zoom-in')).toBeNull();
   });
 
   test('opens overlay on expand button click', async () => {
@@ -191,6 +208,12 @@ describe('MermaidDiagram', () => {
     const home = computeWidthHome(0, { x: 0, y: 0, w: 900, h: 300 });
     expect(home.zoom).toBe(1);
     expect(home.pan).toEqual({ x: 0, y: 0 });
+  });
+
+  test('computeWidthHome never shrinks below natural size', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 2000, h: 400 });
+    expect(home.zoom).toBe(1);
+    expect(home.pan.x).toBe(0);
   });
 
   test('computeWidthHome offsets pan by content y', () => {
