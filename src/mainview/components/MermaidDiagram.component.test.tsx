@@ -4,7 +4,13 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { mermaidMockImpl } from '../../testFsShared';
 import { setupRPC } from '../testUtils';
 import MermaidDiagram from './MermaidDiagram';
-import { computeHome, computeWidthHome, INLINE_MAX_ZOOM, parseMinFontSize } from './MermaidOverlay';
+import {
+  computeHome,
+  computeWidthHome,
+  INLINE_MAX_ZOOM,
+  parseMinFontSize,
+  parseSvgSize,
+} from './MermaidOverlay';
 
 setupRPC();
 
@@ -190,7 +196,7 @@ describe('MermaidDiagram', () => {
   test('computeWidthHome fills container width', () => {
     const home = computeWidthHome(1000, { x: 0, y: 0, w: 900, h: 300 });
     expect(home.zoom).toBeCloseTo(952 / 900);
-    expect(home.pan.x).toBeCloseTo(24);
+    expect(home.pan.x).toBeCloseTo(0);
     expect(home.pan.y).toBe(0);
   });
 
@@ -216,8 +222,69 @@ describe('MermaidDiagram', () => {
     expect(home.pan.x).toBe(0);
   });
 
-  test('computeWidthHome offsets pan by content y', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 50, w: 950, h: 300 });
-    expect(home.pan.y).toBeCloseTo(-50 * home.zoom);
+  test('computeWidthHome centers narrow diagram', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 100, h: 50 });
+    expect(home.zoom).toBe(INLINE_MAX_ZOOM);
+    expect(home.pan.x).toBeCloseTo((952 - 300) / 2);
+    expect(home.pan.y).toBe(0);
+  });
+
+  test('computeWidthHome keeps pan.x 0 for wide diagram', () => {
+    const home = computeWidthHome(1000, { x: -450, y: -350, w: 900, h: 700 });
+    expect(home.zoom).toBeCloseTo(952 / 900);
+    expect(home.pan.x).toBeCloseTo(0);
+    expect(home.pan.y).toBe(0);
+  });
+
+  test('parseSvgSize returns viewBox rect incl origin', () => {
+    expect(parseSvgSize('<svg viewBox="-100 -50 400 300">')).toEqual({
+      x: -100,
+      y: -50,
+      w: 400,
+      h: 300,
+    });
+  });
+
+  test('parseSvgSize falls back to width/height attrs at origin 0,0', () => {
+    expect(parseSvgSize('<svg width="800" height="600">')).toEqual({
+      x: 0,
+      y: 0,
+      w: 800,
+      h: 600,
+    });
+    expect(parseSvgSize('<svg>no size</svg>')).toBeNull();
+  });
+
+  test('negative viewBox origin normalized via margins + wrapper dims', async () => {
+    mermaidMockImpl.render = (..._args: unknown[]) =>
+      Promise.resolve({ svg: '<svg viewBox="-100 -50 400 300">mock</svg>' });
+    const utils = renderDiagram();
+    await waitForSvg(utils);
+
+    const wrapper = utils.getByTestId('mermaid-inline-svg');
+    await waitFor(() => {
+      expect(wrapper.style.width).toBe('400px');
+      expect(wrapper.style.height).toBe('300px');
+    });
+    const frame = wrapper.firstElementChild as HTMLElement;
+    expect(frame.style.position).toBe('absolute');
+    expect(frame.style.left).toBe('0px');
+    expect(frame.style.top).toBe('0px');
+  });
+
+  test('width/height-attr svg (no viewBox) normalizes at origin 0,0', async () => {
+    mermaidMockImpl.render = (..._args: unknown[]) =>
+      Promise.resolve({ svg: '<svg width="800" height="600">mock</svg>' });
+    const utils = renderDiagram();
+    await waitForSvg(utils);
+
+    const wrapper = utils.getByTestId('mermaid-inline-svg');
+    await waitFor(() => {
+      expect(wrapper.style.width).toBe('800px');
+      expect(wrapper.style.height).toBe('600px');
+    });
+    const frame = wrapper.firstElementChild as HTMLElement;
+    expect(frame.style.left).toBe('0px');
+    expect(frame.style.top).toBe('0px');
   });
 });

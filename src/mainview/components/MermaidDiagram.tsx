@@ -21,11 +21,6 @@ function getSvgEl(container: HTMLDivElement): SVGSVGElement | null {
   return container.querySelector('svg') as SVGSVGElement | null;
 }
 
-function deSquish(svgEl: SVGSVGElement, size: { w: number; h: number }) {
-  svgEl.setAttribute('width', String(size.w));
-  svgEl.style.maxWidth = 'none';
-}
-
 function getContentBbox(svgEl: SVGSVGElement) {
   try {
     const bbox = svgEl.getBBox();
@@ -47,6 +42,9 @@ export default function MermaidDiagram({ code, isDark }: Props) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [boxH, setBoxH] = useState<number | null>(null);
+  const [dims, setDims] = useState<{ w: number; h: number; offX: number; offY: number } | null>(
+    null,
+  );
   const [controlsOn, setControlsOn] = useState(false);
   const homeRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
   const contentHRef = useRef<number | null>(null);
@@ -78,13 +76,18 @@ export default function MermaidDiagram({ code, isDark }: Props) {
     if (!svg || !containerRef.current) return;
     const container = containerRef.current;
     const svgEl = getSvgEl(container);
-    const size = parseSvgSize(svg);
-    if (!svgEl || !size) return;
+    const vbRect = parseSvgSize(svg);
+    if (!svgEl || !vbRect) return;
 
-    deSquish(svgEl, size);
     const bbox = getContentBbox(svgEl);
     const rect = container.getBoundingClientRect();
-    const content = bbox ?? { x: 0, y: 0, w: size.w, h: size.h };
+    const content = bbox ?? vbRect;
+    setDims({
+      w: Math.round(content.w),
+      h: Math.round(content.h),
+      offX: vbRect.x - content.x,
+      offY: vbRect.y - content.y,
+    });
     const home = computeWidthHome(rect.width, content, parseMinFontSize(svg));
     contentHRef.current = content.h;
     homeRef.current = home;
@@ -147,11 +150,23 @@ export default function MermaidDiagram({ code, isDark }: Props) {
           <div
             data-testid="mermaid-inline-svg"
             style={{
+              position: 'relative',
+              width: dims ? `${dims.w}px` : undefined,
+              height: dims ? `${dims.h}px` : undefined,
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
               transformOrigin: '0 0',
             }}
-            dangerouslySetInnerHTML={{ __html: svg }}
-          />
+          >
+            <div
+              style={{
+                position: 'absolute',
+                left: dims ? `${dims.offX}px` : 0,
+                top: dims ? `${dims.offY}px` : 0,
+                lineHeight: 0,
+              }}
+              dangerouslySetInnerHTML={{ __html: svg }}
+            />
+          </div>
         </div>
         <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           {controlsOn && (

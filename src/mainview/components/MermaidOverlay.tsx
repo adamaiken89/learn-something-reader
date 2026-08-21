@@ -12,7 +12,7 @@ interface Home {
   pan: { x: number; y: number };
 }
 
-export function parseSvgSize(svg: string): { w: number; h: number } | null {
+export function parseSvgSize(svg: string): ContentBox | null {
   const vb = svg.match(/viewBox="([^"]+)"/);
   if (vb) {
     const parts = vb[1]
@@ -20,12 +20,12 @@ export function parseSvgSize(svg: string): { w: number; h: number } | null {
       .split(/[\s,]+/)
       .map(Number);
     if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
-      return { w: parts[2], h: parts[3] };
+      return { x: parts[0], y: parts[1], w: parts[2], h: parts[3] };
     }
   }
   const w = svg.match(/width="([\d.]+)"/);
   const h = svg.match(/height="([\d.]+)"/);
-  if (w && h) return { w: parseFloat(w[1]), h: parseFloat(h[1]) };
+  if (w && h) return { x: 0, y: 0, w: parseFloat(w[1]), h: parseFloat(h[1]) };
   return null;
 }
 
@@ -91,8 +91,8 @@ export function computeWidthHome(
   return {
     zoom,
     pan: {
-      x: scaledW <= availW ? viewportW / 2 - (content.x + content.w / 2) * zoom : 0,
-      y: -(content.y * zoom) || 0,
+      x: Math.max(0, (availW - scaledW) / 2),
+      y: 0,
     },
   };
 }
