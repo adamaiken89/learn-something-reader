@@ -178,6 +178,8 @@
     "saved": "Saved!",
     "readingTheme": "Reading Theme",
     "fontSize": "Font Size",
+    "textFont": "Text Font",
+    "codeFont": "Code Font",
     "layout": "Layout",
     "narrowLayout": "Narrow",
     "narrowDesc": "720px centred, book-like",
@@ -442,7 +444,10 @@
   },
   "mermaid": {
     "expand": "Click to expand",
-    "downloadPng": "Download PNG",
-    "reset": "Reset"
+    "reset": "Reset",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fullscreen": "Fullscreen",
+    "loading": "Loading diagram..."
   }
 }

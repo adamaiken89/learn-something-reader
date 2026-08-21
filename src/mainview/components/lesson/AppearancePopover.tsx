@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/shallow';
 
+import { CODE_FONTS, TEXT_FONTS } from '../../fonts';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import type { ContentWidth, TransitionStyle } from '../../stores/settingsStore';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -24,10 +25,22 @@ const WIDTH_LABELS: Record<ContentWidth, string> = {
   full: 'lesson.full',
 };
 
-function Pill({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function Pill({
+  label,
+  active,
+  onClick,
+  style,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  style?: React.CSSProperties;
+}) {
   return (
     <button
       onClick={onClick}
+      style={style}
+      aria-pressed={active}
       className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
         active
           ? 'bg-indigo-700/50 border-indigo-500 text-indigo-200'
@@ -53,6 +66,10 @@ export default function AppearancePopover() {
     setTheme,
     contentWidth,
     setContentWidth,
+    textFont,
+    setTextFont,
+    codeFont,
+    setCodeFont,
     transitionStyle,
     setTransitionStyle,
   } = useSettingsStore(
@@ -64,6 +81,10 @@ export default function AppearancePopover() {
       setTheme: s.setTheme,
       contentWidth: s.contentWidth,
       setContentWidth: s.setContentWidth,
+      textFont: s.textFont,
+      setTextFont: s.setTextFont,
+      codeFont: s.codeFont,
+      setCodeFont: s.setCodeFont,
       transitionStyle: s.transitionStyle,
       setTransitionStyle: s.setTransitionStyle,
     })),
@@ -128,6 +149,42 @@ export default function AppearancePopover() {
               label={t(WIDTH_LABELS[w])}
               active={contentWidth === w}
               onClick={() => setContentWidth(w)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Text Font */}
+      <div className="mb-3">
+        <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+          {t('settings.textFont')}
+        </div>
+        <div className="flex gap-1.5 flex-wrap">
+          {TEXT_FONTS.map((f) => (
+            <Pill
+              key={f.id}
+              label={f.label}
+              style={{ fontFamily: f.stack }}
+              active={textFont === f.id}
+              onClick={() => setTextFont(f.id)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Code Font */}
+      <div className="mb-3">
+        <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">
+          {t('settings.codeFont')}
+        </div>
+        <div className="flex gap-1.5 flex-wrap">
+          {CODE_FONTS.map((f) => (
+            <Pill
+              key={f.id}
+              label={f.label}
+              style={{ fontFamily: f.stack }}
+              active={codeFont === f.id}
+              onClick={() => setCodeFont(f.id)}
             />
           ))}
         </div>

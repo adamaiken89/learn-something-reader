@@ -12,6 +12,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { AI_SKILLS } from '../../ai/skills';
 import { copyPrompt, stripContentForAI } from '../../ai/utils';
 import { api } from '../../api';
+import { fontToCSSVars } from '../../fonts';
 import { useAutoCopy } from '../../hooks/useAutoCopy';
 import { useCurrentLesson } from '../../hooks/useCurrentLesson';
 import { useHighlights } from '../../hooks/useHighlights';
@@ -156,15 +157,18 @@ export default function LessonContentViewer({
     }
   }, [courseId, moduleId]);
 
-  const { contentWidth, fontSize, theme, focusMode } = useSettingsStore(
+  const { contentWidth, fontSize, theme, focusMode, textFont, codeFont } = useSettingsStore(
     useShallow((s) => ({
       contentWidth: s.contentWidth,
       fontSize: s.fontSize,
       theme: s.theme,
       focusMode: s.focusMode,
+      textFont: s.textFont,
+      codeFont: s.codeFont,
     })),
   );
   const themeVars = themeToCSSVars(THEME_TOKENS[theme]);
+  const fontVars = fontToCSSVars(textFont, codeFont);
 
   const { notes } = useNotes(courseId, moduleId);
   useHighlights(courseId, moduleId);
@@ -232,7 +236,7 @@ export default function LessonContentViewer({
               contentWidth === 'full' && 'book-content-full',
             )}
             data-testid="book-content-area"
-            style={{ fontSize: `${fontSize}px`, ...themeVars }}
+            style={{ fontSize: `${fontSize}px`, ...themeVars, ...fontVars }}
             onMouseUp={handleTextSelectionWithAutoCopy}
           >
             <LessonContentHeader rehypePlugins={rehypePlugins} />

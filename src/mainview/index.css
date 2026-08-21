@@ -266,7 +266,7 @@ body {
   max-width: 720px;
   margin: 0 auto;
   padding: 2.5rem 2rem;
-  font-family: Georgia, 'Palatino Linotype', 'Book Antiqua', serif;
+  font-family: var(--book-font-text, Georgia, 'Palatino Linotype', 'Book Antiqua', serif);
   color: var(--book-text);
   background: var(--book-bg);
   line-height: 1.85;
@@ -389,7 +389,7 @@ body {
   padding: 0.15em 0.4em;
   border-radius: 3px;
   font-size: 0.875em;
-  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+  font-family: var(--book-font-code, 'SF Mono', Menlo, Consolas, monospace);
 }
 
 /* Code blocks */
@@ -452,7 +452,7 @@ body {
   margin: 1.2em 0 1.2em 0;
   color: var(--book-bq-text);
   font-style: italic;
-  font-family: Georgia, serif;
+  font-family: var(--book-font-text, Georgia, serif);
   background: var(--book-bq-bg);
   border-radius: 0 4px 4px 0;
 }
@@ -625,7 +625,7 @@ body {
   padding: 0.5rem 0.75rem;
   margin-top: 0.5rem;
   font-size: 0.8em;
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--book-font-code, 'SF Mono', Menlo, Consolas, monospace);
   border-top: 1px solid rgba(239, 68, 68, 0.3);
 }
 .mermaid-loading {
@@ -642,7 +642,7 @@ body {
   top: 0;
   right: 1em;
   font-size: 0.7em;
-  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-family: var(--book-font-code, 'SF Mono', Menlo, Consolas, monospace);
   color: var(--lang-badge-text);
   background: var(--lang-badge-bg);
   padding: 0.2em 0.6em;

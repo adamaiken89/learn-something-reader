@@ -177,6 +177,8 @@
     "saved": "已保存！",
     "readingTheme": "阅读主题",
     "fontSize": "字体大小",
+    "textFont": "正文字体",
+    "codeFont": "代码字体",
     "layout": "布局",
     "narrowLayout": "窄版",
     "narrowDesc": "720px 居中，书籍风格",
@@ -439,7 +441,10 @@
   },
   "mermaid": {
     "expand": "点击展开",
-    "downloadPng": "下载 PNG",
-    "reset": "重设"
+    "reset": "重设",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "fullscreen": "全屏",
+    "loading": "图表加载中..."
   }
 }

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 
+import { type CodeFont, isCodeFont, isTextFont, type TextFont } from '../fonts';
 import i18n from '../i18n';
 import type { Theme } from '../themes';
 import { THEMES } from '../themes';
@@ -14,6 +15,8 @@ interface SettingsState {
   fontSize: number;
   theme: Theme;
   contentWidth: ContentWidth;
+  textFont: TextFont;
+  codeFont: CodeFont;
   rightPanel: RightPanel;
   focusMode: boolean;
   locale: string;
@@ -26,6 +29,8 @@ interface SettingsState {
   cycleTheme: () => void;
   setTheme: (t: Theme) => void;
   setContentWidth: (v: ContentWidth) => void;
+  setTextFont: (v: TextFont) => void;
+  setCodeFont: (v: CodeFont) => void;
   setRightPanel: (v: RightPanel) => void;
   toggleFocusMode: () => void;
   setLocale: (l: string) => void;
@@ -54,10 +59,22 @@ const migrateRightPanel = (): RightPanel => {
   return 'sections';
 };
 
+const migrateTextFont = (): TextFont => {
+  const saved = getStored<unknown>('coursereader-textfont', undefined);
+  return isTextFont(saved) ? saved : 'georgia';
+};
+
+const migrateCodeFont = (): CodeFont => {
+  const saved = getStored<unknown>('coursereader-codefont', undefined);
+  return isCodeFont(saved) ? saved : 'sfmono';
+};
+
 export const useSettingsStore = create<SettingsState>((set) => ({
   fontSize: getStored<number>('coursereader-fontsize', 16),
   theme: getStored<Theme>('coursereader-theme', 'dark'),
   contentWidth: migrateWidth(),
+  textFont: migrateTextFont(),
+  codeFont: migrateCodeFont(),
   rightPanel: migrateRightPanel(),
   focusMode: getStored<boolean>('coursereader-focus', false),
   locale: localStorage.getItem('coursereader-locale') || 'en-US',
@@ -99,6 +116,16 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setContentWidth: (v) => {
     store('coursereader-width', v);
     set({ contentWidth: v });
+  },
+
+  setTextFont: (v) => {
+    store('coursereader-textfont', v);
+    set({ textFont: v });
+  },
+
+  setCodeFont: (v) => {
+    store('coursereader-codefont', v);
+    set({ codeFont: v });
   },
 
   setRightPanel: (v) => {

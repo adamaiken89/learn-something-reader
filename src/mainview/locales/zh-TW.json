@@ -177,6 +177,8 @@
     "saved": "已儲存！",
     "readingTheme": "閱讀主題",
     "fontSize": "字型大小",
+    "textFont": "內文字型",
+    "codeFont": "程式碼字型",
     "layout": "版面配置",
     "narrowLayout": "窄版",
     "narrowDesc": "720px 置中，書籍風格",
@@ -439,7 +441,10 @@
   },
   "mermaid": {
     "expand": "點擊展開",
-    "downloadPng": "下載 PNG",
-    "reset": "重設"
+    "reset": "重設",
+    "zoomIn": "放大",
+    "zoomOut": "縮小",
+    "fullscreen": "全螢幕",
+    "loading": "圖表載入中..."
   }
 }

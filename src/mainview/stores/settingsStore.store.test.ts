@@ -18,6 +18,8 @@ describe('settingsStore', () => {
     expect(s.fontSize).toBe(16);
     expect(s.theme).toBe('dark');
     expect(s.contentWidth).toBe('standard');
+    expect(s.textFont).toBe('georgia');
+    expect(s.codeFont).toBe('sfmono');
     expect(s.rightPanel).toBe('sections');
     expect(s.focusMode).toBe(false);
     expect(s.locale).toBe('en-US');
@@ -61,6 +63,18 @@ describe('settingsStore', () => {
     useSettingsStore.getState().setContentWidth('wide');
     expect(useSettingsStore.getState().contentWidth).toBe('wide');
     expect(JSON.parse(localStorage.getItem('coursereader-width')!)).toBe('wide');
+  });
+
+  test('setTextFont sets font and persists', () => {
+    useSettingsStore.getState().setTextFont('charter');
+    expect(useSettingsStore.getState().textFont).toBe('charter');
+    expect(JSON.parse(localStorage.getItem('coursereader-textfont')!)).toBe('charter');
+  });
+
+  test('setCodeFont sets font and persists', () => {
+    useSettingsStore.getState().setCodeFont('jetbrains');
+    expect(useSettingsStore.getState().codeFont).toBe('jetbrains');
+    expect(JSON.parse(localStorage.getItem('coursereader-codefont')!)).toBe('jetbrains');
   });
 
   test('setRightPanel controls right panel', () => {

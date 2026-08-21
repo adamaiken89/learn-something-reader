@@ -51,4 +51,6 @@ src/
 
 ## Mermaid zoom/pan overlay
 
-Full-view overlay uses CSS `transform: translate(panX, panY) scale(zoom)` with `overflow-hidden` container. Drag to pan (window-level mousemove/mouseup). Wheel zooms toward cursor. Zoom buttons adjust toward center anchor (`applyZoomWithCenterAnchor`). Auto-fit sets initial zoom to `Math.max(1, containerWidth/svgWidth)` — never below 100%. Limits: 0.5x – 5x. No animation (instant transform). Download PNG button unchanged.
+Full-view overlay uses CSS `transform: translate(panX, panY) scale(zoom)` with `overflow-hidden` container. Drag to pan (window-level mousemove/mouseup). Wheel zooms toward cursor. Zoom buttons adjust toward center anchor (`applyZoomWithCenterAnchor`). Initial home from `computeHome` — fit-to-viewport with legibility boost (`LEGIBLE_PX/minFontSize`), clamped 0.5x–2x. Limits: 0.5x – 5x. No animation (instant transform). Download PNG button unchanged.
+
+Inline diagram home from `computeWidthHome` — fills container **width** (not fit-height), same legibility boost, clamped 0.5x–`INLINE_MAX_ZOOM` (3). Container height tracks zoom (`boxH = content.h * zoom`) so scaled-up diagrams reserve layout space instead of overlapping prose; manual zoom/wheel/reset update it via `applyView`.
