@@ -73,6 +73,29 @@ export function computeHome(
 
 export const INLINE_MAX_ZOOM = 3;
 export const MAX_COMFORT_FONT_PX = 18;
+export const FIT_VIEW_RATIO = 0.8;
+const FIT_MIN_ZOOM = 0.2;
+
+export function computeFitHome(
+  viewport: { w: number; h: number },
+  content: ContentBox,
+  ratio: number = FIT_VIEW_RATIO,
+): Home {
+  const availW = viewport.w - PAD;
+  const availH = viewport.h - PAD;
+  if (availW <= 0 || availH <= 0 || content.w <= 0 || content.h <= 0) {
+    return { zoom: 1, pan: { x: 0, y: 0 } };
+  }
+  const fit = Math.min(availW / content.w, availH / content.h);
+  const zoom = Math.max(FIT_MIN_ZOOM, fit * ratio);
+  return {
+    zoom,
+    pan: {
+      x: availW / 2 - (content.x + content.w / 2) * zoom + PAD / 2,
+      y: availH / 2 - (content.y + content.h / 2) * zoom + PAD / 2,
+    },
+  };
+}
 
 export function computeWidthHome(
   viewportW: number,

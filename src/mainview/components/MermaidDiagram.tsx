@@ -1,9 +1,14 @@
-import { Maximize2, ZoomIn } from 'lucide-react';
+import { Maximize2, Scan, ZoomIn } from 'lucide-react';
 import mermaid from 'mermaid';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import MermaidOverlay, { computeWidthHome, parseMinFontSize, parseSvgSize } from './MermaidOverlay';
+import MermaidOverlay, {
+  computeFitHome,
+  computeWidthHome,
+  parseMinFontSize,
+  parseSvgSize,
+} from './MermaidOverlay';
 
 mermaid.initialize({ startOnLoad: false, theme: 'default' });
 
@@ -50,6 +55,7 @@ export default function MermaidDiagram({ code, isDark }: Props) {
   const [controlsOn, setControlsOn] = useState(false);
   const homeRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
   const contentHRef = useRef<number | null>(null);
+  const lastContentRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
 
   const applyView = (nextZoom: number, nextPan: { x: number; y: number }) => {
     setZoom(nextZoom);
@@ -68,6 +74,8 @@ export default function MermaidDiagram({ code, isDark }: Props) {
 
     const bbox = getContentBbox(svgEl);
     const rect = container.getBoundingClientRect();
+    const content = bbox ?? vbRect;
+    lastContentRef.current = content;
     setDims({
       w: Math.round(vbRect.w),
       h: Math.round(vbRect.h),
@@ -137,6 +145,17 @@ export default function MermaidDiagram({ code, isDark }: Props) {
 
   const handleReset = () => {
     applyView(homeRef.current.zoom, homeRef.current.pan);
+  };
+
+  const handleFit = () => {
+    const rect = containerRef.current?.getBoundingClientRect();
+    const content = lastContentRef.current;
+    if (!rect || !content) return;
+    const fit = computeFitHome(
+      { w: rect.width, h: Math.min(rect.height, INLINE_MAX_BOX_H) },
+      content,
+    );
+    applyView(fit.zoom, fit.pan);
   };
 
   if (error)
@@ -217,6 +236,14 @@ export default function MermaidDiagram({ code, isDark }: Props) {
                 data-testid="mermaid-reset"
               >
                 1:1
+              </button>
+              <button
+                onClick={handleFit}
+                className={TOOLBAR_BTN}
+                title={t('mermaid.fit')}
+                data-testid="mermaid-fit"
+              >
+                <Scan size={12} />
               </button>
             </>
           )}

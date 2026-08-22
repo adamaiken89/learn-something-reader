@@ -449,6 +449,7 @@
     "zoomOut": "Zoom out",
     "fullscreen": "Fullscreen",
     "zoomToggle": "Toggle zoom controls",
+    "fit": "Auto fit",
     "loading": "Loading diagram..."
   }
 }

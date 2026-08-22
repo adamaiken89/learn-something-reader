@@ -5,8 +5,10 @@ import { mermaidMockImpl } from '../../testFsShared';
 import { setupRPC } from '../testUtils';
 import MermaidDiagram from './MermaidDiagram';
 import {
+  computeFitHome,
   computeHome,
   computeWidthHome,
+  FIT_VIEW_RATIO,
   INLINE_MAX_ZOOM,
   MAX_COMFORT_FONT_PX,
   parseMinFontSize,
@@ -245,6 +247,25 @@ describe('MermaidDiagram', () => {
     expect(home.zoom).toBeCloseTo(952 / 900);
     expect(home.pan.x).toBeCloseTo(0);
     expect(home.pan.y).toBe(0);
+  });
+
+  test('computeFitHome shrinks oversized diagram to ratio of viewport', () => {
+    const home = computeFitHome({ w: 1000, h: 600 }, { x: 0, y: 0, w: 2000, h: 1200 });
+    expect(home.zoom).toBeCloseTo((552 / 1200) * FIT_VIEW_RATIO);
+    expect(home.pan.x + (0 + 1000) * home.zoom).toBeCloseTo(500);
+    expect(home.pan.y + (0 + 600) * home.zoom).toBeCloseTo(300);
+  });
+
+  test('computeFitHome centers content with negative origin', () => {
+    const home = computeFitHome({ w: 1000, h: 800 }, { x: -450, y: -350, w: 900, h: 700 });
+    expect(home.zoom).toBeCloseTo((952 / 900) * FIT_VIEW_RATIO);
+    expect(home.pan.x + 0 * home.zoom).toBeCloseTo(500);
+    expect(home.pan.y + 0 * home.zoom).toBeCloseTo(400);
+  });
+
+  test('computeFitHome guards zero viewport', () => {
+    const home = computeFitHome({ w: 0, h: 0 }, { x: 0, y: 0, w: 400, h: 300 });
+    expect(home).toEqual({ zoom: 1, pan: { x: 0, y: 0 } });
   });
 
   test('tall diagram container height capped at 520px', async () => {
