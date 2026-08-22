@@ -56,6 +56,7 @@ export default function MermaidDiagram({ code, isDark }: Props) {
   const homeRef = useRef({ zoom: 1, pan: { x: 0, y: 0 } });
   const contentHRef = useRef<number | null>(null);
   const lastContentRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
+  const lastRoWRef = useRef(0);
 
   const applyView = (nextZoom: number, nextPan: { x: number; y: number }) => {
     setZoom(nextZoom);
@@ -76,13 +77,14 @@ export default function MermaidDiagram({ code, isDark }: Props) {
     const rect = container.getBoundingClientRect();
     const content = bbox ?? vbRect;
     lastContentRef.current = content;
+    lastRoWRef.current = rect.width;
     setDims({
       w: Math.round(vbRect.w),
       h: Math.round(vbRect.h),
       offX: bbox ? vbRect.x - bbox.x : 0,
       offY: bbox ? vbRect.y - bbox.y : 0,
     });
-    const home = computeWidthHome(rect.width, vbRect, parseMinFontSize(svg));
+    const home = computeWidthHome(rect.width, content, INLINE_MAX_BOX_H, parseMinFontSize(svg));
     contentHRef.current = vbRect.h;
     homeRef.current = home;
     applyView(home.zoom, home.pan);
@@ -95,7 +97,13 @@ export default function MermaidDiagram({ code, isDark }: Props) {
   useEffect(() => {
     const container = containerRef.current;
     if (!container || typeof ResizeObserver === 'undefined') return;
-    const ro = new ResizeObserver(() => rehome());
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (Math.abs(entry.contentRect.width - lastRoWRef.current) < 1) continue;
+        rehome();
+        break;
+      }
+    });
     ro.observe(container);
     return () => ro.disconnect();
   }, []);

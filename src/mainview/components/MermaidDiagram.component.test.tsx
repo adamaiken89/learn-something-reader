@@ -9,7 +9,7 @@ import {
   computeHome,
   computeWidthHome,
   FIT_VIEW_RATIO,
-  INLINE_MAX_ZOOM,
+  INLINE_FIT_HEADROOM,
   MAX_COMFORT_FONT_PX,
   parseMinFontSize,
   parseSvgSize,
@@ -196,56 +196,52 @@ describe('MermaidDiagram', () => {
     expect(home.pan.y).toBeCloseTo(126);
   });
 
-  test('computeWidthHome fills container width', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 900, h: 300 });
-    expect(home.zoom).toBeCloseTo(952 / 900);
-    expect(home.pan.x).toBeCloseTo(0);
+  test('computeWidthHome fits median diagram within height budget', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 846, h: 440 }, 520);
+    expect(home.zoom).toBeCloseTo((952 / 846) * INLINE_FIT_HEADROOM);
+    expect(home.pan.x).toBeCloseTo((952 - 846 * home.zoom) / 2);
     expect(home.pan.y).toBe(0);
   });
 
   test('computeWidthHome boosts zoom for tiny text', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 2000, h: 400 }, 5);
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 2000, h: 400 }, 520, 5);
     expect(home.zoom).toBeCloseTo(12 / 5);
   });
 
-  test('computeWidthHome font ceiling pins oversized text at natural size', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 900, h: 300 }, 30);
-    expect(home.zoom).toBe(1);
+  test('computeWidthHome font ceiling pins oversized text', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 900, h: 300 }, 520, 30);
+    expect(home.zoom).toBeCloseTo(MAX_COMFORT_FONT_PX / 30);
   });
 
   test('computeWidthHome font ceiling caps width-fill enlargement', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 300, h: 100 }, 8);
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 300, h: 100 }, 520, 8);
     expect(home.zoom).toBeCloseTo(MAX_COMFORT_FONT_PX / 8);
   });
 
-  test('computeWidthHome caps at INLINE_MAX_ZOOM', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 100, h: 50 });
-    expect(home.zoom).toBe(INLINE_MAX_ZOOM);
+  test('computeWidthHome enlarges modestly to comfort ceiling for small diagrams', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 100, h: 50 }, 520);
+    expect(home.zoom).toBeCloseTo(MAX_COMFORT_FONT_PX / 16);
+    expect(home.pan.x).toBeCloseTo((952 - 100 * home.zoom) / 2);
+    expect(home.pan.y).toBe(0);
   });
 
   test('computeWidthHome guards zero-width viewport', () => {
-    const home = computeWidthHome(0, { x: 0, y: 0, w: 900, h: 300 });
+    const home = computeWidthHome(0, { x: 0, y: 0, w: 900, h: 300 }, 520);
     expect(home.zoom).toBe(1);
     expect(home.pan).toEqual({ x: 0, y: 0 });
   });
 
-  test('computeWidthHome never shrinks below natural size', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 2000, h: 400 });
-    expect(home.zoom).toBe(1);
+  test('computeWidthHome clamps wide diagram to legibility floor', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 2000, h: 400 }, 520);
+    expect(home.zoom).toBeCloseTo(12 / 16);
     expect(home.pan.x).toBe(0);
-  });
-
-  test('computeWidthHome centers narrow diagram', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 100, h: 50 });
-    expect(home.zoom).toBe(INLINE_MAX_ZOOM);
-    expect(home.pan.x).toBeCloseTo((952 - 300) / 2);
     expect(home.pan.y).toBe(0);
   });
 
-  test('computeWidthHome keeps pan.x 0 for wide diagram', () => {
-    const home = computeWidthHome(1000, { x: -450, y: -350, w: 900, h: 700 });
-    expect(home.zoom).toBeCloseTo(952 / 900);
-    expect(home.pan.x).toBeCloseTo(0);
+  test('computeWidthHome floor wins over fit for very tall diagram', () => {
+    const home = computeWidthHome(1000, { x: -450, y: -350, w: 900, h: 2000 }, 520);
+    expect(home.zoom).toBeCloseTo(12 / 16);
+    expect(home.pan.x).toBeCloseTo((952 - 900 * (12 / 16)) / 2);
     expect(home.pan.y).toBe(0);
   });
 

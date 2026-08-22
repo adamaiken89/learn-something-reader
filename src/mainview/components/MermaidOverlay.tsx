@@ -73,6 +73,8 @@ export function computeHome(
 
 export const INLINE_MAX_ZOOM = 3;
 export const MAX_COMFORT_FONT_PX = 18;
+export const INLINE_FIT_HEADROOM = 0.85;
+const MERMAID_BASE_FONT_PX = 16;
 export const FIT_VIEW_RATIO = 0.8;
 const FIT_MIN_ZOOM = 0.2;
 
@@ -100,24 +102,22 @@ export function computeFitHome(
 export function computeWidthHome(
   viewportW: number,
   content: ContentBox,
+  heightBudget: number,
   minFontSize?: number | null,
 ): Home {
   const availW = viewportW - PAD;
   if (availW <= 0 || content.w <= 0 || content.h <= 0) {
     return { zoom: 1, pan: { x: 0, y: 0 } };
   }
-  let zoom = Math.max(1, availW / content.w);
-  if (minFontSize && minFontSize > 0) {
-    zoom = Math.max(zoom, LEGIBLE_PX / minFontSize);
-    const comfortCap = Math.max(1, MAX_COMFORT_FONT_PX / minFontSize);
-    zoom = Math.min(zoom, comfortCap);
-  }
-  zoom = Math.min(INLINE_MAX_ZOOM, zoom);
-  const scaledW = content.w * zoom;
+  const base = minFontSize && minFontSize > 0 ? minFontSize : MERMAID_BASE_FONT_PX;
+  const floor = LEGIBLE_PX / base;
+  const ceiling = Math.min(MAX_COMFORT_FONT_PX / base, INLINE_MAX_ZOOM);
+  const zoomFit = Math.min(availW / content.w, heightBudget / content.h) * INLINE_FIT_HEADROOM;
+  const zoom = Math.min(ceiling, Math.max(floor, zoomFit));
   return {
     zoom,
     pan: {
-      x: Math.max(0, (availW - scaledW) / 2),
+      x: Math.max(0, (availW - content.w * zoom) / 2),
       y: 0,
     },
   };
