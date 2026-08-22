@@ -270,6 +270,8 @@ describe('MermaidDiagram', () => {
     expect(frame.style.position).toBe('absolute');
     expect(frame.style.left).toBe('0px');
     expect(frame.style.top).toBe('0px');
+    expect(frame.style.width).toBe('400px');
+    expect(frame.style.height).toBe('300px');
   });
 
   test('width/height-attr svg (no viewBox) normalizes at origin 0,0', async () => {
@@ -286,5 +288,7 @@ describe('MermaidDiagram', () => {
     const frame = wrapper.firstElementChild as HTMLElement;
     expect(frame.style.left).toBe('0px');
     expect(frame.style.top).toBe('0px');
+    expect(frame.style.width).toBe('800px');
+    expect(frame.style.height).toBe('600px');
   });
 });

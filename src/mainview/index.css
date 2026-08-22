@@ -616,6 +616,13 @@ body {
   height: auto;
   overflow: visible;
 }
+.mermaid-inline {
+  justify-content: flex-start;
+}
+.mermaid-inline svg {
+  width: 100% !important;
+  height: 100% !important;
+}
 .mermaid-diagram svg p,
 .mermaid-diagram svg span {
   line-height: 1.35;

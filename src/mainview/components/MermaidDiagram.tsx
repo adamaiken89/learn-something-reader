@@ -81,15 +81,14 @@ export default function MermaidDiagram({ code, isDark }: Props) {
 
     const bbox = getContentBbox(svgEl);
     const rect = container.getBoundingClientRect();
-    const content = bbox ?? vbRect;
     setDims({
-      w: Math.round(content.w),
-      h: Math.round(content.h),
-      offX: vbRect.x - content.x,
-      offY: vbRect.y - content.y,
+      w: Math.round(vbRect.w),
+      h: Math.round(vbRect.h),
+      offX: bbox ? vbRect.x - bbox.x : 0,
+      offY: bbox ? vbRect.y - bbox.y : 0,
     });
-    const home = computeWidthHome(rect.width, content, parseMinFontSize(svg));
-    contentHRef.current = content.h;
+    const home = computeWidthHome(rect.width, vbRect, parseMinFontSize(svg));
+    contentHRef.current = vbRect.h;
     homeRef.current = home;
     applyView(home.zoom, home.pan);
   }, [svg]);
@@ -142,7 +141,7 @@ export default function MermaidDiagram({ code, isDark }: Props) {
       <div className="relative group">
         <div
           ref={containerRef}
-          className="mermaid-diagram overflow-x-auto"
+          className="mermaid-diagram mermaid-inline overflow-x-auto"
           data-testid="mermaid-diagram"
           style={{ height: boxH != null ? `${boxH}px` : undefined }}
           onWheel={handleWheel}
@@ -162,6 +161,8 @@ export default function MermaidDiagram({ code, isDark }: Props) {
                 position: 'absolute',
                 left: dims ? `${dims.offX}px` : 0,
                 top: dims ? `${dims.offY}px` : 0,
+                width: dims ? `${dims.w}px` : '100%',
+                height: dims ? `${dims.h}px` : 'auto',
                 lineHeight: 0,
               }}
               dangerouslySetInnerHTML={{ __html: svg }}
