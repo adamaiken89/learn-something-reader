@@ -72,6 +72,7 @@ export function computeHome(
 }
 
 export const INLINE_MAX_ZOOM = 3;
+export const MAX_COMFORT_FONT_PX = 18;
 
 export function computeWidthHome(
   viewportW: number,
@@ -85,6 +86,8 @@ export function computeWidthHome(
   let zoom = Math.max(1, availW / content.w);
   if (minFontSize && minFontSize > 0) {
     zoom = Math.max(zoom, LEGIBLE_PX / minFontSize);
+    const comfortCap = Math.max(1, MAX_COMFORT_FONT_PX / minFontSize);
+    zoom = Math.min(zoom, comfortCap);
   }
   zoom = Math.min(INLINE_MAX_ZOOM, zoom);
   const scaledW = content.w * zoom;

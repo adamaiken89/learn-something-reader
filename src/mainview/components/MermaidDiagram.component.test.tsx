@@ -8,6 +8,7 @@ import {
   computeHome,
   computeWidthHome,
   INLINE_MAX_ZOOM,
+  MAX_COMFORT_FONT_PX,
   parseMinFontSize,
   parseSvgSize,
 } from './MermaidOverlay';
@@ -205,6 +206,16 @@ describe('MermaidDiagram', () => {
     expect(home.zoom).toBeCloseTo(12 / 5);
   });
 
+  test('computeWidthHome font ceiling pins oversized text at natural size', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 900, h: 300 }, 30);
+    expect(home.zoom).toBe(1);
+  });
+
+  test('computeWidthHome font ceiling caps width-fill enlargement', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 300, h: 100 }, 8);
+    expect(home.zoom).toBeCloseTo(MAX_COMFORT_FONT_PX / 8);
+  });
+
   test('computeWidthHome caps at INLINE_MAX_ZOOM', () => {
     const home = computeWidthHome(1000, { x: 0, y: 0, w: 100, h: 50 });
     expect(home.zoom).toBe(INLINE_MAX_ZOOM);
@@ -234,6 +245,18 @@ describe('MermaidDiagram', () => {
     expect(home.zoom).toBeCloseTo(952 / 900);
     expect(home.pan.x).toBeCloseTo(0);
     expect(home.pan.y).toBe(0);
+  });
+
+  test('tall diagram container height capped at 520px', async () => {
+    mermaidMockImpl.render = (..._args: unknown[]) =>
+      Promise.resolve({ svg: '<svg viewBox="0 0 400 2000">mock</svg>' });
+    const utils = renderDiagram();
+    await waitForSvg(utils);
+
+    const container = utils.getByTestId('mermaid-diagram');
+    await waitFor(() => {
+      expect(container.style.height).toBe('520px');
+    });
   });
 
   test('parseSvgSize returns viewBox rect incl origin', () => {

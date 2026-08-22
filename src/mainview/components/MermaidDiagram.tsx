@@ -1,6 +1,6 @@
 import { Maximize2, ZoomIn } from 'lucide-react';
 import mermaid from 'mermaid';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MermaidOverlay, { computeWidthHome, parseMinFontSize, parseSvgSize } from './MermaidOverlay';
@@ -16,6 +16,8 @@ interface Props {
 
 const TOOLBAR_BTN =
   'px-1.5 py-0.5 rounded text-xs bg-gray-700/80 hover:bg-gray-600 text-gray-300 hover:text-white cursor-pointer transition-colors';
+
+const INLINE_MAX_BOX_H = 520;
 
 function getSvgEl(container: HTMLDivElement): SVGSVGElement | null {
   return container.querySelector('svg') as SVGSVGElement | null;
@@ -52,8 +54,43 @@ export default function MermaidDiagram({ code, isDark }: Props) {
   const applyView = (nextZoom: number, nextPan: { x: number; y: number }) => {
     setZoom(nextZoom);
     setPan(nextPan);
-    if (contentHRef.current != null) setBoxH(Math.round(contentHRef.current * nextZoom));
+    if (contentHRef.current != null) {
+      setBoxH(Math.min(Math.round(contentHRef.current * nextZoom), INLINE_MAX_BOX_H));
+    }
   };
+
+  const rehome = useEffectEvent(() => {
+    const container = containerRef.current;
+    if (!svg || !container) return;
+    const svgEl = getSvgEl(container);
+    const vbRect = parseSvgSize(svg);
+    if (!svgEl || !vbRect) return;
+
+    const bbox = getContentBbox(svgEl);
+    const rect = container.getBoundingClientRect();
+    setDims({
+      w: Math.round(vbRect.w),
+      h: Math.round(vbRect.h),
+      offX: bbox ? vbRect.x - bbox.x : 0,
+      offY: bbox ? vbRect.y - bbox.y : 0,
+    });
+    const home = computeWidthHome(rect.width, vbRect, parseMinFontSize(svg));
+    contentHRef.current = vbRect.h;
+    homeRef.current = home;
+    applyView(home.zoom, home.pan);
+  });
+
+  useEffect(() => {
+    rehome();
+  }, [svg]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => rehome());
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     const id = `mermaid-${++counter}`;
@@ -71,27 +108,6 @@ export default function MermaidDiagram({ code, isDark }: Props) {
       cancelled = true;
     };
   }, [code, isDark]);
-
-  useEffect(() => {
-    if (!svg || !containerRef.current) return;
-    const container = containerRef.current;
-    const svgEl = getSvgEl(container);
-    const vbRect = parseSvgSize(svg);
-    if (!svgEl || !vbRect) return;
-
-    const bbox = getContentBbox(svgEl);
-    const rect = container.getBoundingClientRect();
-    setDims({
-      w: Math.round(vbRect.w),
-      h: Math.round(vbRect.h),
-      offX: bbox ? vbRect.x - bbox.x : 0,
-      offY: bbox ? vbRect.y - bbox.y : 0,
-    });
-    const home = computeWidthHome(rect.width, vbRect, parseMinFontSize(svg));
-    contentHRef.current = vbRect.h;
-    homeRef.current = home;
-    applyView(home.zoom, home.pan);
-  }, [svg]);
 
   const applyZoom = (newZoom: number) => {
     const container = containerRef.current;
