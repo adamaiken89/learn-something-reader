@@ -17,6 +17,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Sync electrobun devkit
+        run: bunx electrobun sync
+
       - name: Run type check
         run: bun run check
 
