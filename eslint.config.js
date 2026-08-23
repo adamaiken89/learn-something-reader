@@ -47,8 +47,9 @@ export default tseslint.config(
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'error',
       'react-compiler/react-compiler': 'error',
-      'simple-import-sort/imports': 'warn',
+      'simple-import-sort/imports': 'error',
       'import/no-duplicates': 'error',
+      'import/no-cycle': ['error', { maxDepth: Infinity }],
     },
   },
   {

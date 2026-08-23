@@ -74,7 +74,11 @@ export default function QuizPopover() {
           style={{ left: getDropdownLeft() }}
         >
           <div className="absolute -top-1.5 left-4 w-3 h-3 bg-gray-900/95 border-l border-t border-gray-700/50 rotate-45" />
-          <button onClick={() => handleQuiz('quiz')} className={btnClass} data-testid="quiz-start-mcq">
+          <button
+            onClick={() => handleQuiz('quiz')}
+            className={btnClass}
+            data-testid="quiz-start-mcq"
+          >
             <CheckSquare className="w-3.5 h-3.5" />
             {t('lesson.quizMCQ', 'Quiz')}
           </button>

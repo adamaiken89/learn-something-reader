@@ -274,7 +274,10 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
                     </span>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-200 group-hover:text-indigo-400 transition-colors truncate" data-testid="module-name">
+                        <span
+                          className="text-sm font-medium text-gray-200 group-hover:text-indigo-400 transition-colors truncate"
+                          data-testid="module-name"
+                        >
                           {mod.name}
                         </span>
                         {mod.timeHours > 0 && (
