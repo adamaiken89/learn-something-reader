@@ -90,7 +90,7 @@ export default function NavigationSectionsTab({
   };
 
   return (
-    <div className="overflow-y-auto flex-1" ref={sectionsRef}>
+    <div className="overflow-y-auto flex-1" ref={sectionsRef} data-testid="sections-panel">
       {modules.map((mod) => {
         const isCurrent = mod.id === moduleId;
         const isExpanded = isCurrent ? !collapseCurrent : expandedModules.has(mod.id);

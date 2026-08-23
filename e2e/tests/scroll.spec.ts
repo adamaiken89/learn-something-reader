@@ -2,10 +2,10 @@ import { expect, test } from '../fixtures';
 
 test.describe('Scroll behavior', () => {
   async function navigateToLesson(page: import('@playwright/test').Page) {
-    await page.waitForSelector('button:has-text("Introduction to Programming")');
-    await page.click('button:has-text("Introduction to Programming")');
-    await page.waitForSelector('button:has-text("Getting Started")');
-    await page.click('button:has-text("Getting Started")');
+    await page.waitForSelector('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.click('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.waitForSelector('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
+    await page.click('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
     await page.waitForSelector('text=Welcome to Introduction to Programming');
     await page.waitForTimeout(600);
   }

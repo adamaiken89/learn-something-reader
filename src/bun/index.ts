@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, Updater, Utils } from 'electrobun/bun';
+import { BrowserView, BrowserWindow, Updater, Utils } from 'electrobun/main';
 import type { AppSchema } from './rpcSchema';
 import * as CourseLoader from './courseLoader';
 import * as Annotations from './persistence-annotations';

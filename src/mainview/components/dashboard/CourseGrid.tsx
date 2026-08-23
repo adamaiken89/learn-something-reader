@@ -14,7 +14,7 @@ export default function CourseGrid() {
   const completed = useCompletionStore((s) => s.completed);
   const totalModules = useCompletionStore((s) => s.totalModules);
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<StatusFilter>('inProgress');
+  const [filter, setFilter] = useState<StatusFilter>('all');
 
   if (courses.length === 0) return null;
 

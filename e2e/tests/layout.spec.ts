@@ -2,7 +2,7 @@ import { test, expect } from '../fixtures';
 
 test.describe('Layout invariants', () => {
   test('PageContent has flex flex-col classes', async ({ page }) => {
-    await page.waitForSelector('button:has-text("Introduction to Programming")');
+    await page.waitForSelector('[data-testid="course-card"]:has-text("Introduction to Programming")');
     await page.waitForTimeout(300);
 
     const hasFlexCol = await page.evaluate(() => {
@@ -16,10 +16,10 @@ test.describe('Layout invariants', () => {
   });
 
   test('contentRef has overflow-y-auto', async ({ page }) => {
-    await page.waitForSelector('button:has-text("Introduction to Programming")');
-    await page.click('button:has-text("Introduction to Programming")');
-    await page.waitForSelector('button:has-text("Getting Started")');
-    await page.click('button:has-text("Getting Started")');
+    await page.waitForSelector('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.click('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.waitForSelector('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
+    await page.click('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
     await page.waitForSelector('text=Welcome to Introduction to Programming');
     await page.waitForTimeout(600);
 
@@ -33,10 +33,10 @@ test.describe('Layout invariants', () => {
   });
 
   test('contentRef scrollHeight > clientHeight (content overflows)', async ({ page }) => {
-    await page.waitForSelector('button:has-text("Introduction to Programming")');
-    await page.click('button:has-text("Introduction to Programming")');
-    await page.waitForSelector('button:has-text("Getting Started")');
-    await page.click('button:has-text("Getting Started")');
+    await page.waitForSelector('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.click('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.waitForSelector('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
+    await page.click('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
     await page.waitForSelector('text=Welcome to Introduction to Programming');
     await page.waitForTimeout(600);
 
@@ -50,10 +50,10 @@ test.describe('Layout invariants', () => {
   });
 
   test('scroll assignment works on contentRef', async ({ page }) => {
-    await page.waitForSelector('button:has-text("Introduction to Programming")');
-    await page.click('button:has-text("Introduction to Programming")');
-    await page.waitForSelector('button:has-text("Getting Started")');
-    await page.click('button:has-text("Getting Started")');
+    await page.waitForSelector('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.click('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.waitForSelector('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
+    await page.click('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
     await page.waitForSelector('text=Welcome to Introduction to Programming');
     await page.waitForTimeout(600);
 

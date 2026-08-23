@@ -40,6 +40,7 @@ export default function PageHeader({
                 <button
                   onClick={onBack}
                   className="text-gray-400 hover:text-white transition-colors text-xs shrink-0"
+                  data-testid="header-back"
                 >
                   {backLabel ?? t('common.back')}
                 </button>

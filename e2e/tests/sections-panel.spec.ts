@@ -2,10 +2,12 @@ import { expect, test } from '../fixtures';
 
 test.describe('SectionsPanel: highlight follows scroll, panel auto-scrolls', () => {
   async function navigateToLesson(page: import('@playwright/test').Page) {
-    // Click course card (div[role="button"], not <button>)
-    await page.waitForSelector('div[role="button"]:has-text("Introduction to Programming")');
-    await page.click('div[role="button"]:has-text("Introduction to Programming")');
-    // Lesson loads directly with first module
+    // Click course card → syllabus → first module row → lesson
+    await page.waitForSelector('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.click('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.waitForSelector('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
+    await page.click('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
+    // Lesson loads with first module
     await page.waitForSelector('text=Welcome to Introduction to Programming');
     await page.waitForTimeout(600);
   }

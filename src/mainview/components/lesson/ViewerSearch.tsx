@@ -79,6 +79,7 @@ export default function ViewerSearch({ search }: ViewerSearchProps) {
             onMouseDown={(e) => e.preventDefault()}
             className="text-gray-400 hover:text-white px-1 py-0.5 rounded transition-colors"
             title={t('viewerSearch.prev')}
+            data-testid="search-prev"
           >
             <ChevronUp size={14} />
           </button>
@@ -87,6 +88,7 @@ export default function ViewerSearch({ search }: ViewerSearchProps) {
             onMouseDown={(e) => e.preventDefault()}
             className="text-gray-400 hover:text-white px-1 py-0.5 rounded transition-colors"
             title={t('viewerSearch.next')}
+            data-testid="search-next"
           >
             <ChevronDown size={14} />
           </button>

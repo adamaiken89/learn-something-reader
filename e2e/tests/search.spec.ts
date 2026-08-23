@@ -2,10 +2,10 @@ import { expect, test } from '../fixtures';
 
 test.describe('Search bar stays visible', () => {
   async function navigateToLesson(page: import('@playwright/test').Page) {
-    await page.waitForSelector('button:has-text("Introduction to Programming")');
-    await page.click('button:has-text("Introduction to Programming")');
-    await page.waitForSelector('button:has-text("Getting Started")');
-    await page.click('button:has-text("Getting Started")');
+    await page.waitForSelector('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.click('[data-testid="course-card"]:has-text("Introduction to Programming")');
+    await page.waitForSelector('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
+    await page.click('[data-testid="module-row"]:has([data-testid="module-name"]:has-text("Getting Started"))');
     await page.waitForSelector('text=Welcome to Introduction to Programming');
     await page.waitForTimeout(600);
   }
@@ -56,7 +56,7 @@ test.describe('Search bar stays visible', () => {
     const rectBefore = await getSearchBarRect(page);
     expect(rectBefore).not.toBeNull();
 
-    const nextBtn = page.locator('[data-testid="viewer-search"] button').filter({ hasText: '↓' });
+    const nextBtn = page.locator('[data-testid="search-next"]');
     await nextBtn.click();
     await page.waitForTimeout(500);
 
@@ -138,7 +138,7 @@ test.describe('Search bar stays visible', () => {
     });
 
     // Click next multiple times to jump through matches across sections
-    const nextBtn = page.locator('[data-testid="viewer-search"] button').filter({ hasText: '↓' });
+    const nextBtn = page.locator('[data-testid="search-next"]');
     for (let i = 0; i < 5; i++) {
       await nextBtn.click();
       await page.waitForTimeout(600);
@@ -171,7 +171,7 @@ test.describe('Search bar stays visible', () => {
     const rectBefore = await getSearchBarRect(page);
     expect(rectBefore).not.toBeNull();
 
-    const nextBtn = page.locator('[data-testid="viewer-search"] button').filter({ hasText: '↓' });
+    const nextBtn = page.locator('[data-testid="search-next"]');
     await nextBtn.click();
     await page.waitForTimeout(500);
 
@@ -245,7 +245,7 @@ test.describe('Search bar stays visible', () => {
       }
     });
 
-    const nextBtn = page.locator('[data-testid="viewer-search"] button').filter({ hasText: '↓' });
+    const nextBtn = page.locator('[data-testid="search-next"]');
     await nextBtn.click();
     await page.waitForTimeout(800);
 
@@ -319,7 +319,7 @@ test.describe('Search bar stays visible', () => {
       return null;
     });
 
-    const nextBtn = page.locator('[data-testid="viewer-search"] button').filter({ hasText: '↓' });
+    const nextBtn = page.locator('[data-testid="search-next"]');
     for (let i = 0; i < 5; i++) {
       await nextBtn.click();
       await page.waitForTimeout(600);

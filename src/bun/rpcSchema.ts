@@ -1,4 +1,4 @@
-import type { RPCSchema } from 'electrobun/bun';
+import type { RPCSchema } from 'electrobun/main';
 import type { MetaField } from './lessonMarkdown';
 import type { CourseQuizStatus, CourseStats, GlobalStats } from './stats';
 import type { SearchResult } from './search';

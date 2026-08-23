@@ -65,7 +65,21 @@ class MockElectroview {
     };
   }
 }
-void mock.module('electrobun/view', () => ({ Electroview: MockElectroview }));
+// rpc.ts imports Electroview directly from the Hutch devkit (absolute path
+// mock — the old 'electrobun/view' specifier no longer exists at runtime in
+// electrobun 2.x; npm package is a bootstrap stub). Requires `bunx
+// electrobun sync` before running tests on a fresh clone.
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+
+const ELECTROVIEW_DEVKIT_PATH = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../.hutch/devkit/api/browser/index.ts',
+);
+const ELECTROVIEW_DEVKIT_URL = pathToFileURL(ELECTROVIEW_DEVKIT_PATH).href;
+for (const target of [ELECTROVIEW_DEVKIT_PATH, ELECTROVIEW_DEVKIT_URL]) {
+  void mock.module(target, () => ({ Electroview: MockElectroview }));
+}
 
 // sonner — intercept toast calls globally
 void mock.module('sonner', () => toastMockState);

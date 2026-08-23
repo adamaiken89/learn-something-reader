@@ -1,5 +1,7 @@
-import { Electroview } from 'electrobun/view';
-
+// Direct devkit import (no resolve.alias): Hutch projects the SDK into
+// .hutch/devkit; the npm electrobun package is a bootstrap-only stub in 2.x.
+// Run `bunx electrobun sync` once after cloning before building/testing.
+import { Electroview } from '../../.hutch/devkit/api/browser/index';
 import type { AppSchema } from '../bun/rpcSchema';
 
 const rpcInstance = Electroview.defineRPC<AppSchema>({

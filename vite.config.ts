@@ -4,6 +4,15 @@ import { defineConfig, type Plugin } from 'vite';
 import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import babel from '@rolldown/plugin-babel';
 
+// src/mainview/rpc.ts imports Electroview directly from the Hutch-projected
+// devkit (no resolve.alias — Vite applies aliases before any resolveId hook,
+// which would shadow this e2e mock). Match both the raw relative specifier and
+// its fs-resolved absolute form.
+const ELECTROVIEW_SUFFIXES = [
+  '.hutch/devkit/api/browser/index',
+  '.hutch/devkit/api/browser/index.ts',
+];
+
 function mockViewPlugin(): Plugin {
   const enabled = process.env.VITE_E2E === 'true';
   if (!enabled) return { name: 'mock-view' };
@@ -15,6 +24,9 @@ function mockViewPlugin(): Plugin {
     enforce: 'pre',
     resolveId(id) {
       if (id === 'electrobun/view') return '\0virtual:e2e-mock-view';
+      if (ELECTROVIEW_SUFFIXES.some((s) => id.includes(s))) {
+        return '\0virtual:e2e-mock-view';
+      }
     },
     load(id) {
       if (id !== '\0virtual:e2e-mock-view') return;

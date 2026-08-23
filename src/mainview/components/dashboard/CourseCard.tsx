@@ -44,6 +44,7 @@ export default function CourseCard({ course }: { course: Course }) {
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
+      data-testid="course-card"
       className="text-left bg-[#131620] border border-white/[0.06] hover:border-indigo-500/25 rounded-lg p-4 transition-all duration-200 group cursor-pointer flex flex-col h-full justify-between"
     >
       <div className="min-w-0">
