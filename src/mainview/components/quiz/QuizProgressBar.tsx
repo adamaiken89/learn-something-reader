@@ -1,5 +1,6 @@
+import { progressSegmentClass } from '@/lib/quiz-styles';
+
 import { useQuizStore } from '../../stores/quizStore';
-import { progressSegmentClass } from '../ui/variants/quiz';
 
 export default function QuizProgressBar() {
   const questions = useQuizStore((s) => s.questions);

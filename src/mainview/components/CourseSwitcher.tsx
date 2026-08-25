@@ -2,11 +2,12 @@ import { ChevronDown, Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { selectableItemVariants } from '@/lib/card-styles';
+
 import type { Course } from '../../bun/types';
 import { useDelayedUnmount } from '../hooks/useDelayedUnmount';
 import { countCompleted, useCompletionStore } from '../stores/completionStore';
 import { useCourseStore } from '../stores/courseStore';
-import { selectableItemVariants } from './ui/variants/card';
 
 interface Props {
   currentCourseId?: string;

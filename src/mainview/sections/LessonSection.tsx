@@ -2,14 +2,15 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import BottomSheet from '@/components/shadcn/bottom-sheet';
+import { loadingIndicator } from '@/lib/loading';
+
 import type { Course, ModuleMeta } from '../../bun/types';
 import { handleToggle } from '../components/lesson/LessonContentCompletionButton';
 import LessonContentViewer from '../components/lesson/LessonContentViewer';
 import NavigationPanel from '../components/lesson/NavigationPanel';
 import ViewerSearch from '../components/lesson/ViewerSearch';
 import PomodoroTimer from '../components/PomodoroTimer';
-import BottomSheet from '../components/ui/BottomSheet';
-import { loadingIndicator } from '../components/ui/variants/loading';
 import { useBookmarks } from '../hooks/useBookmarks';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { useLesson } from '../hooks/useLesson';

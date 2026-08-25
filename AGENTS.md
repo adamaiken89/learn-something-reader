@@ -115,8 +115,18 @@ LessonPage supports 4 styles: none, flip, slide, fade. Stored in `settingsStore.
 
 ## Button styling conventions
 
-- **`Button` component** (`src/mainview/components/ui/Button.tsx`): base shadow via `shadow-sm`, hover: `shadow-md` + `-translate-y-0.5`, transition `transition-all duration-150`. `variant` controls bg/border/text colors (primary=indigo, outline=border, ghost=transparent).
+- **`Button` component** (`src/mainview/components/shadcn/button.tsx`): CVA superset — legacy variants (primary/secondary/danger/ghost/outline/toggle/toggleActive) + shadcn aliases (default=secondary classes, destructive=danger), sizes sm/md/lg/icon, `loading` spinner prop, `asChild` via Radix Slot, focus-visible ring. Base shadow via `shadow-sm`, hover: `shadow-md` + `-translate-y-0.5`.
 - **Toolbar buttons** (lesson toolbar, search, zoom, etc.): `shadow-none` (override Button's `shadow-sm`), `hover:bg-gray-700/30` subtle background instead of lift.
+
+## Shadcn/ui
+
+- **Migration complete**: legacy `components/ui/*` deleted (Button, BottomSheet, StatCard). Canonical Button = `components/shadcn/button.tsx` (superset: keeps `loading` + `toggleActive`/`toggle` variants, adds `asChild`). BottomSheet = `components/shadcn/bottom-sheet.tsx` (wraps shadcn Sheet side=bottom, preserves `{open,onClose,title,children}` API + drag-to-dismiss; consumers self-gate isMobile). Orphaned style variants live in `lib/*-styles.ts` (`quiz-styles`, `toggle-styles`, etc.).
+- **Output dir**: `src/mainview/components/shadcn/` via `components.json` aliases. NEVER let shadcn write into `components/ui/` — macOS case-insensitive FS means a future kebab-case `button.tsx` would collide with existing `Button.tsx`.
+- **Infra**: `@/*` → `src/mainview` (tsconfig `paths` + vite `resolve.alias`). Alias is narrow — never add one matching `.hutch/devkit` paths or it shadows the e2e mockViewPlugin. `cn()` at `src/mainview/lib/utils.ts`.
+- **Tokens**: semantic colors (`bg-primary`, `text-muted-foreground`, …) read `hsl(var(--…))` vars from `:root` in `index.css`; values pinned to existing dark palette (#111827 bg, #283141 card, indigo primary). Dashboard brand classes separate.
+- **After every `shadcn add`**: run `bun run fix` — generated code needs oxfmt/oxlint conform.
+- **className overrides now win**: canonical Button merges via `cn()` (twMerge) — call-site `gap-1.5` etc. actually override base classes. Old Button concat meant base+override coexisted and Tailwind CSS order decided (usually base won). Visual snapshots may shift a few px when touching old call sites.
+- Radix deps auto-install per component (`@radix-ui/react-*`).
 
 ## Dashboard design conventions
 

@@ -1,4 +1,4 @@
-import { progressBarVariants } from '../ui/variants/progress';
+import { progressBarVariants } from '@/lib/progress-styles';
 
 export default function ProgressBar({ pct, size = 'md' }: { pct: number; size?: 'sm' | 'md' }) {
   return (

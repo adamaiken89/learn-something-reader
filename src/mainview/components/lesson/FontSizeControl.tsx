@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/shadcn/button';
+
 import { useSettingsStore } from '../../stores/settingsStore';
-import { Button } from '../ui/Button';
 
 function FontSizeControl() {
   const { t } = useTranslation();

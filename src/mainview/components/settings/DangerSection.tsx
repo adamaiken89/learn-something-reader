@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/shadcn/button';
+
 import { api } from '../../api';
 import { showToast } from '../../toast';
-import { Button } from '../ui/Button';
 
 type ConfirmState = 'clearData' | 'clearLogs' | null;
 

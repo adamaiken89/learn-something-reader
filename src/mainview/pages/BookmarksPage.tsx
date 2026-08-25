@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { loadingIndicator } from '@/lib/loading';
+
 import type { Bookmark, Course } from '../../bun/types';
 import { api } from '../api';
 import CourseSwitcher from '../components/CourseSwitcher';
-import { loadingIndicator } from '../components/ui/variants/loading';
 import PageContent from '../layouts/PageContent';
 import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';

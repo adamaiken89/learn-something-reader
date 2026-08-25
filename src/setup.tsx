@@ -111,6 +111,20 @@ interface TestGlobals {
   crypto: Crypto;
   Event: typeof Event;
   MutationObserver: typeof globalThis.MutationObserver;
+  CustomEvent: typeof CustomEvent;
+  KeyboardEvent: typeof KeyboardEvent;
+  MouseEvent: typeof MouseEvent;
+  PointerEvent: typeof PointerEvent;
+  FocusEvent: typeof FocusEvent;
+  WheelEvent: typeof WheelEvent;
+  HTMLElement: typeof HTMLElement;
+  HTMLInputElement: typeof HTMLInputElement;
+  HTMLButtonElement: typeof HTMLButtonElement;
+  HTMLTextAreaElement: typeof HTMLTextAreaElement;
+  Element: typeof Element;
+  Node: typeof Node;
+  SVGElement: typeof SVGElement;
+  getComputedStyle: typeof window.getComputedStyle;
   customElements: CustomElementRegistry;
   IntersectionObserver: { new (): { observe(): void; unobserve(): void; disconnect(): void } };
   Range: typeof Range;
@@ -146,7 +160,23 @@ g.document = win.document;
 g.self = win;
 g.top = win;
 g.parent = win;
-g.Event = win.Event as typeof Event;
+g.Event = win.Event;
+// Radix layers dispatch CustomEvent/KeyboardEvent via bare globals — map the
+// whole DOM event-constructor family onto happy-dom's realm or its
+// `event instanceof Event` checks throw.
+g.CustomEvent = win.CustomEvent;
+g.KeyboardEvent = win.KeyboardEvent;
+g.MouseEvent = win.MouseEvent;
+g.PointerEvent = win.PointerEvent;
+g.FocusEvent = win.FocusEvent;
+g.WheelEvent = win.WheelEvent;
+g.HTMLElement = win.HTMLElement;
+g.HTMLInputElement = win.HTMLInputElement;
+g.HTMLButtonElement = win.HTMLButtonElement;
+g.HTMLTextAreaElement = win.HTMLTextAreaElement;
+g.Element = win.Element;
+g.Node = win.Node;
+g.SVGElement = win.SVGElement;
 g.location = win.location;
 g.navigator = win.navigator;
 g.localStorage = win.localStorage;
@@ -159,6 +189,8 @@ g.URLSearchParams = win.URLSearchParams;
 g.crypto = win.crypto;
 g.MutationObserver = win.MutationObserver;
 g.customElements = win.customElements;
+// Radix Presence calls bare getComputedStyle during mount animations.
+g.getComputedStyle = win.getComputedStyle.bind(win);
 g.IntersectionObserver = class {
   observe() {}
   unobserve() {}

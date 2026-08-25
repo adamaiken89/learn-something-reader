@@ -1,10 +1,11 @@
 import { Bookmark as BookmarkIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/shadcn/button';
+
 import type { Bookmark } from '../../../bun/types';
 import { useCurrentLesson } from '../../hooks/useCurrentLesson';
 import { useBookmarksStore } from '../../stores/bookmarksStore';
-import { Button } from '../ui/Button';
 
 const EMPTY_BOOKMARKS: Bookmark[] = [];
 

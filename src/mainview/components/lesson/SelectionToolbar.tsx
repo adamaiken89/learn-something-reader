@@ -2,14 +2,15 @@ import { Pencil } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
+import BottomSheet from '@/components/shadcn/bottom-sheet';
+import { Button } from '@/components/shadcn/button';
+
 import { useFloatingPosition } from '../../hooks/useFloatingPosition';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { getTextOffset } from '../../sections/lessonHelpers';
 import { useHighlightsStore } from '../../stores/highlightsStore';
 import { useLessonViewStore } from '../../stores/lessonViewStore';
 import { useSelectionStore } from '../../stores/selectionStore';
-import BottomSheet from '../ui/BottomSheet';
-import { Button } from '../ui/Button';
 import { ColorPickerRow } from './ColorPickerRow';
 import NoteEditor from './NoteEditor';
 

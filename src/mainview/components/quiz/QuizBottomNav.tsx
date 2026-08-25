@@ -1,8 +1,9 @@
 import { CornerDownLeft } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { quizCtaButton, quizNavButton } from '@/lib/quiz-styles';
+
 import { useQuizStore } from '../../stores/quizStore';
-import { quizCtaButton, quizNavButton } from '../ui/variants/quiz';
 
 export default function QuizBottomNav() {
   const { t } = useTranslation();

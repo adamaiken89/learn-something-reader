@@ -1,7 +1,8 @@
 import { useTranslation } from 'react-i18next';
 
+import { selectableCardVariants } from '@/lib/card-styles';
+
 import { useSettingsStore } from '../../stores/settingsStore';
-import { selectableCardVariants } from '../ui/variants/card';
 
 const LOCALES = [
   { code: 'en-US', labelKey: 'settings.englishUS' },

@@ -1,6 +1,9 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { loadingIndicator } from '@/lib/loading';
+import { quizCompletionContainer } from '@/lib/quiz-styles';
+
 import type { Course, QuizIndex, QuizQuestion } from '../../bun/types';
 import { api } from '../api';
 import QuizBottomNav from '../components/quiz/QuizBottomNav';
@@ -10,8 +13,6 @@ import QuizCompletionView from '../components/quiz/QuizCompletionView';
 import QuizExplanation from '../components/quiz/QuizExplanation';
 import QuizMCQGrid from '../components/quiz/QuizMCQGrid';
 import QuizProgressBar from '../components/quiz/QuizProgressBar';
-import { loadingIndicator } from '../components/ui/variants/loading';
-import { quizCompletionContainer } from '../components/ui/variants/quiz';
 import { useQuizEngine } from '../hooks/useQuizEngine';
 import { nextQuizAfter, presenceFromIndex, targetToView } from '../quizDrive';
 import { clozeCorrect } from '../quizUtil';

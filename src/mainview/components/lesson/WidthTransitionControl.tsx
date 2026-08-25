@@ -1,8 +1,9 @@
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/shadcn/button';
+
 import type { ContentWidth, TransitionStyle } from '../../stores/settingsStore';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { Button } from '../ui/Button';
 
 function WidthTransitionControl() {
   const { t } = useTranslation();

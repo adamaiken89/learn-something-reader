@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/shadcn/button';
+
 import { useCompletionStore } from '../../stores/completionStore';
 import { useCourseStore } from '../../stores/courseStore';
 import { useSyncStore } from '../../stores/syncStore';
 import { showToast } from '../../toast';
-import { Button } from '../ui/Button';
 
 export default function SyncSection() {
   const { t } = useTranslation();

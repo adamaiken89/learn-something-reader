@@ -2,6 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * shadcn/ui design tokens (consumed via hsl(var(--…)) in tailwind.config.js).
+ * Values pinned to the app's existing dark palette so shadcn components match
+ * current visuals exactly:
+ *   background  #111827 (body bg, gray-900)     card   #283141 (.bg-gray-750)
+ *   popover     #0f1729 (.bg-gray-850)          muted  #1f2937 (gray-800)
+ *   primary     #4f46e5 (indigo-600)            ring   #6366f1 (indigo-500)
+ *   destructive #b91c1c (red-700)               border #4b5563 (gray-600)
+ * App is dark-first with no .dark toggle, so values live directly on :root.
+ */
+:root {
+  --background: 221 39% 11%;
+  --foreground: 220 14% 96%;
+
+  --card: 218 24% 21%;
+  --card-foreground: 220 14% 91%;
+
+  --popover: 222 13% 11%;
+  --popover-foreground: 220 14% 96%;
+
+  --primary: 243 75% 59%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 215 19% 27%;
+  --secondary-foreground: 220 14% 91%;
+
+  --muted: 217 19% 17%;
+  --muted-foreground: 218 11% 65%;
+
+  --accent: 215 19% 27%;
+  --accent-foreground: 220 14% 91%;
+
+  --destructive: 0 74% 42%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 215 14% 34%;
+  --input: 215 14% 34%;
+  --ring: 239 84% 67%;
+
+  --radius: 0.5rem;
+}
+
 * {
   margin: 0;
   padding: 0;

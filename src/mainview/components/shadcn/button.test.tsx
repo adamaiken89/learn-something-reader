@@ -2,7 +2,7 @@ import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, mock, test } from 'bun:test';
 
-import { Button } from './Button';
+import { Button } from './button';
 
 describe('Button', () => {
   const user = userEvent.setup();

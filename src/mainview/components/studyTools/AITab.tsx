@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { textareaVariants } from '@/lib/textarea-styles';
+
 import { copyPrompt } from '../../ai/utils';
 import { useLessonViewStore } from '../../stores/lessonViewStore';
-import { textareaVariants } from '../ui/variants/textarea';
 
 const ASK_PROMPT = (question: string, context: string) =>
   [

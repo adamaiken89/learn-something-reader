@@ -12,13 +12,14 @@ import {
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/shadcn/button';
+
 import type { CourseQuizStatus, CourseStats } from '../../bun/stats';
 import type { Course, QuizIndex } from '../../bun/types';
 import { api } from '../api';
 import CourseSwitcher from '../components/CourseSwitcher';
 import CourseTags from '../components/dashboard/CourseTags';
 import ProgressBar from '../components/dashboard/ProgressBar';
-import { Button } from '../components/ui/Button';
 import PageContent from '../layouts/PageContent';
 import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';

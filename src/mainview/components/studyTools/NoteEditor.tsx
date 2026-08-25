@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
-import { textareaVariants } from '../ui/variants/textarea';
+import { textareaVariants } from '@/lib/textarea-styles';
 
 interface NoteEditorProps {
   value: string;

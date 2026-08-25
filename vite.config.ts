@@ -45,6 +45,14 @@ export default defineConfig({
   ],
   root: "src/mainview",
   base: "",
+  resolve: {
+    // '@' maps to the mainview root. Deliberately narrow: do NOT alias the
+    // electroview devkit path — vite aliases resolve before any resolveId hook,
+    // which would shadow mockViewPlugin (see ELECTROVIEW_SUFFIXES above).
+    alias: {
+      '@': path.resolve(__dirname, 'src/mainview'),
+    },
+  },
   build: {
     outDir: "../../dist",
     emptyOutDir: true,

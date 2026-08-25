@@ -1,12 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/react/shallow';
 
+import { textareaVariants } from '@/lib/textarea-styles';
+
 import { api } from '../../api';
 import { getTextOffset } from '../../sections/lessonHelpers';
 import { useHighlightsStore } from '../../stores/highlightsStore';
 import { useLessonViewStore } from '../../stores/lessonViewStore';
 import { useSelectionStore } from '../../stores/selectionStore';
-import { textareaVariants } from '../ui/variants/textarea';
 
 export default function NoteEditor() {
   const { t } = useTranslation();

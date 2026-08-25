@@ -1,9 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/shadcn/button';
+
 import { api } from '../../api';
 import { useCompletionStore } from '../../stores/completionStore';
 import { useLessonViewStore } from '../../stores/lessonViewStore';
-import { Button } from '../ui/Button';
 
 export default function LessonContentCompletionButton() {
   const { t } = useTranslation();

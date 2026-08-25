@@ -2,12 +2,13 @@ import { Layers, ListChecks, Play, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { Button } from '@/components/shadcn/button';
+import { loadingIndicator } from '@/lib/loading';
+
 import type { CourseQuizStatus, QuizAttemptStatus } from '../../bun/stats';
 import type { Course, QuizIndex } from '../../bun/types';
 import { api } from '../api';
 import QuizHeader from '../components/QuizHeader';
-import { Button } from '../components/ui/Button';
-import { loadingIndicator } from '../components/ui/variants/loading';
 import PageContent from '../layouts/PageContent';
 import PageLayout from '../layouts/PageLayout';
 import { useViewStore } from '../stores/viewStore';

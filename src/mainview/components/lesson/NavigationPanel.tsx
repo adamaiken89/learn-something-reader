@@ -1,10 +1,11 @@
 import { ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+import { toggleVariants } from '@/lib/toggle-styles';
+
 import type { ModuleMeta } from '../../../bun/types';
 import { useSettingsStore } from '../../stores/settingsStore';
 import NotesHighlightsTab from '../studyTools/NotesHighlightsTab';
-import { toggleVariants } from '../ui/variants/toggle';
 import NavigationAITab from './NavigationAITab';
 import NavigationSectionsTab from './NavigationSectionsTab';
 

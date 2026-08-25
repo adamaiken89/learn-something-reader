@@ -3,13 +3,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useShallow } from 'zustand/shallow';
 
+import BottomSheet from '@/components/shadcn/bottom-sheet';
+
 import { CODE_FONTS, TEXT_FONTS } from '../../fonts';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import type { ContentWidth, TransitionStyle } from '../../stores/settingsStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useViewStore } from '../../stores/viewStore';
 import { THEME_ICONS, THEME_LABELS, THEMES } from '../../themes';
-import BottomSheet from '../ui/BottomSheet';
 
 const TRANSITION_LABELS: Record<TransitionStyle, string> = {
   none: 'settings.transitionNone',

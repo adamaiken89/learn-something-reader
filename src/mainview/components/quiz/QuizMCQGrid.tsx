@@ -1,7 +1,8 @@
 import { Check, X } from 'lucide-react';
 
+import { optionButtonClass, radioIndicatorClass } from '@/lib/quiz-styles';
+
 import { useQuizStore } from '../../stores/quizStore';
-import { optionButtonClass, radioIndicatorClass } from '../ui/variants/quiz';
 
 interface Props {
   highlightedIdx?: number;
