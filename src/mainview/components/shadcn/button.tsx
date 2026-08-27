@@ -3,9 +3,9 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '@/lib/utils';
 
-export const TOGGLE_ACTIVE_CLASSES = 'bg-indigo-600 text-white';
+const TOGGLE_ACTIVE_CLASSES = 'bg-indigo-600 text-white';
 
-export const buttonVariants = cva(
+const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed',
   {
     variants: {
@@ -42,7 +42,7 @@ export const buttonVariants = cva(
   },
 );
 
-export type ButtonVariantProps = VariantProps<typeof buttonVariants>;
+type ButtonVariantProps = VariantProps<typeof buttonVariants>;
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, ButtonVariantProps {

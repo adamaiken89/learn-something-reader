@@ -1,7 +1,11 @@
 {
 	"$schema": "https://unpkg.com/knip@5/schema.json",
-	"entry": ["src/bun/index.ts"],
+	"entry": [
+		"src/bun/index.ts",
+		"src/mainview/__e2e__/mock-view-entry.ts",
+		"electrobun.config.ts"
+	],
 	"project": ["src/**/*.{ts,tsx}"],
-	"ignore": ["src/setup.ts"],
-	"ignoreDependencies": ["happy-dom"]
+	"ignoreDependencies": [],
+	"typescript": false
 }

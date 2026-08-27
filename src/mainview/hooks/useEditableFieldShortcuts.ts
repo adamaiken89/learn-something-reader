@@ -25,7 +25,7 @@ function copySelection(): void {
   }
 }
 
-export function useClipboardFallback(): void {
+export function useEditableFieldShortcuts(): void {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (!e.metaKey && !e.ctrlKey) return;

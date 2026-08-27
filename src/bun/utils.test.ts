@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 
-import { normalizeModuleId } from './utils';
+import { fsMockImpl } from '../testFsShared';
+import { normalizeModuleId, findSubjectsDir } from './utils';
 
 describe('normalizeModuleId', () => {
   test('pads number with leading zero', () => {
@@ -25,5 +26,26 @@ describe('normalizeModuleId', () => {
 
   test('handles empty string', () => {
     expect(normalizeModuleId('')).toBe('');
+  });
+});
+
+describe('findSubjectsDir', () => {
+  test('prefers src/bun/subjects when present', () => {
+    Object.assign(fsMockImpl, { existsSync: (p: string) => p.includes('src/bun/subjects') });
+    let mkdirCalls: unknown[] = [];
+    Object.assign(fsMockImpl, { mkdirSync: (p: string) => void mkdirCalls.push(p) });
+    const dir = findSubjectsDir();
+    expect(dir.includes('src/bun/subjects')).toBe(true);
+    expect(mkdirCalls).toHaveLength(0);
+  });
+
+  test('falls back to ~/.coursereader/subjects when both dev dirs missing', () => {
+    Object.assign(fsMockImpl, {
+      existsSync: () => false,
+      mkdirSync: () => {},
+      readFileSync: () => '',
+    });
+    const dir = findSubjectsDir();
+    expect(dir.includes('.coursereader')).toBe(true);
   });
 });

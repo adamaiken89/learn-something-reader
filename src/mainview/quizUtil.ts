@@ -41,7 +41,7 @@ export function parseClozeText(text: string): {
 }
 
 /** All `{term}` answers in a cloze question; falls back to `[q.answer]`. */
-export function clozeAnswers(q: QuizQuestion): string[] {
+function clozeAnswers(q: QuizQuestion): string[] {
   const parsed = parseClozeText(q.question).answers;
   return parsed.length > 0 ? parsed : [q.answer];
 }

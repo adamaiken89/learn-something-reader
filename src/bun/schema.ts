@@ -28,7 +28,7 @@ function isStringOrNull(v: unknown): v is string | null {
   return v === null || typeof v === 'string';
 }
 
-export function isHighlight(v: unknown): v is Highlight {
+function isHighlight(v: unknown): v is Highlight {
   if (!isRecord(v)) return false;
   return (
     isString(v.id) &&
@@ -42,7 +42,7 @@ export function isHighlight(v: unknown): v is Highlight {
   );
 }
 
-export function isNote(v: unknown): v is Note {
+function isNote(v: unknown): v is Note {
   if (!isRecord(v)) return false;
   return (
     isString(v.id) &&
@@ -56,7 +56,7 @@ export function isNote(v: unknown): v is Note {
   );
 }
 
-export function isBookmark(v: unknown): v is Bookmark {
+function isBookmark(v: unknown): v is Bookmark {
   if (!isRecord(v)) return false;
   return (
     isString(v.id) &&
@@ -69,12 +69,12 @@ export function isBookmark(v: unknown): v is Bookmark {
   );
 }
 
-export function isCompletedModule(v: unknown): v is CompletedModule {
+function isCompletedModule(v: unknown): v is CompletedModule {
   if (!isRecord(v)) return false;
   return isString(v.courseID) && isString(v.moduleID) && isString(v.completedAt);
 }
 
-export function isStudySession(v: unknown): v is StudySession {
+function isStudySession(v: unknown): v is StudySession {
   if (!isRecord(v)) return false;
   if (
     !isString(v.date) ||
@@ -91,7 +91,7 @@ export function isStudySession(v: unknown): v is StudySession {
   return true;
 }
 
-export function isModuleSession(v: unknown): v is ModuleSession {
+function isModuleSession(v: unknown): v is ModuleSession {
   if (!isRecord(v)) return false;
   return (
     isString(v.courseId) &&
@@ -102,7 +102,7 @@ export function isModuleSession(v: unknown): v is ModuleSession {
   );
 }
 
-export function isQuizSchedule(v: unknown): v is QuizSchedule {
+function isQuizSchedule(v: unknown): v is QuizSchedule {
   if (!isRecord(v)) return false;
   return isNumber(v.intervalDays) && isString(v.nextDue);
 }

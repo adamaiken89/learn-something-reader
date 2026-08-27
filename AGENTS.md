@@ -38,7 +38,7 @@ Full per-file tree + Mermaid zoom/pan overlay internals: [`docs/architecture.md`
 - **i18n first**: all text via `t('key')`. Locale files at `src/mainview/locales/*.json` (4 locales: en-US, en-GB, zh-CN, zh-TW). Adding UI text requires keys in all 4 locales + snapshot update.
 - **Icons via lucide-react**: never emoji in locale strings. Import lucide components directly. Theme icons (`themes.ts` `THEME_ICONS` + locale `icons.*` emoji) are legacy — migrate to lucide when touched.
 - **Keyboard shortcuts**: single source of truth at `src/mainview/shortcuts.ts`. All shortcut key/ID/scope defined there. Components import `shortcutKey(id)` for display use. Handlers kept in components (switch statements) — scope overlap intentional where same key does same action in different scopes. Adding new shortcut requires entry in `shortcuts.ts` + handler in component. Duplicate detection runs at module load.
-- **Effect cleanup**: Use `useEffectEvent` (React 19) for event listener effects that reference reactive values. Extracts handler into stable callback, effect registers listener once. Pattern: `const onKey = useEffectEvent((e: KeyboardEvent) => { /* uses state */ }); useEffect(() => { window.addEventListener('keydown', onKey); }, []);`. Eliminates listener re-registration when callback identity changes. Applied in: QuizSection, CumulativeQuizSection, useQuizKeyboard, ReviewSection, SettingsPage, BottomSheet, MermaidOverlay, useNotePopoverOnClick.
+- **Effect cleanup**: Use `useEffectEvent` (React 19) for event listener effects that reference reactive values. Extracts handler into stable callback, effect registers listener once. Pattern: `const onKey = useEffectEvent((e: KeyboardEvent) => { /* uses state */ }); useEffect(() => { window.addEventListener('keydown', onKey); }, []);`. Eliminates listener re-registration when callback identity changes. Applied in: QuizSection, CumulativeQuizSection, ReviewSection, SettingsPage, BottomSheet, MermaidOverlay, useNotePopoverOnClick.
 - **React Compiler (auto-memo)**: `babel-plugin-react-compiler` v1.0.0 active via `vite.config.ts` `reactCompilerPreset()`. Compiler auto-memoizes values + components at build time. Manual `useMemo`/`useCallback` is redundant — compiler handles it. These hooks are removed from codebase. Exception: keep `useMemo` only for genuinely expensive computations (>1ms) verified by profiling, but none known currently. `react-compiler/react-compiler` set to `error` in `.oxlintrc.json` (via eslint-plugin-react-compiler JS bridge) to prevent reintroduction.
 - **Lint/format tooling**: oxlint + oxfmt replace ESLint + Prettier (`.oxlintrc.json`, `.oxfmtrc.json`). Scripts: `lint` (husky pre-commit), `fix`, `check`. Traps: react-compiler + simple-import-sort run through the `jsPlugins` bridge — those 2 npm packages must stay installed; `"import"` goes in ROOT `plugins` array (override-only = rule silently dead); type-aware rules need the `oxlint-tsgolint` package.
 
@@ -138,14 +138,14 @@ LessonPage supports 4 styles: none, flip, slide, fade. Stored in `settingsStore.
 - **CourseGrid toolbar**: search input (displayName, case-insensitive) + status tabs All/In Progress/Not Started/Completed with live counts from completionStore. Default All. Empty filter result → `dashboard.noMatch` text. Grid stays `lg:grid-cols-3`.
 - **Landing order**: greeting → hero row (ResumeCard flex-1 + StatsBar 380px) → ReviewNowPanel → course library toolbar + grid.
 - **Backend stats shape**: `GlobalStats.courseSummaries[]` carries `srsDueCount` + `srsTotalCards` per course (computed in `getGlobalStats`). `CourseStats` carries `moduleSrsDue: Record<moduleId, count>` for per-module SRS badges.
-- **SyllabusPage module badges**: each module row fetches `api.quiz.status` + `api.stats.course` → shows rose "Quiz overdue" / amber "Quiz ready" chip + amber `{{count}} cards due` chip when due. Reuses `syllabus.quizOverdue/quizReady/srsDue` keys.
+- **SyllabusPage module badges**: page fetches `api.quiz.index` + `api.quiz.status` + `api.stats.course`; each row is `components/syllabus/ModuleRow.tsx` (props `{mod,index,courseModules,isCompleted,hasQuiz,attempt,srsDueCount,onOpen,onOpenQuiz}`, unit-tested) → rose "Quiz overdue" / amber "Quiz ready" chip + amber `{{count}} cards due` chip when due. Reuses `syllabus.quizOverdue/quizReady/srsDue` keys.
 - **Greeting**: time-aware greeting in DashboardPage (`greetingKey()`). Keys: `dashboard.greetingMorning`, `dashboard.greetingAfternoon`, `dashboard.greetingEvening`.
 - **ProgressBar 0% handling**: No `Math.max(2, pct)` guard. At 0%, fill bar is 0px wide (invisible), empty track stays visible.
 - **Header spacing**: DashboardPage header action icons use `gap-1.5`.
 
-## Clipboard fallback
+## Editable field shortcuts
 
-`useClipboardFallback` (mounted in `App.tsx`) listens for window-level `copy`/`cut` events. When `clipboard-write` permission unavailable (Electrobun), uses `document.execCommand('copy')` fallback. Also overrides Ctrl+A in lesson content viewer to select all text in `contentRef`.
+`useEditableFieldShortcuts` (mounted in `App.tsx`) — window-level **keydown capture** listener intercepting ⌘A / ⌘C (and Ctrl+ equivalents) ONLY when focus is in an editable element (`input`, `textarea`, `[role=textbox]`, contentEditable). `preventDefault()`s the default, then calls `.select()` or `navigator.clipboard.writeText(selection)` directly. Throws if Clipboard API unavailable. Why: Electrobun's WKWebView doesn't reliably deliver native menu shortcuts into editable fields, and default select-all selects the whole page instead of the focused field — lesson-content copying goes through selection overlays instead, this hook only covers form fields.
 
 ## AI Integration
 
@@ -177,7 +177,7 @@ Each builds: `[concise persona + output format] + [hint from lesson section] + [
 
 Lesson markdown can include `## Feynman Explain`, `## Reframe`, `## Drill` headings with seed analogy/framing for AI prompts.
 
-**Lesson viewer** (`LessonContentViewer.tsx`): `processLessonContent()` pre-processes `bodyContent` before ReactMarkdown render.
+**Lesson viewer** (`LessonContentViewer.tsx`): imports `processLessonContent()` from `src/mainview/lessonContent.ts` (pure module, unit-tested in `lessonContent.test.ts`; also exports `extractSkillSection` + `PERPLEXITY_PLACEHOLDER`).
 - `## Drill` section — removed entirely (hidden from viewer)
 - `## Feynman Explain` / `## Reframe` — section content replaced with "Open in Perplexity" button (`PerplexityButton` component). Click builds prompt via `AI_SKILLS.buildPrompt()` + `extractSkillSection()` hint, then calls `copyPrompt()` (clipboard + Perplexity open).
 
@@ -191,9 +191,7 @@ Lesson markdown can include `## Feynman Explain`, `## Reframe`, `## Drill` headi
 
 `setup.tsx:128-130` uses happy-dom `Window`. happy-dom NOT reliably bubble `KeyboardEvent` from `document.body` → `window`. Affects all `window.addEventListener('keydown', handler)` tests.
 
-**Fix**: Use `pressKey(key)` from `testUtils.ts` instead of `user.keyboard('{Key}')`. `pressKey` dispatches directly on `window` via `window.dispatchEvent(new KeyboardEvent(...))` wrapped in `act`. Bypasses bubbling issue.
-
-Use `user.keyboard()` only for tests needing focus management. For raw `window.addEventListener` dispatch, `pressKey()` is more reliable.
+**Fix**: use `user.setup()` + `user.keyboard('{Key}')` on a focused element, or dispatch `window.dispatchEvent(new KeyboardEvent(...))` wrapped in `act` directly in the test when no focus target exists.
 
 ## Animations & timing
 
@@ -302,3 +300,7 @@ Key invariants:
 - **E2E testid seams**: specs target `data-testid`s, never tag/text selectors — UI drifts (div[role=button] cards, lucide icons replacing arrow text, prereq labels substring-matching row names) break text selectors silently or via strict-mode multi-match. Seams: `course-card`, `module-row` + nested `module-name` (`:has([data-testid="module-name"]:has-text("X"))` — bare has-text on the row hits 'Prereq: X' labels in later rows), `sections-panel` (NavigationSectionsTab root), `search-prev`/`search-next`, `header-back`, `quiz-popover-trigger` + `quiz-start-mcq`. Adding UI reachable by specs = add testid + update spec together.
 - **E2E init-script ordering**: fixture does `page.goto('/?e2e')` before test body → test-body `addInitScript` registers AFTER navigation, never injected (SPA nav never reloads). Any test needing a page-init override must `addInitScript(...)` then explicit `page.reload()`. Quiz shuffle flake cause: tests pin `Math.random=()=>0.999` this way; without reload, question order randomizes → screenshot diffs.
 - **CourseGrid default filter = `'all'`** invariant: landing grid must show all courses (nav-chain e2e depends on it). A past drift to `'inProgress'` emptied the grid for fresh visitors and killed every dashboard→syllabus test.
+- **Coverage gate**: `bun run coverage` = full suite + coverage report, gated by bunfig `coverageThreshold = { functions = 0.5, lines = 0.4 }`. Bun enforces the threshold **per-file** (any single file below → exit 1), NOT on the aggregate — floor values are current repo minimums; ratchet up as legacy files gain tests. `coverageSkipTestFiles = true` is REQUIRED: without it every `.test.ts(x)` counts as 0% and the per-file gate can never pass. UI-heavy components intentionally below the line are covered by Playwright e2e instead.
+- **knip in check**: `bun run check` ends with `bun run knip`. knip.json sets `"typescript": false` — the TS plugin maps tsconfig `compilerOptions.types: ["*"]` (TS7 requirement) to a dependency named `*`, producing a permanent false "Unresolved imports" failure. Path-alias (`@/*`) resolution is unaffected by disabling the plugin. Remaining output is one benign `.css` configuration hint (compiled-extension import not followed) — exits 0.
+- **bun-side fs test pattern** (persistence/logger/stats tests): mock via `Object.assign(fsMockImpl, {...})` from `src/bun/testFsShared.ts` + a local `storageData` fixture whose `writeFileSync` re-parses into it (round-trip sim); call `invalidateCache()` in `beforeEach` (persistence `_cache` module state persists across tests). Sort-order assertions must seed explicit distinct timestamps — same-ms `createdAt` makes stable sort keep insertion order.
+- **Selection-state pollution across tests**: tests that drive `window.getSelection()` (clipboard fallback, selection overlays) MUST clean up in afterEach: `window.getSelection()?.removeAllRanges()` + blur activeElement, else non-collapsed selections leak into other files' hooks (useNotePopoverOnClick branches on collapsed state) and fail only in full-suite runs.

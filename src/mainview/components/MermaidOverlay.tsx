@@ -71,7 +71,7 @@ export function computeHome(
   };
 }
 
-export const INLINE_MAX_ZOOM = 3;
+const INLINE_MAX_ZOOM = 3;
 export const MAX_COMFORT_FONT_PX = 18;
 export const INLINE_FIT_HEADROOM = 0.85;
 const MERMAID_BASE_FONT_PX = 16;

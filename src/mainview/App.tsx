@@ -5,7 +5,7 @@ import type { Course } from '../bun/types';
 import { api } from './api';
 import SearchOverlay from './components/SearchOverlay';
 import { useAppInit } from './hooks/useAppInit';
-import { useClipboardFallback } from './hooks/useClipboardFallback';
+import { useEditableFieldShortcuts } from './hooks/useEditableFieldShortcuts';
 import { useQuizDueNotification } from './hooks/useQuizDueNotification';
 import { useShortcuts } from './hooks/useShortcuts';
 import { useWindowTitle } from './hooks/useWindowTitle';
@@ -31,7 +31,7 @@ export default function App() {
   const [searchOpen, setSearchOpen] = useState(false);
 
   useAppInit();
-  useClipboardFallback();
+  useEditableFieldShortcuts();
   useQuizDueNotification();
   useWindowTitle();
 

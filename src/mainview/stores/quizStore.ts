@@ -3,7 +3,7 @@ import { create } from 'zustand';
 import type { QuizQuestion } from '../../bun/types';
 import { clozeCorrect } from '../quizUtil';
 
-export type QuizStatus = 'loading' | 'ready' | 'completed';
+type QuizStatus = 'loading' | 'ready' | 'completed';
 
 interface QuizState {
   status: QuizStatus;

@@ -79,11 +79,11 @@ export function isCodeFont(v: unknown): v is CodeFont {
   return typeof v === 'string' && CODE_STACKS.has(v as CodeFont);
 }
 
-export function textFontStack(id: TextFont): string {
+function textFontStack(id: TextFont): string {
   return TEXT_STACKS.get(id) ?? TEXT_FONTS[0].stack;
 }
 
-export function codeFontStack(id: CodeFont): string {
+function codeFontStack(id: CodeFont): string {
   return CODE_STACKS.get(id) ?? CODE_FONTS[0].stack;
 }
 

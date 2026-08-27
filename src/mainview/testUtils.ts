@@ -1,4 +1,3 @@
-import { act } from '@testing-library/react';
 import { beforeAll } from 'bun:test';
 
 import { __setRPC } from './api';
@@ -32,19 +31,6 @@ export function deleteMock(method: string) {
 
 export function hasMock(method: string): boolean {
   return mockResponses.has(method);
-}
-
-export function pressKey(key: string, options?: { ctrl?: boolean; meta?: boolean }) {
-  const event = new window.KeyboardEvent('keydown', {
-    key,
-    code: key === ' ' ? 'Space' : key,
-    keyCode: key === 'Escape' ? 27 : key === ' ' ? 32 : key.length === 1 ? key.charCodeAt(0) : 0,
-    bubbles: true,
-    cancelable: true,
-    ctrlKey: options?.ctrl ?? false,
-    metaKey: options?.meta ?? false,
-  });
-  void act(() => window.dispatchEvent(event));
 }
 
 export { clearMocks };

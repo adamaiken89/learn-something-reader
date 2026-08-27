@@ -1,14 +1,4 @@
-import {
-  BookOpen,
-  CheckCircle2,
-  Clock,
-  Layers,
-  LayoutGrid,
-  ListChecks,
-  Play,
-  RotateCcw,
-  Target,
-} from 'lucide-react';
+import { BookOpen, CheckCircle2, Layers, LayoutGrid, Play, RotateCcw, Target } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -20,6 +10,7 @@ import { api } from '../api';
 import CourseSwitcher from '../components/CourseSwitcher';
 import CourseTags from '../components/dashboard/CourseTags';
 import ProgressBar from '../components/dashboard/ProgressBar';
+import ModuleRow from '../components/syllabus/ModuleRow';
 import PageContent from '../layouts/PageContent';
 import PageHeader from '../layouts/PageHeader';
 import PageLayout from '../layouts/PageLayout';
@@ -250,104 +241,21 @@ export default function SyllabusPage({ course, onBack }: SyllabusPageProps) {
             <div className="space-y-1">
               {course.modules.map((mod, idx) => {
                 const modKey = `${course.id}:${mod.id}`;
-                const isCompleted = !!completed[modKey];
-                const hasQuiz = quizModuleIds.has(mod.id);
-                const attempt = quizStatus?.modules.find((m) => m.moduleId === mod.id)?.attempt;
-                const quizDue = attempt?.due ?? false;
-                const quizOverdue = attempt?.overdue ?? false;
-                const srsDue = courseStats?.moduleSrsDue[mod.id] ?? 0;
-                const showDue = quizDue || srsDue > 0;
                 return (
-                  <div
+                  <ModuleRow
                     key={mod.id}
-                    onClick={() => handleModuleClick(mod)}
-                    data-testid="module-row"
-                    className="group flex items-center gap-3 px-4 py-3 rounded-lg border border-gray-700/50 hover:border-indigo-500/30 bg-gray-800/30 hover:bg-gray-800/60 transition-all duration-150 cursor-pointer"
-                  >
-                    <span
-                      className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                        isCompleted
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                          : 'bg-gray-700/50 text-gray-400 border border-gray-600/50'
-                      }`}
-                    >
-                      {isCompleted ? <CheckCircle2 size={14} /> : <span>{idx + 1}</span>}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="text-sm font-medium text-gray-200 group-hover:text-indigo-400 transition-colors truncate"
-                          data-testid="module-name"
-                        >
-                          {mod.name}
-                        </span>
-                        {mod.timeHours > 0 && (
-                          <span className="shrink-0 text-[11px] text-gray-400 flex items-center gap-0.5">
-                            <Clock size={11} />
-                            {mod.timeHours}h
-                          </span>
-                        )}
-                      </div>
-                      {mod.topics.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-1">
-                          {mod.topics.slice(0, 5).map((topic) => (
-                            <span
-                              key={topic}
-                              className="text-[10px] px-1.5 py-0.5 rounded bg-gray-700/40 text-gray-400"
-                            >
-                              {topic}
-                            </span>
-                          ))}
-                          {mod.topics.length > 5 && (
-                            <span className="text-[10px] text-gray-600">
-                              +{mod.topics.length - 5}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      {mod.prerequisites.length > 0 && (
-                        <div className="mt-0.5 text-[10px] text-gray-600">
-                          {t('syllabus.prereqOf', 'Prereq:')}{' '}
-                          {mod.prerequisites
-                            .map((p) => course.modules.find((m) => m.id === p)?.name || p)
-                            .join(', ')}
-                        </div>
-                      )}
-                    </div>
-                    {showDue && (
-                      <span className="flex items-center gap-1.5 shrink-0">
-                        {quizDue && (
-                          <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${
-                              quizOverdue
-                                ? 'bg-rose-500/10 text-rose-300 border-rose-500/20'
-                                : 'bg-amber-500/10 text-amber-300 border-amber-500/20'
-                            }`}
-                          >
-                            {quizOverdue ? t('syllabus.quizOverdue') : t('syllabus.quizReady')}
-                          </span>
-                        )}
-                        {srsDue > 0 && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                            {t('syllabus.srsDue', { count: srsDue })}
-                          </span>
-                        )}
-                      </span>
-                    )}
-                    {hasQuiz && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          push({ type: 'quiz', course, module: mod });
-                        }}
-                        title={t('quiz.allQuizzes')}
-                        className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-indigo-600/20 text-indigo-300 hover:bg-indigo-600/40 border border-indigo-500/20 hover:border-indigo-500/40 transition-colors"
-                      >
-                        <ListChecks size={13} />
-                        {t('lesson.quizMCQ', 'MCQ')}
-                      </button>
-                    )}
-                  </div>
+                    mod={mod}
+                    index={idx}
+                    courseModules={course.modules}
+                    isCompleted={!!completed[modKey]}
+                    hasQuiz={quizModuleIds.has(mod.id)}
+                    attempt={
+                      quizStatus?.modules.find((m) => m.moduleId === mod.id)?.attempt ?? null
+                    }
+                    srsDueCount={courseStats?.moduleSrsDue[mod.id] ?? 0}
+                    onOpen={handleModuleClick}
+                    onOpenQuiz={(m) => push({ type: 'quiz', course, module: m })}
+                  />
                 );
               })}
             </div>

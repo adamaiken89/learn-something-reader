@@ -664,3 +664,118 @@ describe('QuizSection', () => {
     expect(container.textContent).not.toContain('trace_id');
   });
 });
+
+describe('QuizSection keyboard handler (window dispatch)', () => {
+  const props = { courseId: 'cs101', moduleId: 'mod-01', course: mockCourse, module: mockModule };
+
+  beforeEach(() => {
+    clearMocks();
+    mockResponse('quizStart', []);
+    mockResponse('logSession', undefined);
+    mockResponse('getLastQuizSession', null);
+  });
+
+  function fireKey(key: string) {
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+    });
+  }
+
+  async function renderWith(questions: QuizQuestion[]) {
+    mockResponse('quizStart', questions);
+    const rendered = render(<QuizSection {...props} />);
+    await waitFor(() => {
+      expect(rendered.container.textContent).toContain(`Question ${questions[0].id}?`);
+    });
+    return rendered;
+  }
+
+  test('ArrowDown from no highlight moves to first option', async () => {
+    await renderWith([makeQuestion('q1')]);
+    fireKey('ArrowDown');
+    expect(useQuizStore.getState().highlightedIdx).toBe(0);
+  });
+
+  test('ArrowRight at right column stays in place', async () => {
+    await renderWith([makeQuestion('q1')]);
+    act(() => useQuizStore.getState().setHighlightedIdx(1));
+    fireKey('ArrowRight');
+    expect(useQuizStore.getState().highlightedIdx).toBe(1);
+  });
+
+  test('ArrowRight moves within row to next column', async () => {
+    await renderWith([makeQuestion('q1')]);
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
+    fireKey('ArrowRight');
+    expect(useQuizStore.getState().highlightedIdx).toBe(1);
+  });
+
+  test('ArrowLeft at left column stays in place', async () => {
+    await renderWith([makeQuestion('q1')]);
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
+    fireKey('ArrowLeft');
+    expect(useQuizStore.getState().highlightedIdx).toBe(0);
+  });
+
+  test('ArrowDown at bottom row stays in place', async () => {
+    await renderWith([makeQuestion('q1')]);
+    act(() => useQuizStore.getState().setHighlightedIdx(2));
+    fireKey('ArrowDown');
+    expect(useQuizStore.getState().highlightedIdx).toBe(2);
+  });
+
+  test('ArrowDown moves down one row same column', async () => {
+    await renderWith([makeQuestion('q1')]);
+    act(() => useQuizStore.getState().setHighlightedIdx(0));
+    fireKey('ArrowDown');
+    expect(useQuizStore.getState().highlightedIdx).toBe(2);
+  });
+
+  test('ArrowUp from no highlight lands on last option', async () => {
+    await renderWith([makeQuestion('q1')]);
+    fireKey('ArrowUp');
+    expect(useQuizStore.getState().highlightedIdx).toBe(3);
+  });
+
+  test('Enter with highlight selects that option', async () => {
+    const { container } = await renderWith([makeQuestion('q1')]);
+    act(() => useQuizStore.getState().setHighlightedIdx(1));
+    fireKey('Enter');
+    await waitFor(() => {
+      expect(container.textContent).toContain('Explanation q1');
+    });
+    expect(useQuizStore.getState().hasAnswer).toBe(true);
+  });
+
+  test('letter key selects matching option directly', async () => {
+    const { container } = await renderWith([makeQuestion('q1')]);
+    fireKey('b');
+    await waitFor(() => {
+      expect(container.textContent).toContain('Explanation q1');
+    });
+    expect(useQuizStore.getState().selectedAnswers['q1']).toBe('B');
+  });
+
+  test('Escape skips current question', async () => {
+    await renderWith([makeQuestion('q1'), makeQuestion('q2')]);
+    fireKey('Escape');
+    await waitFor(() => {
+      expect(useQuizStore.getState().currentIndex).toBe(1);
+    });
+    expect(useQuizStore.getState().selectedAnswers['q1']).toBeUndefined();
+  });
+
+  test('Enter after answering advances to next question', async () => {
+    await renderWith([makeQuestion('q1'), makeQuestion('q2')]);
+    act(() => useQuizStore.getState().selectAnswer('B'));
+    fireKey('Enter');
+    expect(useQuizStore.getState().currentIndex).toBe(1);
+  });
+
+  test('keyboard nav ignored while quiz not ready', async () => {
+    mockResponse('quizStart', new Promise(() => {}));
+    render(<QuizSection {...props} />);
+    fireKey('ArrowDown');
+    expect(useQuizStore.getState().status).toBe('loading');
+  });
+});

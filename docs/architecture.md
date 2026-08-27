@@ -30,7 +30,7 @@ src/
 │   ├── ai/               # AI skill configs, prompt builders, clipboard utils
 │   │   ├── skills.ts     # AI_SKILLS definitions + prompt builders
 │   │   └── utils.ts      # copyPrompt(): clipboard + toast + open browser
-│   ├── hooks/            # 22+ domain hooks (useLesson, useBookmarks, useHighlights, useQuizEngine, useReviewState, useCardReviewState, useLessonNav, useLessonSearch, useLessonSection, useLessonAnimations, useLessonKeyboardShortcuts, useNotes, useSelection, useShortcuts, useSettingsPage, useDashboard, useWheelNavigation, useSearchOverlay, useCurrentLesson, useAppInit, useAutoCopy, useCountUp, useClipboardFallback, etc.)
+│   ├── hooks/            # 22+ domain hooks (useLesson, useBookmarks, useHighlights, useQuizEngine, useReviewState, useCardReviewState, useLessonNav, useLessonSearch, useLessonSection, useLessonAnimations, useLessonKeyboardShortcuts, useNotes, useSelection, useShortcuts, useSettingsPage, useDashboard, useWheelNavigation, useSearchOverlay, useCurrentLesson, useAppInit, useAutoCopy, useCountUp, useEditableFieldShortcuts, etc.)
 │   └── stores/           # Zustand (13): viewStore, lessonViewStore, courseStore, settingsStore, pomodoroStore, bookmarksStore, completionStore, highlightsStore, lessonUIStore, notesStore, syncStore, selectionStore, quizStore
 ├── types/                # Ambient declarations (three, jest-dom)
 └── bun/                  # Backend (Electrobun RPC handlers)

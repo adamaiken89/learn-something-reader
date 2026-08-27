@@ -1,7 +1,10 @@
 import { renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, mock, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, mock, test } from 'bun:test';
 
 import { useShortcuts } from './useShortcuts';
+
+const originalAddEventListener = window.addEventListener;
+const originalRemoveEventListener = window.removeEventListener;
 
 function createMockEvent(overrides: {
   key?: string;
@@ -73,6 +76,11 @@ describe('useShortcuts', () => {
     removeEventSpy = mock((_type: string, _listener: EventListener) => {});
     window.addEventListener = addEventSpy;
     window.removeEventListener = removeEventSpy;
+  });
+
+  afterEach(() => {
+    window.addEventListener = originalAddEventListener;
+    window.removeEventListener = originalRemoveEventListener;
   });
 
   test('registers keydown listener on mount', () => {
