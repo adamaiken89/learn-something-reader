@@ -30,13 +30,20 @@ describe('normalizeModuleId', () => {
 });
 
 describe('findSubjectsDir', () => {
-  test('prefers src/bun/subjects when present', () => {
-    Object.assign(fsMockImpl, { existsSync: (p: string) => p.includes('src/bun/subjects') });
-    let mkdirCalls: unknown[] = [];
-    Object.assign(fsMockImpl, { mkdirSync: (p: string) => void mkdirCalls.push(p) });
+  test('prefers first existing dev candidate over ~/.coursereader fallback', () => {
+    const checkedPaths: string[] = [];
+    Object.assign(fsMockImpl, {
+      existsSync: (p: string) => {
+        checkedPaths.push(p);
+        return checkedPaths.length === 1;
+      },
+      mkdirSync: () => {
+        throw new Error('should not mkdirSync when a candidate exists');
+      },
+    });
     const dir = findSubjectsDir();
-    expect(dir.includes('src/bun/subjects')).toBe(true);
-    expect(mkdirCalls).toHaveLength(0);
+    expect(checkedPaths).toHaveLength(1);
+    expect(dir).toBe(checkedPaths[0]);
   });
 
   test('falls back to ~/.coursereader/subjects when both dev dirs missing', () => {

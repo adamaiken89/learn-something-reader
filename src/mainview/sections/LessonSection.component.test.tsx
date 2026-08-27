@@ -109,10 +109,14 @@ function makeMockSelection(text: string, container: Node) {
 }
 
 function installMockSelection(mockSel: ReturnType<typeof makeMockSelection>) {
-  const orig = window.getSelection;
-  window.getSelection = () => mockSel as unknown as Selection;
+  const orig = Object.getOwnPropertyDescriptor(window, 'getSelection');
+  Object.defineProperty(window, 'getSelection', {
+    configurable: true,
+    value: () => mockSel as unknown as Selection,
+  });
   return () => {
-    window.getSelection = orig;
+    if (orig) Object.defineProperty(window, 'getSelection', orig);
+    else delete (window as unknown as { getSelection?: unknown }).getSelection;
   };
 }
 
@@ -339,15 +343,19 @@ describe('LessonSection', () => {
       rangeCount: 0,
       toString: () => '',
     };
-    const origGetSelection = window.getSelection;
-    window.getSelection = () => collapsedSel as unknown as Selection;
+    const origGetSelectionDesc = Object.getOwnPropertyDescriptor(window, 'getSelection');
+    Object.defineProperty(window, 'getSelection', {
+      configurable: true,
+      value: () => collapsedSel as unknown as Selection,
+    });
 
     await act(async () => fireEvent.mouseUp(contentDiv));
 
     await waitFor(() => expect(clipboardText).toBe(''));
 
     Object.assign(navigator.clipboard, { writeText: originalWriteText });
-    window.getSelection = origGetSelection;
+    if (origGetSelectionDesc) Object.defineProperty(window, 'getSelection', origGetSelectionDesc);
+    else delete (window as unknown as { getSelection?: unknown }).getSelection;
   });
 
   test('auto-copy debounces rapid selections', async () => {

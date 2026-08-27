@@ -161,16 +161,19 @@ describe('SelectionToolbar', () => {
     useSelectionStore.setState({ selectedHighlightId: 'h1' });
     mockResponse('deleteHighlight', undefined);
 
-    const origGetSelection = window.getSelection;
-    window.getSelection = () =>
-      ({
-        isCollapsed: false,
-        rangeCount: 1,
-        getRangeAt: () => mockRange,
-        toString: () => 'selected text',
-        removeAllRanges: () => {},
-        addRange: () => {},
-      }) as unknown as Selection;
+    const origGetSelectionDesc = Object.getOwnPropertyDescriptor(window, 'getSelection');
+    Object.defineProperty(window, 'getSelection', {
+      configurable: true,
+      value: () =>
+        ({
+          isCollapsed: false,
+          rangeCount: 1,
+          getRangeAt: () => mockRange,
+          toString: () => 'selected text',
+          removeAllRanges: () => {},
+          addRange: () => {},
+        }) as unknown as Selection,
+    });
 
     const { container } = render(<SelectionToolbar />);
     const yellowBtn = container.querySelector('button[title="yellow"]');
@@ -180,6 +183,7 @@ describe('SelectionToolbar', () => {
       await new Promise((r) => setTimeout(r, 10));
     });
     expect(useHighlightsStore.getState().byModule['cs101:mod-01'] ?? []).toHaveLength(0);
-    window.getSelection = origGetSelection;
+    if (origGetSelectionDesc) Object.defineProperty(window, 'getSelection', origGetSelectionDesc);
+    else delete (window as unknown as { getSelection?: unknown }).getSelection;
   });
 });
