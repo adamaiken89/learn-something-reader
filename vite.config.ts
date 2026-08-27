@@ -17,7 +17,7 @@ function mockViewPlugin(): Plugin {
   const enabled = process.env.VITE_E2E === 'true';
   if (!enabled) return { name: 'mock-view' };
 
-  const entryPath = path.resolve(__dirname, 'src/mainview/__e2e__/mock-view-entry.ts');
+  const entryPath = path.resolve(import.meta.dirname, 'src/mainview/__e2e__/mock-view-entry.ts');
 
   return {
     name: 'mock-view',
@@ -50,7 +50,7 @@ export default defineConfig({
     // electroview devkit path — vite aliases resolve before any resolveId hook,
     // which would shadow mockViewPlugin (see ELECTROVIEW_SUFFIXES above).
     alias: {
-      '@': path.resolve(__dirname, 'src/mainview'),
+      '@': path.resolve(import.meta.dirname, 'src/mainview'),
     },
   },
   build: {
