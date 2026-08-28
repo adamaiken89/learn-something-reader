@@ -53,10 +53,13 @@ describe('CumulativeQuizSection', () => {
     mockResponse('logSession', undefined);
   });
 
-  test('renders loading state', () => {
+  test('renders loading state', async () => {
     mockResponse('loadCumulativeQuiz', new Promise(() => {}));
-    const { container } = render(<CumulativeQuizSection {...props} />);
-    expect(container.textContent).toContain('Loading quiz');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<CumulativeQuizSection {...props} />).container;
+    });
+    expect(container!.textContent).toContain('Loading quiz');
   });
 
   test('renders empty state when no questions', async () => {

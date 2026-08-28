@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { CourseQuizStatus } from '../../bun/stats';
@@ -103,46 +103,61 @@ describe('QuizHubPage', () => {
     mockResponse('coursesList', []);
   });
 
-  test('snapshot — loading state', () => {
+  test('snapshot — loading state', async () => {
     mockResponse('quizStatus', new Promise(() => {}));
-    const { container } = render(<QuizHubPage {...defaultProps} />);
-    expect(container.textContent).toContain('Quiz Hub');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<QuizHubPage {...defaultProps} />).container;
+    });
+    expect(container!.textContent).toContain('Quiz Hub');
   });
 
   test('renders course name and subtitle once loaded', async () => {
-    const { container } = render(<QuizHubPage {...defaultProps} />);
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<QuizHubPage {...defaultProps} />).container;
+    });
     await waitFor(() => {
-      expect(container.textContent).toContain('CS 101');
-      expect(container.textContent).toContain('Revise by working through quizzes in order');
+      expect(container!.textContent).toContain('CS 101');
+      expect(container!.textContent).toContain('Revise by working through quizzes in order');
     });
   });
 
   test('renders module quiz rows with attempt badges', async () => {
-    const { container } = render(<QuizHubPage {...defaultProps} />);
-    await waitFor(() => {
-      expect(container.textContent).toContain('Module Quizzes');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<QuizHubPage {...defaultProps} />).container;
     });
-    expect(container.textContent).toContain('MCQ');
-    expect(container.textContent).toContain('Cloze');
+    await waitFor(() => {
+      expect(container!.textContent).toContain('Module Quizzes');
+    });
+    expect(container!.textContent).toContain('MCQ');
+    expect(container!.textContent).toContain('Cloze');
     // Module 1 MCQ passed (90%) but due
-    expect(container.textContent).toContain('90%');
-    expect(container.textContent).toContain('Due');
+    expect(container!.textContent).toContain('90%');
+    expect(container!.textContent).toContain('Due');
   });
 
   test('renders cumulative review with Start Review', async () => {
-    const { container } = render(<QuizHubPage {...defaultProps} />);
-    await waitFor(() => {
-      expect(container.textContent).toContain('Start Review');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<QuizHubPage {...defaultProps} />).container;
     });
-    expect(container.textContent).toContain('Cumulative Reviews');
+    await waitFor(() => {
+      expect(container!.textContent).toContain('Start Review');
+    });
+    expect(container!.textContent).toContain('Cumulative Reviews');
   });
 
   test('renders empty state when no quizzes exist', async () => {
     mockResponse('quizStatus', { courseID: 'cs101', modules: [], cumulativeQuizzes: [] });
     mockResponse('quizIndex', { modules: {}, cumulativeQuizzes: [] });
-    const { container } = render(<QuizHubPage {...defaultProps} />);
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<QuizHubPage {...defaultProps} />).container;
+    });
     await waitFor(() => {
-      expect(container.textContent).toContain('Module Quizzes');
+      expect(container!.textContent).toContain('Module Quizzes');
     });
   });
 });

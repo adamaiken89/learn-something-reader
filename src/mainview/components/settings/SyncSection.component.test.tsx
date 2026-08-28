@@ -102,7 +102,9 @@ describe('SyncSection', () => {
       (b) => b.textContent === 'Sync Now',
     )!;
     expect((syncBtn as HTMLButtonElement).disabled).toBe(true);
-    seedSync({ remoteRepoURL: 'https://x.co/r' });
+    act(() => {
+      seedSync({ remoteRepoURL: 'https://x.co/r' });
+    });
     await waitFor(() => {
       expect((syncBtn as HTMLButtonElement).disabled).toBe(false);
     });

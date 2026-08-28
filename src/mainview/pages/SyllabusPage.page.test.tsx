@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { CourseQuizStatus, CourseStats } from '../../bun/stats';
@@ -96,7 +96,13 @@ const mockCourseStats: CourseStats = {
 };
 
 describe('SyllabusPage', () => {
-  const renderPage = () => render(<SyllabusPage course={makeCourse()} onBack={() => {}} />);
+  const renderPage = async () => {
+    let r: ReturnType<typeof render> | undefined;
+    await act(async () => {
+      r = render(<SyllabusPage course={makeCourse()} onBack={() => {}} />);
+    });
+    return r!;
+  };
 
   beforeEach(() => {
     clearMocks();
@@ -109,7 +115,7 @@ describe('SyllabusPage', () => {
   });
 
   test('renders hero with display name and formatted domain', async () => {
-    const { container } = renderPage();
+    const { container } = await renderPage();
     expect(container.textContent).toContain('ML Basics');
     expect(container.textContent).toContain('Machine Learning');
     await waitForQuizStatus(container);
@@ -117,7 +123,7 @@ describe('SyllabusPage', () => {
 
   test('renders prerequisites and learning objectives sections', async () => {
     await new Promise((r) => setTimeout(r, 0));
-    const { container } = renderPage();
+    const { container } = await renderPage();
     expect(container.textContent).toContain('Prerequisites');
     expect(container.textContent).toContain('Basic algebra');
     expect(container.textContent).toContain('Learning Objectives');
@@ -126,14 +132,14 @@ describe('SyllabusPage', () => {
 
   test('resolves prereq module names and truncates topic chips', async () => {
     await new Promise((r) => setTimeout(r, 0));
-    const { container } = renderPage();
+    const { container } = await renderPage();
     expect(container.textContent).toContain('Prereq: Getting Started');
     // 6 topics → first 5 shown, then "+1"
     expect(container.textContent).toContain('+1');
   });
 
   test('shows quiz due badges and SRS due chip', async () => {
-    const { container } = renderPage();
+    const { container } = await renderPage();
     await waitForQuizStatus(container);
     expect(container.textContent).toContain('Quiz overdue'); // module 1
     expect(container.textContent).toContain('Quiz ready'); // module 3
@@ -141,7 +147,7 @@ describe('SyllabusPage', () => {
   });
 
   test('shows MCQ button only for modules with a quiz', async () => {
-    const { container } = renderPage();
+    const { container } = await renderPage();
     await waitForQuizStatus(container);
     const mcqButtons = Array.from(container.querySelectorAll('button')).filter((b) =>
       b.textContent?.includes('MCQ'),
@@ -151,7 +157,7 @@ describe('SyllabusPage', () => {
 
   test('fresh course shows Continue without Resume', async () => {
     await new Promise((r) => setTimeout(r, 0));
-    const { container } = renderPage();
+    const { container } = await renderPage();
     expect(container.textContent).toContain('Continue');
     expect(container.textContent).not.toContain('Resume');
   });
@@ -162,7 +168,7 @@ describe('SyllabusPage', () => {
       completed: { 'ml101:1': true },
       totalModules: { ml101: 3 },
     });
-    const { container } = renderPage();
+    const { container } = await renderPage();
     expect(container.textContent).toContain('Resume');
     expect(container.textContent).toContain('1/3');
   });
@@ -173,7 +179,7 @@ describe('SyllabusPage', () => {
       completed: { 'ml101:1': true, 'ml101:2': true, 'ml101:3': true },
       totalModules: { ml101: 3 },
     });
-    const { container } = renderPage();
+    const { container } = await renderPage();
     expect(container.textContent).toContain('Course Complete');
     expect(container.textContent).not.toContain('Continue');
   });
@@ -181,7 +187,7 @@ describe('SyllabusPage', () => {
   test('Continue pushes first incomplete module', async () => {
     await new Promise((r) => setTimeout(r, 0));
     useCompletionStore.setState({ completed: { 'ml101:1': true }, totalModules: { ml101: 3 } });
-    const { getByText } = renderPage();
+    const { getByText } = await renderPage();
     getByText('Continue').closest('button')!.click();
     const views = useViewStore.getState().views;
     const last = views[views.length - 1];
@@ -205,7 +211,7 @@ describe('SyllabusPage', () => {
         updatedAt: '2026-08-20T10:00:00Z',
       },
     ]);
-    const { getByText } = renderPage();
+    const { getByText } = await renderPage();
     getByText('Resume').closest('button')!.click();
     await new Promise((r) => setTimeout(r, 0));
     const views = useViewStore.getState().views;
@@ -219,7 +225,7 @@ describe('SyllabusPage', () => {
 
   test('module row click pushes lesson view', async () => {
     await new Promise((r) => setTimeout(r, 0));
-    const { getAllByTestId } = renderPage();
+    const { getAllByTestId } = await renderPage();
     getAllByTestId('module-row')[1].click();
     const views = useViewStore.getState().views;
     const last = views[views.length - 1];
@@ -230,7 +236,7 @@ describe('SyllabusPage', () => {
   });
 
   test('MCQ button pushes quiz without also pushing lesson', async () => {
-    const { container } = renderPage();
+    const { container } = await renderPage();
     await waitForQuizStatus(container);
     const mcqButton = Array.from(container.querySelectorAll('button')).find((b) =>
       b.textContent?.includes('MCQ'),
@@ -242,7 +248,7 @@ describe('SyllabusPage', () => {
   });
 
   test('quick actions navigate to cumulative/quizHub/review', async () => {
-    const { container } = renderPage();
+    const { container } = await renderPage();
     for (let i = 0; i < 50 && !container.textContent?.includes('Cumulative'); i++) {
       await new Promise((r) => setTimeout(r, 10));
     }
@@ -264,7 +270,7 @@ describe('SyllabusPage', () => {
 
   test('hides Cumulative action when course has none', async () => {
     mockResponse('quizIndex', { modules: {}, cumulativeQuizzes: [] });
-    const { container } = renderPage();
+    const { container } = await renderPage();
     await new Promise((r) => setTimeout(r, 0));
     expect(container.textContent).not.toContain('Cumulative');
     expect(container.textContent).toContain('All Quizzes');

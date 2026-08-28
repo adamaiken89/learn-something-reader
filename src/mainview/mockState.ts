@@ -4,6 +4,7 @@ export const defaultMocks: Record<string, unknown> = {
   setWindowTitle: undefined,
   openExternal: { ok: true },
   getDueCardsCount: 0,
+  quizIndex: { modules: {}, cumulativeQuizzes: [] },
 };
 
 export function clearMocks() {

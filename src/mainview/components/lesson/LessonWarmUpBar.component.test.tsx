@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
@@ -37,16 +37,22 @@ beforeEach(() => {
 describe('LessonWarmUpBar', () => {
   const user = userEvent.setup();
 
-  test('hidden while dueCount loading (null)', () => {
-    mockResponse('getDueCardsCount', 5);
-    const { container } = render(<LessonWarmUpBar courseId="c1" />);
-    expect(container.firstChild).toBeNull();
+  test('hidden while dueCount loading (null)', async () => {
+    mockResponse('getDueCardsCount', new Promise(() => {}));
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonWarmUpBar courseId="c1" />).container;
+    });
+    expect(container!.firstChild).toBeNull();
   });
 
   test('hidden when zero cards due', async () => {
     mockResponse('getDueCardsCount', 0);
-    const { container } = render(<LessonWarmUpBar courseId="c1" />);
-    await waitFor(() => expect(container.firstChild).toBeNull());
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonWarmUpBar courseId="c1" />).container;
+    });
+    await waitFor(() => expect(container!.firstChild).toBeNull());
   });
 
   test('hidden when already dismissed today', async () => {
@@ -56,25 +62,34 @@ describe('LessonWarmUpBar', () => {
       calls += 1;
       return 5;
     });
-    const { container } = render(<LessonWarmUpBar courseId="c1" />);
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonWarmUpBar courseId="c1" />).container;
+    });
     await waitFor(() => expect(calls).toBe(0));
-    expect(container.firstChild).toBeNull();
+    expect(container!.firstChild).toBeNull();
   });
 
   test('shows warm-up count and buttons when cards due', async () => {
     mockResponse('getDueCardsCount', 4);
-    const { getByText } = render(<LessonWarmUpBar courseId="c1" />);
-    await waitFor(() => expect(getByText(/4 cards due/)).toBeInTheDocument());
-    expect(getByText('Review Now')).toBeInTheDocument();
-    expect(getByText('Dismiss')).toBeInTheDocument();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<LessonWarmUpBar courseId="c1" />).getByText;
+    });
+    await waitFor(() => expect(getByText!(/4 cards due/)).toBeInTheDocument());
+    expect(getByText!('Review Now')).toBeInTheDocument();
+    expect(getByText!('Dismiss')).toBeInTheDocument();
   });
 
   test('review button pushes review view for the course', async () => {
     mockResponse('getDueCardsCount', 2);
-    const { getByText } = render(<LessonWarmUpBar courseId="c1" />);
-    await waitFor(() => expect(getByText('Review Now')).toBeInTheDocument());
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<LessonWarmUpBar courseId="c1" />).getByText;
+    });
+    await waitFor(() => expect(getByText!('Review Now')).toBeInTheDocument());
 
-    await user.click(getByText('Review Now'));
+    await user.click(getByText!('Review Now'));
     const views = useViewStore.getState().views;
     expect(views).toHaveLength(1);
     expect(views[0]).toEqual({ type: 'review', course: expect.objectContaining({ id: 'c1' }) });
@@ -82,18 +97,27 @@ describe('LessonWarmUpBar', () => {
 
   test('dismiss persists to localStorage and hides bar', async () => {
     mockResponse('getDueCardsCount', 2);
-    const { container, getByText } = render(<LessonWarmUpBar courseId="c1" />);
-    await waitFor(() => expect(container.textContent).toContain('2'));
+    let container: HTMLElement;
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      const r = render(<LessonWarmUpBar courseId="c1" />);
+      container = r.container;
+      getByText = r.getByText;
+    });
+    await waitFor(() => expect(container!.textContent).toContain('2'));
 
-    await user.click(getByText('Dismiss'));
+    await user.click(getByText!('Dismiss'));
 
     expect(localStorage.getItem('coursereader-warmup-c1')).toBe(today);
-    expect(container.firstChild).toBeNull();
+    expect(container!.firstChild).toBeNull();
   });
 
   test('dueCount fetch failure falls back to hidden (count 0)', async () => {
     mockResponse('getDueCardsCount', () => Promise.reject(new Error('rpc down')));
-    const { container } = render(<LessonWarmUpBar courseId="c1" />);
-    await waitFor(() => expect(container.firstChild).toBeNull());
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonWarmUpBar courseId="c1" />).container;
+    });
+    await waitFor(() => expect(container!.firstChild).toBeNull());
   });
 });

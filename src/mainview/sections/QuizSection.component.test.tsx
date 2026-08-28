@@ -53,15 +53,23 @@ describe('QuizSection', () => {
   const user = userEvent.setup();
   const props = { courseId: 'cs101', moduleId: 'mod-01', course: mockCourse, module: mockModule };
 
+  async function renderSection() {
+    let rendered: ReturnType<typeof render> | undefined;
+    await act(async () => {
+      rendered = render(<QuizSection {...props} />);
+    });
+    return rendered!;
+  }
+
   test('renders loading state', async () => {
     mockResponse('quizStart', new Promise(() => {}));
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     expect(container.textContent).toContain('Loading quiz');
   });
 
   test('renders empty state when no questions', async () => {
     mockResponse('quizStart', []);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('No quiz questions');
     });
@@ -69,7 +77,7 @@ describe('QuizSection', () => {
 
   test('renders active question with options', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -78,7 +86,7 @@ describe('QuizSection', () => {
 
   test('shows explanation after answering', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -90,7 +98,7 @@ describe('QuizSection', () => {
 
   test('shows next/finish button after answering', async () => {
     mockResponse('quizStart', [makeQuestion('q1'), makeQuestion('q2')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -102,7 +110,7 @@ describe('QuizSection', () => {
 
   test('advances to next question', async () => {
     mockResponse('quizStart', [makeQuestion('q1'), makeQuestion('q2')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -118,7 +126,7 @@ describe('QuizSection', () => {
 
   test('shows completed state with score', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -135,7 +143,7 @@ describe('QuizSection', () => {
 
   test('shows retry button in completed state', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -151,7 +159,7 @@ describe('QuizSection', () => {
 
   test('retry resets to first question', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -172,7 +180,7 @@ describe('QuizSection', () => {
 
   test('skip advances to next question', async () => {
     mockResponse('quizStart', [makeQuestion('q1'), makeQuestion('q2')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -184,7 +192,7 @@ describe('QuizSection', () => {
 
   test('wrong answer shows explanation and wrong styling', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -196,7 +204,7 @@ describe('QuizSection', () => {
 
   test('wrong answer results in 0% score', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -213,7 +221,7 @@ describe('QuizSection', () => {
 
   test('renders score ring SVG on completion', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -230,7 +238,7 @@ describe('QuizSection', () => {
 
   test('confetti renders only at 100% score', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -248,7 +256,7 @@ describe('QuizSection', () => {
 
   test('no confetti when score below 100%', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -266,7 +274,7 @@ describe('QuizSection', () => {
 
   test('no pre-highlight on load', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -280,7 +288,7 @@ describe('QuizSection', () => {
 
   test('ArrowDown from no highlight moves to first option', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -298,7 +306,7 @@ describe('QuizSection', () => {
 
   test('ArrowUp from no highlight wraps to last option', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -314,7 +322,7 @@ describe('QuizSection', () => {
 
   test('ArrowRight from no highlight moves to first option', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -332,7 +340,7 @@ describe('QuizSection', () => {
 
   test('ArrowLeft from no highlight goes to top-right', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -348,7 +356,7 @@ describe('QuizSection', () => {
 
   test('ArrowRight moves to next column in same row', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -369,7 +377,7 @@ describe('QuizSection', () => {
 
   test('ArrowRight at right edge stays', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -390,7 +398,7 @@ describe('QuizSection', () => {
 
   test('ArrowDown moves to same column in next row', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -411,7 +419,7 @@ describe('QuizSection', () => {
 
   test('ArrowDown at bottom row stays', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -432,7 +440,7 @@ describe('QuizSection', () => {
 
   test('ArrowLeft at left edge stays', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -453,7 +461,7 @@ describe('QuizSection', () => {
 
   test('ArrowUp at top row stays', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -474,7 +482,7 @@ describe('QuizSection', () => {
 
   test('ArrowUp moves to same column in prev row', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -495,7 +503,7 @@ describe('QuizSection', () => {
 
   test('ArrowUp from top row stays at top', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -516,7 +524,7 @@ describe('QuizSection', () => {
 
   test('Enter without highlight does nothing', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -525,7 +533,7 @@ describe('QuizSection', () => {
 
   test('ArrowDown then Enter selects highlighted option', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -542,7 +550,7 @@ describe('QuizSection', () => {
 
   test('letter key A-D selects answer directly', async () => {
     mockResponse('quizStart', [makeQuestion('q1')]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('Question q1?');
     });
@@ -568,14 +576,16 @@ describe('QuizSection', () => {
 
   test('cloze first wrong shows try-again warn and stays editable', async () => {
     mockResponse('quizStart', [clozeQ()]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('brown fox');
     });
     const input = container.querySelector('input')!;
-    await user.clear(input);
-    await user.type(input, 'slow');
-    await user.click(container.querySelector('button')!);
+    await act(async () => {
+      await user.clear(input);
+      await user.type(input, 'slow');
+      await user.click(container.querySelector('button')!);
+    });
     await waitFor(() => {
       expect(container.textContent).toContain('Try again');
       expect(container.textContent).not.toContain('Cloze explanation');
@@ -585,22 +595,28 @@ describe('QuizSection', () => {
 
   test('cloze second wrong reveals answer and scores 0', async () => {
     mockResponse('quizStart', [clozeQ()]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('brown fox');
     });
     const input = container.querySelector('input')!;
-    await user.clear(input);
-    await user.type(input, 'slow');
-    await getByText('Check').click();
-    await user.clear(input);
-    await user.type(input, 'slow again');
-    await getByText('Check').click();
+    await act(async () => {
+      await user.clear(input);
+      await user.type(input, 'slow');
+      await getByText('Check').click();
+    });
+    await act(async () => {
+      await user.clear(input);
+      await user.type(input, 'slow again');
+      await getByText('Check').click();
+    });
     await waitFor(() => {
       expect(container.textContent).toContain('Cloze explanation');
     });
-    const finish = getByText('Finish Quiz');
-    await finish.click();
+    await act(async () => {
+      const finish = getByText('Finish Quiz');
+      await finish.click();
+    });
     await waitFor(() => {
       expect(container.textContent).toContain('Quiz Complete');
       expect(container.textContent).toContain('0%');
@@ -609,22 +625,28 @@ describe('QuizSection', () => {
 
   test('cloze correct on second attempt scores full marks', async () => {
     mockResponse('quizStart', [clozeQ()]);
-    const { container, getByText } = render(<QuizSection {...props} />);
+    const { container, getByText } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('brown fox');
     });
     const input = container.querySelector('input')!;
-    await user.clear(input);
-    await user.type(input, 'slow');
-    await getByText('Check').click();
-    await user.clear(input);
-    await user.type(input, 'quick');
-    await getByText('Check').click();
+    await act(async () => {
+      await user.clear(input);
+      await user.type(input, 'slow');
+      await getByText('Check').click();
+    });
+    await act(async () => {
+      await user.clear(input);
+      await user.type(input, 'quick');
+      await getByText('Check').click();
+    });
     await waitFor(() => {
       expect(container.textContent).toContain('Cloze explanation');
     });
-    const finish = getByText('Finish Quiz');
-    await finish.click();
+    await act(async () => {
+      const finish = getByText('Finish Quiz');
+      await finish.click();
+    });
     await waitFor(() => {
       expect(container.textContent).toContain('Quiz Complete');
       expect(container.textContent).toContain('100%');
@@ -633,7 +655,7 @@ describe('QuizSection', () => {
 
   test('cloze question renders blank placeholder, not answer in braces', async () => {
     mockResponse('quizStart', [clozeQ()]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('brown fox');
     });
@@ -655,7 +677,7 @@ describe('QuizSection', () => {
       explanation: 'Cloze explanation',
     };
     mockResponse('quizStart', [blankQ]);
-    const { container } = render(<QuizSection {...props} />);
+    const { container } = await renderSection();
     await waitFor(() => {
       expect(container.textContent).toContain('MDC');
     });
@@ -683,11 +705,15 @@ describe('QuizSection keyboard handler (window dispatch)', () => {
 
   async function renderWith(questions: QuizQuestion[]) {
     mockResponse('quizStart', questions);
-    const rendered = render(<QuizSection {...props} />);
-    await waitFor(() => {
-      expect(rendered.container.textContent).toContain(`Question ${questions[0].id}?`);
+    let rendered: ReturnType<typeof render> | undefined;
+    await act(async () => {
+      rendered = render(<QuizSection {...props} />);
     });
-    return rendered;
+    const r = rendered!;
+    await waitFor(() => {
+      expect(r.container.textContent).toContain(`Question ${questions[0].id}?`);
+    });
+    return r;
   }
 
   test('ArrowDown from no highlight moves to first option', async () => {
@@ -774,7 +800,9 @@ describe('QuizSection keyboard handler (window dispatch)', () => {
 
   test('keyboard nav ignored while quiz not ready', async () => {
     mockResponse('quizStart', new Promise(() => {}));
-    render(<QuizSection {...props} />);
+    await act(async () => {
+      render(<QuizSection {...props} />);
+    });
     fireKey('ArrowDown');
     expect(useQuizStore.getState().status).toBe('loading');
   });

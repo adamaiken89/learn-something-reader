@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { act, render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
 import type { Course } from '../../bun/types';
@@ -35,11 +35,14 @@ describe('CumulativeQuizPage', () => {
     mockResponse('coursesList', []);
   });
 
-  test('snapshot — loading', () => {
+  test('snapshot — loading', async () => {
     mockResponse('loadCumulativeQuiz', new Promise(() => {}));
-    const { container } = render(<CumulativeQuizPage {...defaultProps} />);
-    expect(container.textContent).toContain('CS 101');
-    expect(container.textContent).toContain('Cumulative Review');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<CumulativeQuizPage {...defaultProps} />).container;
+    });
+    expect(container!.textContent).toContain('CS 101');
+    expect(container!.textContent).toContain('Cumulative Review');
   });
 
   test('snapshot — loaded with questions', async () => {
@@ -55,44 +58,56 @@ describe('CumulativeQuizPage', () => {
         },
       ],
     });
-    const { container } = render(<CumulativeQuizPage {...defaultProps} />);
-    await waitFor(() => {
-      expect(container.textContent).toContain('CS 101');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<CumulativeQuizPage {...defaultProps} />).container;
     });
-    expect(container.textContent).toContain('Cumulative Review');
+    await waitFor(() => {
+      expect(container!.textContent).toContain('CS 101');
+    });
+    expect(container!.textContent).toContain('Cumulative Review');
   });
 
   test('shows course name and Cumulative Review in header', async () => {
-    const { container } = render(<CumulativeQuizPage {...defaultProps} />);
-    await waitFor(() => {
-      expect(container.textContent).toContain('CS 101');
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<CumulativeQuizPage {...defaultProps} />).container;
     });
-    expect(container.textContent).toContain('Cumulative Review');
+    await waitFor(() => {
+      expect(container!.textContent).toContain('CS 101');
+    });
+    expect(container!.textContent).toContain('Cumulative Review');
   });
 
   test('shows range label for cumulativeQuizId', async () => {
-    const { container } = render(
-      <CumulativeQuizPage {...defaultProps} cumulativeQuizId="cumulative_quiz_01-03.yaml" />,
-    );
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(
+        <CumulativeQuizPage {...defaultProps} cumulativeQuizId="cumulative_quiz_01-03.yaml" />,
+      ).container;
+    });
     await waitFor(() => {
-      expect(container.textContent).toContain('01–03');
+      expect(container!.textContent).toContain('01–03');
     });
   });
 
   test('calls onBack when back button clicked', async () => {
     let called = false;
-    const { getByText } = render(
-      <CumulativeQuizPage
-        {...defaultProps}
-        onBack={() => {
-          called = true;
-        }}
-      />,
-    );
-    await waitFor(() => {
-      expect(getByText('← Back')).toBeInTheDocument();
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(
+        <CumulativeQuizPage
+          {...defaultProps}
+          onBack={() => {
+            called = true;
+          }}
+        />,
+      ).getByText;
     });
-    getByText('← Back').click();
+    await waitFor(() => {
+      expect(getByText!('← Back')).toBeInTheDocument();
+    });
+    getByText!('← Back').click();
     expect(called).toBe(true);
   });
 });
