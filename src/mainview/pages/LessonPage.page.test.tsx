@@ -7,6 +7,7 @@ import i18n from '../i18n';
 import { useCourseStore } from '../stores/courseStore';
 import { useLessonUIStore } from '../stores/lessonUIStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useViewStore } from '../stores/viewStore';
 import { mockResponse, setupRPC } from '../testUtils';
 import LessonPage from './LessonPage';
 
@@ -140,6 +141,82 @@ describe('LessonPage', () => {
     await waitFor(() => {
       expect(container!.querySelector('[data-testid="lesson-toolbar"]')).toBeTruthy();
     });
+  });
+
+  test('clicking Sections tab toggles rightPanel', async () => {
+    useSettingsStore.setState({ rightPanel: false });
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(ui).container;
+    });
+    await waitFor(() => {
+      expect(container!.textContent).toContain('Sections');
+    });
+    const sectionsBtn = Array.from(container!.querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === 'Sections',
+    )!;
+    await act(async () => {
+      await user.click(sectionsBtn);
+    });
+    expect(useSettingsStore.getState().rightPanel).toBe('sections');
+    await act(async () => {
+      await user.click(sectionsBtn);
+    });
+    expect(useSettingsStore.getState().rightPanel).toBe(false);
+  });
+
+  test('clicking AI tab toggles rightPanel', async () => {
+    useSettingsStore.setState({ rightPanel: false });
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(ui).container;
+    });
+    await waitFor(() => {
+      expect(container!.textContent).toContain('Sections');
+    });
+    const aiBtn = Array.from(container!.querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === 'AI',
+    )!;
+    await act(async () => {
+      await user.click(aiBtn);
+    });
+    expect(useSettingsStore.getState().rightPanel).toBe('ai');
+  });
+
+  test('clicking Notes tab toggles rightPanel', async () => {
+    useSettingsStore.setState({ rightPanel: false });
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(ui).container;
+    });
+    await waitFor(() => {
+      expect(container!.textContent).toContain('Sections');
+    });
+    const notesBtn = Array.from(container!.querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === 'Notes',
+    )!;
+    await act(async () => {
+      await user.click(notesBtn);
+    });
+    expect(useSettingsStore.getState().rightPanel).toBe('notes');
+  });
+
+  test('Quiz header button pushes quizHub view', async () => {
+    useViewStore.setState({ views: [] });
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(ui).container;
+    });
+    await waitFor(() => {
+      expect(container!.textContent).toContain('Quiz');
+    });
+    const quizBtn = Array.from(container!.querySelectorAll('button')).find(
+      (b) => b.textContent?.trim() === 'Quiz' && b.title === 'Quiz Access',
+    )!;
+    await act(async () => {
+      await user.click(quizBtn);
+    });
+    expect(useViewStore.getState().views.some((v) => v.type === 'quizHub')).toBe(true);
   });
 });
 

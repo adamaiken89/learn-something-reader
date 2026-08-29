@@ -6,6 +6,7 @@ import type { ModuleMeta, Section } from '../../../bun/types';
 import i18n from '../../i18n';
 import { useBookmarksStore } from '../../stores/bookmarksStore';
 import { useCompletionStore } from '../../stores/completionStore';
+import { useSettingsStore } from '../../stores/settingsStore';
 import { clearMocks, mockResponse, setupRPC } from '../../testUtils';
 import NavigationPanel from './NavigationPanel';
 
@@ -164,5 +165,36 @@ describe('NavigationPanel', () => {
     });
     const key = `${defaultCourseId}:${defaultModuleId}`;
     expect(useBookmarksStore.getState().byModule[key]).toBeDefined();
+  });
+
+  test('clicking AI+Ask tab shows AI tab content', async () => {
+    useSettingsStore.setState({ rightPanel: 'sections' });
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<Panel />).getByText;
+    });
+    await user.click(getByText!('AI+Ask'));
+    expect(useSettingsStore.getState().rightPanel).toBe('ai');
+  });
+
+  test('clicking Notes tab shows Notes tab content', async () => {
+    useSettingsStore.setState({ rightPanel: 'sections' });
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<Panel />).getByText;
+    });
+    await user.click(getByText!('Notes'));
+    expect(useSettingsStore.getState().rightPanel).toBe('notes');
+  });
+
+  test('close button sets rightPanel to false', async () => {
+    useSettingsStore.setState({ rightPanel: 'sections' });
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<Panel />).container;
+    });
+    const closeBtn = container!.querySelector('.lucide-chevron-right')!.closest('button')!;
+    await user.click(closeBtn);
+    expect(useSettingsStore.getState().rightPanel).toBe(false);
   });
 });

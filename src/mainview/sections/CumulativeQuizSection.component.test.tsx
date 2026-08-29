@@ -1,4 +1,4 @@
-import { act, render, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'bun:test';
 
@@ -181,5 +181,69 @@ describe('CumulativeQuizSection', () => {
     await waitFor(() => expect(container!.textContent).toContain('Retry'));
     await user.click(getByText!('Retry'));
     await waitFor(() => expect(container!.textContent).toContain('Question q1?'));
+  });
+
+  test('window keydown ArrowDown navigates MCQ', async () => {
+    mockResponse('loadCumulativeQuiz', { questions: [makeMCQ('q1')] });
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<CumulativeQuizSection {...props} />).container;
+    });
+    await waitFor(() => expect(container!.textContent).toContain('Question q1?'));
+    act(() => useQuizStore.getState().setHighlightedIdx(-1));
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'ArrowDown' });
+    });
+    expect(useQuizStore.getState().highlightedIdx).toBe(0);
+  });
+
+  test('window keydown Enter selects highlighted option', async () => {
+    mockResponse('loadCumulativeQuiz', { questions: [makeMCQ('q1')] });
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<CumulativeQuizSection {...props} />).container;
+    });
+    await waitFor(() => expect(container!.textContent).toContain('Question q1?'));
+    act(() => useQuizStore.getState().setHighlightedIdx(1));
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'Enter' });
+    });
+    await waitFor(() => expect(container!.textContent).toContain('Explanation q1'));
+  });
+
+  test('window keydown does nothing when not ready', async () => {
+    mockResponse('loadCumulativeQuiz', new Promise(() => {}));
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<CumulativeQuizSection {...props} />).container;
+    });
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'ArrowDown' });
+    });
+    expect(container!.textContent).toContain('Loading');
+  });
+
+  test('window keydown does nothing for cloze question', async () => {
+    const clozeQ: QuizQuestion = {
+      id: 'c1',
+      type: 'cloze',
+      question: 'Fill {term}',
+      options: {},
+      answer: 'term',
+      explanation: 'ex',
+      difficulty: 1,
+      tags: [],
+    };
+    mockResponse('loadCumulativeQuiz', { questions: [clozeQ] });
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<CumulativeQuizSection {...props} />).container;
+    });
+    await waitFor(() => expect(container!.textContent).toContain('Fill'));
+    expect(useQuizStore.getState().highlightedIdx).toBe(-1);
+    await act(async () => {
+      fireEvent.keyDown(window, { key: 'ArrowDown' });
+    });
+    expect(useQuizStore.getState().highlightedIdx).toBe(-1);
   });
 });

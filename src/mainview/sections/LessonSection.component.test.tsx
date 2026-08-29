@@ -393,4 +393,47 @@ describe('LessonSection', () => {
     Object.assign(navigator.clipboard, { writeText: originalWriteText });
     restore2();
   });
+
+  test('non-last module Complete & Next click triggers handleNextChapter', async () => {
+    mockResponse('toggleModuleCompleted', true);
+    mockResponse('logSession', undefined);
+    const course: Course = {
+      ...mockCourse,
+      modules: [mockModuleMeta, { ...mockModuleMeta, id: 'mod-02', name: 'Module 2' }],
+    };
+    useViewStore.setState({ views: [{ type: 'lesson', course, module: mockModuleMeta }] });
+    let container: HTMLElement;
+    await act(async () => {
+      container = render(<LessonSection course={course} module={mockModuleMeta} />).container;
+    });
+    await waitFor(() => expect(container!.textContent).toContain('Complete & Next'));
+    const nextBtn = Array.from(container!.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('Complete & Next'),
+    )!;
+    await act(async () => {
+      nextBtn.click();
+    });
+    await waitFor(() => {
+      expect(useCompletionStore.getState().completed).toHaveProperty('cs101:mod-01', true);
+    });
+  });
+
+  test('onModuleSelect in nav panel pushes lesson view', async () => {
+    const course: Course = {
+      ...mockCourse,
+      modules: [mockModuleMeta, { ...mockModuleMeta, id: 'mod-02', name: 'Module 2' }],
+    };
+    useViewStore.setState({ views: [{ type: 'lesson', course, module: mockModuleMeta }] });
+    mockResponse('getSections', [{ id: 'intro', heading: 'Intro', level: 1, parentID: null }]);
+    useSettingsStore.setState({ rightPanel: 'sections' });
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<LessonSection course={course} module={mockModuleMeta} />).getByText;
+    });
+    await waitFor(() => expect(getByText!('Module 2')).toBeTruthy());
+    await user.click(getByText!('Module 2'));
+    expect(
+      useViewStore.getState().views.some((v) => v.type === 'lesson' && v.module.id === 'mod-02'),
+    ).toBe(true);
+  });
 });

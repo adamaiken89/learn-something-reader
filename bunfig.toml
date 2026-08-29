@@ -1,10 +1,10 @@
 [test]
 preload = ["./src/setup.tsx"]
 # Bun enforces coverageThreshold PER-FILE (any single file below → exit 1),
-# not on the aggregate. Floor set to current repo minimums
-# (min funcs 50%, min lines ~41%) so `bun run coverage` gates new untested
-# code without failing on legacy UI files covered by Playwright e2e.
-coverageThreshold = { functions = 0.5, lines = 0.4 }
-coveragePathIgnorePatterns = ["**/testFsShared.ts", "**/setup.tsx"]
+# not on the aggregate. Floor set to 0.7 so `bun run coverage` gates new
+# untested code; legacy UI files covered by Playwright e2e can be added
+# to coveragePathIgnorePatterns if they sit below the line.
+coverageThreshold = { functions = 0.7, lines = 0.7 }
+coveragePathIgnorePatterns = ["**/testFsShared.ts", "**/setup.tsx", "src/mainview/components/lesson/LessonContentViewer.tsx", "src/mainview/components/shadcn/sheet.tsx"]
 coverageSkipTestFiles = true
 pathIgnorePatterns = ["e2e/**", "src/mainview/__e2e__/**"]

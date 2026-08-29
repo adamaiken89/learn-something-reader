@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import type { Course, ModuleMeta } from '../../bun/types';
 import i18n from '../i18n';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useViewStore } from '../stores/viewStore';
 import { mockResponse, setupRPC } from '../testUtils';
 import QuizPage from './QuizPage';
 
@@ -80,5 +81,16 @@ describe('QuizPage', () => {
     const switcher = container!.querySelector('[data-course-id="cs101"]');
     expect(switcher).toBeTruthy();
     await waitFor(() => expect(container!.textContent).toContain('← Back'));
+  });
+
+  test('clicking All Quizzes pushes quizHub view', async () => {
+    useViewStore.setState({ views: [] });
+    mockResponse('coursesList', []);
+    let getByText: ReturnType<typeof render>['getByText'];
+    await act(async () => {
+      getByText = render(<QuizPage {...defaultProps} />).getByText;
+    });
+    await user.click(getByText!('All Quizzes'));
+    expect(useViewStore.getState().views.some((v) => v.type === 'quizHub')).toBe(true);
   });
 });

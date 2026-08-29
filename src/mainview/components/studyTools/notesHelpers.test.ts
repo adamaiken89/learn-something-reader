@@ -1,169 +1,126 @@
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 
+import type { Section } from '../../../bun/types';
 import { findSectionIdForHighlight, scrollToHighlightEl } from './notesHelpers';
 
-function makeContainer(innerHTML: string): HTMLDivElement {
-  const div = document.createElement('div');
-  div.innerHTML = innerHTML;
-  return div;
+function makeSection(id: string, heading: string): Section {
+  return { id, heading } as Section;
 }
 
-describe('scrollToHighlightEl', () => {
-  let container: HTMLDivElement;
-  let ref: React.RefObject<HTMLDivElement | null>;
-
-  beforeEach(() => {
-    container = makeContainer('<mark data-highlight-id="h1">hello</mark>');
-    document.body.appendChild(container);
-    ref = { current: container };
-  });
-
-  afterEach(() => {
-    document.body.removeChild(container);
-  });
-
-  test('returns false when ref has no current', () => {
-    expect(scrollToHighlightEl({ current: null }, 'h1')).toBe(false);
-  });
-
-  test('returns false when element not found', () => {
-    expect(scrollToHighlightEl(ref, 'nonexistent')).toBe(false);
-  });
-
-  test('returns true and scrolls container when element found', () => {
-    const el = container.querySelector('mark')!;
-    el.getBoundingClientRect = () => ({
-      top: 200,
-      left: 0,
-      right: 100,
-      bottom: 220,
-      width: 100,
-      height: 20,
-      x: 0,
-      y: 200,
-      toJSON: () => ({}),
+describe('notesHelpers', () => {
+  describe('scrollToHighlightEl', () => {
+    test('returns false when ref has no current', () => {
+      expect(scrollToHighlightEl({ current: null }, 'h1')).toBe(false);
     });
-    container.getBoundingClientRect = () => ({
-      top: 50,
-      left: 0,
-      right: 500,
-      bottom: 500,
-      width: 500,
-      height: 450,
-      x: 0,
-      y: 50,
-      toJSON: () => ({}),
+
+    test('returns false when highlight element not found', () => {
+      const div = document.createElement('div');
+      document.body.appendChild(div);
+      const result = scrollToHighlightEl({ current: div }, 'missing');
+      expect(result).toBe(false);
     });
-    container.scrollTop = 0;
 
-    const result = scrollToHighlightEl(ref, 'h1');
-    expect(result).toBe(true);
-    expect(container.scrollTop).toBe(200 - 50 + 0 - 60);
-  });
-});
+    test('scrolls and returns true when found', () => {
+      const div = document.createElement('div');
+      div.innerHTML = '<mark data-highlight-id="h1">text</mark>';
+      document.body.appendChild(div);
 
-describe('findSectionIdForHighlight', () => {
-  let container: HTMLDivElement;
+      const el = div.querySelector('mark')!;
+      el.getBoundingClientRect = () =>
+        ({
+          top: 300,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: 0,
+          height: 0,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        }) as DOMRect;
+      div.getBoundingClientRect = () =>
+        ({
+          top: 50,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: 0,
+          height: 0,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        }) as DOMRect;
+      Object.defineProperty(div, 'scrollTop', { value: 100, configurable: true, writable: true });
 
-  const sections = [
-    { id: 'intro', heading: 'Introduction', level: 2, parentID: null },
-    { id: 'body', heading: 'Body', level: 2, parentID: null },
-  ];
-
-  beforeEach(() => {
-    container = makeContainer(`
-      <h2 id="intro">Introduction</h2>
-      <p>Some text <mark data-highlight-id="h1">highlight</mark></p>
-      <h2 id="body">Body</h2>
-      <p>More text</p>
-    `);
-    document.body.appendChild(container);
-  });
-
-  afterEach(() => {
-    document.body.removeChild(container);
-  });
-
-  test('returns null when ref has no current', () => {
-    expect(findSectionIdForHighlight({ current: null }, 'h1', sections)).toBeNull();
-  });
-
-  test('returns null when element not found', () => {
-    const ref = { current: container };
-    expect(findSectionIdForHighlight(ref, 'nonexistent', sections)).toBeNull();
-  });
-
-  test('finds section by previous sibling heading id', () => {
-    const ref = { current: container };
-    const result = findSectionIdForHighlight(ref, 'h1', sections);
-    expect(result).toEqual({ id: 'intro', heading: 'Introduction' });
+      const result = scrollToHighlightEl({ current: div }, 'h1');
+      expect(result).toBe(true);
+      expect(div.scrollTop).toBe(300 - 50 + 100 - 60);
+    });
   });
 
-  test('finds section when heading id matches in sections array', () => {
-    const c2 = makeContainer(`
-      <h2 id="custom-id">Custom Heading</h2>
-      <p>Text <mark data-highlight-id="h2">word</mark></p>
-    `);
-    document.body.appendChild(c2);
-    const ref = { current: c2 };
-    const result = findSectionIdForHighlight(ref, 'h2', [
-      { id: 'custom-id', heading: 'Custom Heading', level: 2, parentID: null },
-    ]);
-    expect(result).toEqual({ id: 'custom-id', heading: 'Custom Heading' });
-    document.body.removeChild(c2);
-  });
+  describe('findSectionIdForHighlight', () => {
+    const sections = [makeSection('s1', 'Intro'), makeSection('s2', 'Core')];
 
-  test('walks up to ancestor when no prevSibling', () => {
-    const c2 = makeContainer(`
-      <div>
-        <p>Text <mark data-highlight-id="h3">word</mark></p>
-      </div>
-    `);
-    document.body.appendChild(c2);
-    const ref = { current: c2 };
-    const result = findSectionIdForHighlight(ref, 'h3', []);
-    expect(result).toBeNull();
-    document.body.removeChild(c2);
-  });
+    test('returns null when ref has no current', () => {
+      expect(findSectionIdForHighlight({ current: null }, 'h1', sections)).toBeNull();
+    });
 
-  test('finds heading inside nested prevSibling', () => {
-    const c2 = makeContainer(`
-      <div>
-        <div><h3 id="nested">Nested Heading</h3></div>
-        <p>Text <mark data-highlight-id="h4">word</mark></p>
-      </div>
-    `);
-    document.body.appendChild(c2);
-    const ref = { current: c2 };
-    const result = findSectionIdForHighlight(ref, 'h4', []);
-    expect(result).toEqual({ id: 'nested', heading: 'Nested Heading' });
-    document.body.removeChild(c2);
-  });
+    test('returns null when highlight not found', () => {
+      const div = document.createElement('div');
+      document.body.appendChild(div);
+      expect(findSectionIdForHighlight({ current: div }, 'missing', sections)).toBeNull();
+    });
 
-  test('falls back to sections array by heading text when heading has no id', () => {
-    const c2 = makeContainer(`
-      <h2>No ID Heading</h2>
-      <p>Text <mark data-highlight-id="h5">word</mark></p>
-    `);
-    document.body.appendChild(c2);
-    const ref = { current: c2 };
-    const result = findSectionIdForHighlight(ref, 'h5', [
-      { id: 'found-by-text', heading: 'No ID Heading', level: 2, parentID: null },
-    ]);
-    expect(result).toEqual({ id: 'found-by-text', heading: 'No ID Heading' });
-    document.body.removeChild(c2);
-  });
+    test('returns section by id when previous heading has id', () => {
+      const div = document.createElement('div');
+      div.innerHTML = '<h2 id="s1">Intro</h2><p><mark data-highlight-id="h1">x</mark></p>';
+      document.body.appendChild(div);
+      const result = findSectionIdForHighlight({ current: div }, 'h1', sections);
+      expect(result).toEqual({ id: 's1', heading: 'Intro' });
+    });
 
-  test('returns null when no heading found anywhere', () => {
-    const c2 = makeContainer(`
-      <div>
-        <p>Just text <mark data-highlight-id="h6">word</mark></p>
-      </div>
-    `);
-    document.body.appendChild(c2);
-    const ref = { current: c2 };
-    const result = findSectionIdForHighlight(ref, 'h6', []);
-    expect(result).toBeNull();
-    document.body.removeChild(c2);
+    test('falls back to heading text match when no id', () => {
+      const div = document.createElement('div');
+      div.innerHTML = '<h2>Core</h2><p><mark data-highlight-id="h2">x</mark></p>';
+      document.body.appendChild(div);
+      const result = findSectionIdForHighlight({ current: div }, 'h2', sections);
+      expect(result?.heading).toBe('Core');
+      expect(result?.id).toBe('s2');
+    });
+
+    test('returns null when no preceding heading found before container', () => {
+      const div = document.createElement('div');
+      div.innerHTML = '<p><mark data-highlight-id="h1">x</mark></p>';
+      document.body.appendChild(div);
+      expect(findSectionIdForHighlight({ current: div }, 'h1', sections)).toBeNull();
+    });
+
+    test('walks up parent when no prev sibling at current node', () => {
+      const div = document.createElement('div');
+      div.innerHTML =
+        '<h2 id="s1">Intro</h2><div><span><mark data-highlight-id="h1">x</mark></span></div>';
+      document.body.appendChild(div);
+      const result = findSectionIdForHighlight({ current: div }, 'h1', sections);
+      expect(result).toEqual({ id: 's1', heading: 'Intro' });
+    });
+
+    test('descends into prev sibling subtree to find last descendant heading', () => {
+      const div = document.createElement('div');
+      div.innerHTML =
+        '<section><h2 id="s2">Core</h2></section><p><mark data-highlight-id="h1">x</mark></p>';
+      document.body.appendChild(div);
+      const result = findSectionIdForHighlight({ current: div }, 'h1', sections);
+      expect(result).toEqual({ id: 's2', heading: 'Core' });
+    });
+
+    test('descends into prev sibling subtree with no-id heading, falls back to text match', () => {
+      const div = document.createElement('div');
+      div.innerHTML =
+        '<section><h2>Core</h2></section><p><mark data-highlight-id="h1">x</mark></p>';
+      document.body.appendChild(div);
+      const result = findSectionIdForHighlight({ current: div }, 'h1', sections);
+      expect(result?.heading).toBe('Core');
+      expect(result?.id).toBe('s2');
+    });
   });
 });

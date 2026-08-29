@@ -1,6 +1,8 @@
-import { describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, test } from 'bun:test';
 
-import { normalizeModuleId } from './utils';
+import { fsMockImpl } from '../testFsShared';
+
+import { findSubjectsDir, normalizeModuleId } from './utils';
 
 describe('normalizeModuleId', () => {
   test('pads number with leading zero', () => {
@@ -25,5 +27,43 @@ describe('normalizeModuleId', () => {
 
   test('handles empty string', () => {
     expect(normalizeModuleId('')).toBe('');
+  });
+});
+
+describe('findSubjectsDir', () => {
+  afterEach(() => {
+    Object.assign(fsMockImpl, {
+      existsSync: () => false,
+      mkdirSync: () => {},
+    });
+  });
+
+  test('returns module-adjacent subjects dir when it exists', () => {
+    Object.assign(fsMockImpl, {
+      existsSync: (p: string) => p.endsWith('/subjects') && !p.endsWith('/../subjects'),
+      mkdirSync: () => {},
+    });
+    const dir = findSubjectsDir();
+    expect(dir).toContain('subjects');
+    expect(dir).not.toContain('..');
+  });
+
+  test('falls back to parent subjects dir when adjacent missing', () => {
+    Object.assign(fsMockImpl, {
+      existsSync: (p: string) => p.includes('../subjects'),
+      mkdirSync: () => {},
+    });
+    const dir = findSubjectsDir();
+    expect(dir).toContain('subjects');
+  });
+
+  test('falls back to COURSES_DIR (mkdir) when neither exists', () => {
+    Object.assign(fsMockImpl, {
+      existsSync: () => false,
+      mkdirSync: () => {},
+    });
+    const dir = findSubjectsDir();
+    expect(dir).toContain('.coursereader');
+    expect(dir).toContain('subjects');
   });
 });

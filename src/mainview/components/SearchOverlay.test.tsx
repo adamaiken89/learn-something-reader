@@ -1,4 +1,4 @@
-import { render, waitFor } from '@testing-library/react';
+import { fireEvent, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, mock, test } from 'bun:test';
 
@@ -152,5 +152,56 @@ describe('SearchOverlay', () => {
     const closeBtn = container.querySelector('.lucide-x')!;
     await user.click(closeBtn);
     expect(getByText('No course filter — searching all courses')).toBeInTheDocument();
+  });
+
+  test('touch swipe down closes overlay', async () => {
+    const onClose = mock(() => {});
+    const { container, getByPlaceholderText, findByText } = render(
+      <SearchOverlay onClose={onClose} />,
+    );
+    await user.type(getByPlaceholderText('Search across courses...'), 'test');
+    await findByText('x + y = z', {}, { timeout: 1000 });
+    const results = container.querySelector('.max-h-96')!;
+    fireEvent.touchStart(results, {
+      touches: [{ clientY: 100 }],
+      changedTouches: [{ clientY: 100 }],
+    });
+    fireEvent.touchEnd(results, {
+      touches: [{ clientY: 250 }],
+      changedTouches: [{ clientY: 250 }],
+    });
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  test('touch swipe up does not close overlay', async () => {
+    const onClose = mock(() => {});
+    const { container, getByPlaceholderText, findByText } = render(
+      <SearchOverlay onClose={onClose} />,
+    );
+    await user.type(getByPlaceholderText('Search across courses...'), 'test');
+    await findByText('x + y = z', {}, { timeout: 1000 });
+    const results = container.querySelector('.max-h-96')!;
+    fireEvent.touchStart(results, {
+      touches: [{ clientY: 250 }],
+      changedTouches: [{ clientY: 250 }],
+    });
+    fireEvent.touchEnd(results, {
+      touches: [{ clientY: 100 }],
+      changedTouches: [{ clientY: 100 }],
+    });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  test('clicking a result navigates and closes', async () => {
+    const onClose = mock(() => {});
+    useViewStore.setState({ views: [] });
+    const { getByPlaceholderText, findByText } = render(<SearchOverlay onClose={onClose} />);
+    await user.type(getByPlaceholderText('Search across courses...'), 'test');
+    const result = await findByText('x + y = z', {}, { timeout: 1000 });
+    await user.click(result);
+    await waitFor(() => {
+      expect(useViewStore.getState().views.some((v) => v.type === 'lesson')).toBe(true);
+      expect(onClose).toHaveBeenCalled();
+    });
   });
 });
