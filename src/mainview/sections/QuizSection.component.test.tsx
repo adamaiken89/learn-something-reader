@@ -282,7 +282,7 @@ describe('QuizSection', () => {
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
     expect(optionBtns.length).toBe(4);
     optionBtns.forEach((btn) => {
-      expect(btn.hasAttribute('data-highlighted')).toBe(false);
+      expect(btn).not.toHaveAttribute('data-highlighted');
     });
   });
 
@@ -295,12 +295,12 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(false);
+    expect(optionBtns[0]).not.toHaveAttribute('data-highlighted');
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
 
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -316,7 +316,7 @@ describe('QuizSection', () => {
     act(() => useQuizStore.getState().setHighlightedIdx(3));
 
     await waitFor(() => {
-      expect(optionBtns[3].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[3]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -329,12 +329,12 @@ describe('QuizSection', () => {
     const buttons = container.querySelectorAll('button');
     const optionBtns = Array.from(buttons).filter((b) => b.textContent?.match(/^[A-D]\./));
 
-    expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(false);
+    expect(optionBtns[0]).not.toHaveAttribute('data-highlighted');
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
 
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -350,7 +350,7 @@ describe('QuizSection', () => {
     act(() => useQuizStore.getState().setHighlightedIdx(1));
 
     await waitFor(() => {
-      expect(optionBtns[1].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[1]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -365,13 +365,13 @@ describe('QuizSection', () => {
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
 
     act(() => useQuizStore.getState().setHighlightedIdx(1));
 
     await waitFor(() => {
-      expect(optionBtns[1].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[1]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -386,13 +386,13 @@ describe('QuizSection', () => {
 
     act(() => useQuizStore.getState().setHighlightedIdx(1));
     await waitFor(() => {
-      expect(optionBtns[1].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[1]).toHaveAttribute('data-highlighted');
     });
 
     act(() => useQuizStore.getState().setHighlightedIdx(1));
 
     await waitFor(() => {
-      expect(optionBtns[1].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[1]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -407,13 +407,13 @@ describe('QuizSection', () => {
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
 
     act(() => useQuizStore.getState().setHighlightedIdx(2));
 
     await waitFor(() => {
-      expect(optionBtns[2].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[2]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -428,13 +428,13 @@ describe('QuizSection', () => {
 
     act(() => useQuizStore.getState().setHighlightedIdx(2));
     await waitFor(() => {
-      expect(optionBtns[2].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[2]).toHaveAttribute('data-highlighted');
     });
 
     act(() => useQuizStore.getState().setHighlightedIdx(2));
 
     await waitFor(() => {
-      expect(optionBtns[2].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[2]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -449,13 +449,13 @@ describe('QuizSection', () => {
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
 
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -470,13 +470,13 @@ describe('QuizSection', () => {
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
 
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -491,13 +491,13 @@ describe('QuizSection', () => {
 
     act(() => useQuizStore.getState().setHighlightedIdx(2));
     await waitFor(() => {
-      expect(optionBtns[2].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[2]).toHaveAttribute('data-highlighted');
     });
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
 
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -512,13 +512,13 @@ describe('QuizSection', () => {
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
 
     act(() => useQuizStore.getState().setHighlightedIdx(0));
 
     await waitFor(() => {
-      expect(optionBtns[0].hasAttribute('data-highlighted')).toBe(true);
+      expect(optionBtns[0]).toHaveAttribute('data-highlighted');
     });
   });
 
@@ -590,7 +590,7 @@ describe('QuizSection', () => {
       expect(container.textContent).toContain('Try again');
       expect(container.textContent).not.toContain('Cloze explanation');
     });
-    expect(container.querySelector('input')!.hasAttribute('disabled')).toBe(false);
+    expect(container.querySelector('input')!).not.toHaveAttribute('disabled');
   });
 
   test('cloze second wrong reveals answer and scores 0', async () => {
