@@ -1,13 +1,14 @@
 import { existsSync, mkdirSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { homedir } from 'os';
 
 export function normalizeModuleId(id: string | number): string {
   if (typeof id === 'number') return String(id).padStart(2, '0');
   return id;
 }
 
-const COURSES_DIR = join(process.env.HOME || '', '.coursereader', 'subjects');
+const COURSES_DIR = join(homedir(), '.coursereader', 'subjects');
 
 export function findSubjectsDir(): string {
   const moduleDir = dirname(fileURLToPath(import.meta.url));
