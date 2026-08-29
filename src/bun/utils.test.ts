@@ -31,11 +31,13 @@ describe('normalizeModuleId', () => {
 });
 
 describe('findSubjectsDir', () => {
+  const mkdirCalls: string[] = [];
   afterEach(() => {
     Object.assign(fsMockImpl, {
       existsSync: () => false,
       mkdirSync: () => {},
     });
+    mkdirCalls.length = 0;
   });
 
   test('returns module-adjacent subjects dir when it exists', () => {
@@ -60,10 +62,14 @@ describe('findSubjectsDir', () => {
   test('falls back to COURSES_DIR (mkdir) when neither exists', () => {
     Object.assign(fsMockImpl, {
       existsSync: () => false,
-      mkdirSync: () => {},
+      mkdirSync: (p: string) => {
+        mkdirCalls.push(p);
+      },
     });
     const dir = findSubjectsDir();
-    expect(dir).toContain('.coursereader');
-    expect(dir).toContain('subjects');
+    expect(mkdirCalls).toHaveLength(1);
+    expect(mkdirCalls[0]).toContain('.coursereader');
+    expect(mkdirCalls[0]).toContain('subjects');
+    expect(dir).toBe(mkdirCalls[0]);
   });
 });
