@@ -180,16 +180,24 @@ describe('addAnnotation', () => {
 });
 
 describe('bookmarks', () => {
-  test('addBookmark defaults scrollPosition 0, nulls sectionID', () => {
+  test('addBookmark defaults kind module, nulls sectionID, omits scrollPosition', () => {
     const b = annotations.addBookmark('math', '01', 'Intro');
-    expect(b.scrollPosition).toBe(0);
+    expect(b.kind).toBe('module');
     expect(b.sectionID).toBeNull();
+    expect(b.scrollPosition).toBeUndefined();
   });
 
-  test('addBookmark stores section and scroll position', () => {
-    const b = annotations.addBookmark('math', '01', 'Deep dive', 'sec-7', 420);
+  test('addBookmark stores section kind and extras', () => {
+    const b = annotations.addBookmark('math', '01', 'Deep dive', 'sec-7');
     expect(b.sectionID).toBe('sec-7');
-    expect(b.scrollPosition).toBe(420);
+    expect(b.kind).toBe('section');
+
+    const h = annotations.addBookmark('math', '01', 'key term', undefined, {
+      kind: 'highlight',
+      snippet: 'key term',
+    });
+    expect(h.kind).toBe('highlight');
+    expect(h.snippet).toBe('key term');
   });
 
   test('getAllBookmarks sorts newest first across courses', () => {

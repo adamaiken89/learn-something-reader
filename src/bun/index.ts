@@ -105,8 +105,24 @@ const rpc = BrowserView.defineRPC<AppSchema>({
       getHighlights: ({ courseID, moduleID }) =>
         Annotations.getHighlightsForModule(courseID, moduleID),
 
-      addHighlight: ({ courseID, moduleID, selectedText, startOffset, endOffset, color }) =>
-        Annotations.addHighlight(courseID, moduleID, selectedText, startOffset, endOffset, color),
+      addHighlight: ({
+        courseID,
+        moduleID,
+        selectedText,
+        startOffset,
+        endOffset,
+        color,
+        sectionID,
+      }) =>
+        Annotations.addHighlight(
+          courseID,
+          moduleID,
+          selectedText,
+          startOffset,
+          endOffset,
+          color,
+          sectionID,
+        ),
 
       deleteHighlight: async ({ id }) => {
         Annotations.deleteHighlight(id);
@@ -137,8 +153,8 @@ const rpc = BrowserView.defineRPC<AppSchema>({
       getModuleBookmarks: ({ courseID, moduleID }) =>
         Annotations.getBookmarksForModule(courseID, moduleID),
 
-      addBookmark: ({ courseID, moduleID, title, sectionID, scrollPosition }) =>
-        Annotations.addBookmark(courseID, moduleID, title, sectionID, scrollPosition),
+      addBookmark: ({ courseID, moduleID, title, sectionID, kind, snippet }) =>
+        Annotations.addBookmark(courseID, moduleID, title, sectionID, { kind, snippet }),
 
       deleteBookmark: async ({ id }) => {
         Annotations.deleteBookmark(id);

@@ -82,6 +82,8 @@ export interface Highlight {
   endOffset: number;
   color: string;
   createdAt: string;
+  /** Heading id the highlight starts in, captured at selection time. Null/absent for legacy rows. */
+  sectionID?: string | null;
 }
 
 export interface Note {
@@ -95,14 +97,21 @@ export interface Note {
   updatedAt: string;
 }
 
+export type BookmarkKind = 'module' | 'section' | 'highlight';
+
 export interface Bookmark {
   id: string;
   courseID: string;
   moduleID: string;
   sectionID: string | null;
   title: string;
-  scrollPosition: number;
+  /** Legacy field — no longer written; kept optional for old data. */
+  scrollPosition?: number;
   createdAt: string;
+  /** Typed save: module bookmark, section bookmark, or saved highlight. */
+  kind?: BookmarkKind;
+  /** Highlight text snippet (truncated) for kind === 'highlight'. */
+  snippet?: string;
 }
 
 export interface CompletedModule {
@@ -132,7 +141,7 @@ export interface StudySession {
   courseID: string;
   moduleID: string;
   durationMinutes: number;
-  type: 'reading' | 'quiz' | 'review';
+  type: 'reading' | 'quiz' | 'review' | 'ai_skill';
   score?: number;
   total?: number;
 }

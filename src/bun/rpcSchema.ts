@@ -83,6 +83,7 @@ type AnnotationRequests = {
       startOffset: number;
       endOffset: number;
       color?: string;
+      sectionID?: string | null;
     };
     response: Highlight;
   };
@@ -121,7 +122,8 @@ type AnnotationRequests = {
       moduleID: string;
       title: string;
       sectionID?: string;
-      scrollPosition?: number;
+      kind?: Bookmark['kind'];
+      snippet?: string;
     };
     response: Bookmark;
   };
@@ -139,7 +141,7 @@ type ProgressRequests = {
       courseID: string;
       moduleID: string;
       durationMinutes: number;
-      type: 'reading' | 'quiz' | 'review';
+      type: 'reading' | 'quiz' | 'review' | 'ai_skill';
       score?: number;
       total?: number;
     };

@@ -10,7 +10,7 @@ import type {
   StudySession,
 } from './types';
 
-const SESSION_TYPES = new Set(['reading', 'quiz', 'review']);
+const SESSION_TYPES = new Set(['reading', 'quiz', 'review', 'ai_skill']);
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -38,7 +38,8 @@ function isHighlight(v: unknown): v is Highlight {
     isNumber(v.startOffset) &&
     isNumber(v.endOffset) &&
     isString(v.color) &&
-    isString(v.createdAt)
+    isString(v.createdAt) &&
+    (v.sectionID === undefined || isStringOrNull(v.sectionID))
   );
 }
 
@@ -56,6 +57,8 @@ function isNote(v: unknown): v is Note {
   );
 }
 
+const BOOKMARK_KINDS = new Set(['module', 'section', 'highlight']);
+
 function isBookmark(v: unknown): v is Bookmark {
   if (!isRecord(v)) return false;
   return (
@@ -64,7 +67,9 @@ function isBookmark(v: unknown): v is Bookmark {
     isString(v.moduleID) &&
     isStringOrNull(v.sectionID) &&
     isString(v.title) &&
-    isNumber(v.scrollPosition) &&
+    (v.scrollPosition === undefined || isNumber(v.scrollPosition)) &&
+    (v.kind === undefined || (isString(v.kind) && BOOKMARK_KINDS.has(v.kind))) &&
+    (v.snippet === undefined || isString(v.snippet)) &&
     isString(v.createdAt)
   );
 }

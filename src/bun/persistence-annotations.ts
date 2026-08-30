@@ -15,6 +15,7 @@ export function addHighlight(
   startOffset: number,
   endOffset: number,
   color: string = 'yellow',
+  sectionID?: string | null,
 ): Highlight {
   const data = load();
   const existing = data.highlights.find(
@@ -27,6 +28,7 @@ export function addHighlight(
   );
   if (existing) {
     existing.color = color;
+    if (sectionID !== undefined) existing.sectionID = sectionID;
     save(data);
     return existing;
   }
@@ -39,6 +41,7 @@ export function addHighlight(
     endOffset,
     color,
     createdAt: new Date().toISOString(),
+    sectionID: sectionID ?? null,
   };
   data.highlights.push(highlight);
   save(data);
@@ -124,7 +127,7 @@ export function addBookmark(
   moduleID: string,
   title: string,
   sectionID?: string,
-  scrollPosition: number = 0,
+  extras?: { kind?: Bookmark['kind']; snippet?: string },
 ): Bookmark {
   const data = load();
   const bookmark: Bookmark = {
@@ -133,8 +136,9 @@ export function addBookmark(
     moduleID,
     sectionID: sectionID || null,
     title,
-    scrollPosition,
     createdAt: new Date().toISOString(),
+    kind: extras?.kind ?? (sectionID ? 'section' : 'module'),
+    ...(extras?.snippet !== undefined ? { snippet: extras.snippet } : {}),
   };
   data.bookmarks.push(bookmark);
   save(data);

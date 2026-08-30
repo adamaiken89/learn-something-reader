@@ -1,5 +1,5 @@
 import type { AppRequests } from '../bun/rpcSchema';
-import type { LastSession, ModuleSession, QuizQuestion, SRSDeck } from '../bun/types';
+import type { Bookmark, LastSession, ModuleSession, QuizQuestion, SRSDeck } from '../bun/types';
 import { logger } from './logger';
 import { rpc as defaultRpc } from './rpc';
 import { showToast } from './toast';
@@ -43,7 +43,7 @@ export const api = {
       courseID: string;
       moduleID: string;
       durationMinutes: number;
-      type: 'reading' | 'quiz' | 'review';
+      type: 'reading' | 'quiz' | 'review' | 'ai_skill';
       score?: number;
       total?: number;
     }) => request(() => _rpcRequest.logSession(data)),
@@ -89,6 +89,7 @@ export const api = {
       startOffset: number;
       endOffset: number;
       color?: string;
+      sectionID?: string | null;
     }) => request(() => _rpcRequest.addHighlight(data)),
     addAnnotation: (data: {
       courseID: string;
@@ -122,7 +123,8 @@ export const api = {
       moduleID: string;
       title: string;
       sectionID?: string;
-      scrollPosition?: number;
+      kind?: Bookmark['kind'];
+      snippet?: string;
     }) => request(() => _rpcRequest.addBookmark(data)),
     deleteBookmark: (id: string) => request(() => _rpcRequest.deleteBookmark({ id })),
     checkBookmark: (courseID: string, moduleID: string) =>
