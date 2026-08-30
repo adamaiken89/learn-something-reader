@@ -1,8 +1,11 @@
-import { Bookmark, Settings } from 'lucide-react';
+import { Bookmark, RefreshCw, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useSyncNow } from '../hooks/useSyncNow';
+import { shortcutKey } from '../shortcuts';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useSyncStore } from '../stores/syncStore';
 import { useViewStore } from '../stores/viewStore';
 
 interface PageHeaderProps {
@@ -29,6 +32,9 @@ export default function PageHeader({
   const { t } = useTranslation();
   const push = useViewStore((s) => s.push);
   const focusMode = useSettingsStore((s) => s.focusMode);
+  const remoteRepoURL = useSyncStore((s) => s.remoteRepoURL);
+  const isSyncing = useSyncStore((s) => s.isSyncing);
+  const syncNow = useSyncNow();
 
   return (
     <header className="relative z-40 bg-gray-800/80 backdrop-blur-sm border-b border-gray-700/60 shrink-0 min-h-[28px] flex flex-col">
@@ -58,9 +64,20 @@ export default function PageHeader({
 
           {!hideHeaderActions && !actions && (
             <div className="ml-auto flex items-center gap-0.5">
+              {remoteRepoURL && (
+                <button
+                  onClick={() => void syncNow(true)}
+                  disabled={isSyncing}
+                  title={`${t('settings.syncNow')} (⌘${shortcutKey('syncNow') ?? 'S'})`}
+                  data-testid="header-sync"
+                  className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/60 rounded-md transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
+                </button>
+              )}
               <button
                 onClick={() => push({ type: 'bookmarks' })}
-                title={t('common.bookmarks')}
+                title={t('common.saved')}
                 className="p-1.5 text-gray-400 hover:text-gray-200 hover:bg-gray-700/60 rounded-md transition-colors"
               >
                 <Bookmark size={14} />

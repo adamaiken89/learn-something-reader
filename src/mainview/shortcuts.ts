@@ -9,6 +9,7 @@ export interface Shortcut {
 export const SHORTCUTS: Shortcut[] = [
   // ── Global ──
   { key: 'k', id: 'search', scope: 'global', mod: true },
+  { key: 's', id: 'syncNow', scope: 'global', mod: true },
 
   // ── Lesson toolbar ──
   { key: '-', id: 'decFontSize', scope: 'lessonToolbar' },

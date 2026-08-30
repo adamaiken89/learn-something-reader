@@ -1,11 +1,14 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
 
+import { toastCallState } from '../../testFsShared';
 import { clearMocks, deleteMock, mockResponse, setupRPC } from '../testUtils';
 import { useSyncStore } from './syncStore';
 
 setupRPC();
 
 beforeEach(() => {
+  toastCallState.method = '';
+  toastCallState.args = [];
   useSyncStore.setState({
     lastSyncTime: null,
     lastSyncedCommit: null,
@@ -45,13 +48,39 @@ describe('syncStore', () => {
     console.warn = origWarn;
   });
 
-  test('startSync successful sync', async () => {
+  test('startSync successful sync returns success and toasts', async () => {
     mockResponse('syncStart', { success: true, commitHash: 'def', message: 'OK' });
-    await useSyncStore.getState().startSync();
+    const result = await useSyncStore.getState().startSync();
     const state = useSyncStore.getState();
+    expect(result).toEqual({ success: true, unchanged: undefined });
     expect(state.lastSyncedCommit).toBe('def');
     expect(state.isSyncing).toBe(false);
     expect(state.error).toBeNull();
+    expect(toastCallState.method).toBe('success');
+  });
+
+  test('startSync unchanged sync is silent (no toast) and flags unchanged', async () => {
+    mockResponse('syncStart', {
+      success: true,
+      commitHash: 'def',
+      message: 'Already up to date',
+      unchanged: true,
+    });
+    const result = await useSyncStore.getState().startSync();
+    expect(result).toEqual({ success: true, unchanged: true });
+    expect(toastCallState.method).not.toBe('success');
+  });
+
+  test('startSync concurrent attempt is skipped without error toast', async () => {
+    mockResponse('syncStart', {
+      success: false,
+      commitHash: '',
+      message: 'Sync already in progress',
+    });
+    const result = await useSyncStore.getState().startSync();
+    expect(result).toEqual({ success: false, skipped: true });
+    expect(toastCallState.method).not.toBe('error');
+    expect(useSyncStore.getState().error).toBeNull();
   });
 
   test('startSync failed sync', async () => {
@@ -65,7 +94,8 @@ describe('syncStore', () => {
   test('startSync skips if already syncing', async () => {
     useSyncStore.setState({ isSyncing: true });
     deleteMock('syncStart');
-    await useSyncStore.getState().startSync();
+    const result = await useSyncStore.getState().startSync();
+    expect(result).toEqual({ success: false, skipped: true });
     expect(useSyncStore.getState().isSyncing).toBe(true);
   });
 
@@ -75,9 +105,11 @@ describe('syncStore', () => {
     console.error = () => {};
     console.warn = () => {};
     deleteMock('syncStart');
-    await useSyncStore.getState().startSync();
+    const result = await useSyncStore.getState().startSync();
+    expect(result.success).toBe(false);
     expect(useSyncStore.getState().isSyncing).toBe(false);
     expect(useSyncStore.getState().error).toBeTruthy();
+    expect(toastCallState.method).toBe('error');
     console.error = origError;
     console.warn = origWarn;
   });

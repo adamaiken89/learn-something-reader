@@ -8,6 +8,7 @@ import { useAppInit } from './hooks/useAppInit';
 import { useEditableFieldShortcuts } from './hooks/useEditableFieldShortcuts';
 import { useQuizDueNotification } from './hooks/useQuizDueNotification';
 import { useShortcuts } from './hooks/useShortcuts';
+import { useSyncNow } from './hooks/useSyncNow';
 import { useWindowTitle } from './hooks/useWindowTitle';
 import BookmarksPage from './pages/BookmarksPage';
 import CumulativeQuizPage from './pages/CumulativeQuizPage';
@@ -34,6 +35,7 @@ export default function App() {
   useEditableFieldShortcuts();
   useQuizDueNotification();
   useWindowTitle();
+  const syncNow = useSyncNow();
 
   useEffect(() => {
     if (currentView) {
@@ -57,6 +59,7 @@ export default function App() {
 
   useShortcuts('global', {
     search: () => setSearchOpen(true),
+    syncNow: () => void syncNow(true),
   });
 
   if (loading || !currentView) {

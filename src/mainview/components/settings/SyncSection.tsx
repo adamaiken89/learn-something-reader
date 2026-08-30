@@ -3,8 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/shadcn/button';
 
-import { useCompletionStore } from '../../stores/completionStore';
-import { useCourseStore } from '../../stores/courseStore';
+import { useSyncNow } from '../../hooks/useSyncNow';
 import { useSyncStore } from '../../stores/syncStore';
 import { showToast } from '../../toast';
 
@@ -19,8 +18,8 @@ export default function SyncSection() {
   const isSyncing = useSyncStore((s) => s.isSyncing);
   const remoteRepoURL = useSyncStore((s) => s.remoteRepoURL);
   const syncError = useSyncStore((s) => s.error);
-  const startSync = useSyncStore((s) => s.startSync);
   const setRepoURLStore = useSyncStore((s) => s.setRepoURL);
+  const syncNow = useSyncNow();
 
   useEffect(() => {
     if (remoteRepoURL) setRepoURL(remoteRepoURL);
@@ -102,16 +101,7 @@ export default function SyncSection() {
           size="lg"
           onClick={() => {
             void (async () => {
-              const result = await startSync(forceSync || undefined);
-              if (result?.success) {
-                useCourseStore.getState().reset();
-                void useCourseStore
-                  .getState()
-                  .load()
-                  .then((courses) => {
-                    void useCompletionStore.getState().loadAll(courses.map((c) => c.id));
-                  });
-              }
+              await syncNow(forceSync || undefined);
             })();
           }}
           disabled={isSyncing || !remoteRepoURL}

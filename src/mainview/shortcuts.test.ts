@@ -5,6 +5,7 @@ import { shortcutKey, SHORTCUTS } from './shortcuts';
 describe('shortcuts', () => {
   test('shortcutKey returns key for known id', () => {
     expect(shortcutKey('search')).toBe('k');
+    expect(shortcutKey('syncNow')).toBe('s');
     expect(shortcutKey('incFontSize')).toBe('=');
     expect(shortcutKey('prevModule')).toBe('ArrowLeft');
   });

@@ -36,19 +36,19 @@ describe('PageHeader', () => {
 
   test('renders bookmarks and settings icon buttons when no actions and not hidden', () => {
     const { getByTitle } = render(<PageHeader />);
-    expect(getByTitle('Bookmarks')).toBeInTheDocument();
+    expect(getByTitle('Saved')).toBeInTheDocument();
     expect(getByTitle('Settings')).toBeInTheDocument();
   });
 
   test('hides default actions when hideHeaderActions', () => {
     const { queryByTitle } = render(<PageHeader hideHeaderActions />);
-    expect(queryByTitle('Bookmarks')).toBeNull();
+    expect(queryByTitle('Saved')).toBeNull();
     expect(queryByTitle('Settings')).toBeNull();
   });
 
   test('hides default actions when actions prop provided', () => {
     const { queryByTitle } = render(<PageHeader actions={<button>Custom</button>} />);
-    expect(queryByTitle('Bookmarks')).toBeNull();
+    expect(queryByTitle('Saved')).toBeNull();
     expect(queryByTitle('Settings')).toBeNull();
   });
 
@@ -57,7 +57,7 @@ describe('PageHeader', () => {
       <PageHeader actions={<button>Custom Action</button>} />,
     );
     expect(getByText('Custom Action')).toBeInTheDocument();
-    expect(queryByTitle('Bookmarks')).toBeNull();
+    expect(queryByTitle('Saved')).toBeNull();
   });
 
   test('renders center content', () => {
@@ -68,7 +68,7 @@ describe('PageHeader', () => {
   test('clicking bookmarks pushes bookmarks view', async () => {
     useViewStore.setState(useViewStore.getInitialState());
     const { getByTitle } = render(<PageHeader />);
-    await user.click(getByTitle('Bookmarks'));
+    await user.click(getByTitle('Saved'));
     const views = useViewStore.getState().views;
     expect(views).toHaveLength(1);
     expect(views[0]).toEqual({ type: 'bookmarks' });

@@ -86,6 +86,13 @@ Subjects path resolution (`src/bun/utils.ts` `findSubjectsDir`):
 - **Corrupt data.json**: `_loadFresh` backs up original to `data.json.bak-<ts>` before returning empty defaults (kills old silent data-loss path). `parse`-fail and per-record repair both `logger.warn`.
 - **New records must satisfy** `Highlight`/`Note`/`Bookmark`/`StudySession`(enum `reading|quiz|review`)/`CompletedModule`/`QuizSchedule`/`ModuleSession` shapes or they get dropped on next load. Tests feeding `data.json` fixtures must use full record shapes (see `src/bun/schema.test.ts`).
 
+## Sync (remote course content)
+
+Auto-sync is **once per session, production only** — never per-mount:
+- **Guard**: module-level `didAutoSync` in `useAppInit.ts` survives React StrictMode double-mounts (the old cause of double-sync in dev). Auto-sync is skipped entirely in dev (`import.meta.env.DEV`) — in dev `findSubjectsDir()` resolves to the checked-in `src/*/subjects`, and `syncCourses` would REPLACE that dir with the remote clone (only SRS decks are restored), wiping unpushed local course edits.
+- **Silent no-ops**: `syncStore.startSync` returns `SyncStartResult {success, unchanged?, skipped?, error}`. No success toast when `unchanged: true` (backend short-circuit on same SHA); concurrent attempts (`'Sync already in progress'`) return `skipped` with NO error toast. Course/completion reload only runs when content actually changed.
+- **Manual sync** goes through `hooks/useSyncNow(force?)` (cross-store orchestration: syncStore + courseStore + completionStore). Surfaces: ⌘S global shortcut (`shortcuts.ts` id `syncNow`), header RefreshCw button (`data-testid="header-sync"`, rendered only when `remoteRepoURL` set — always force), and Settings `SyncSection` (passes its Force checkbox: `syncNow(forceSync || undefined)`). Manual sync is NOT dev-gated.
+
 ## Scroll layout invariant
 
 `PageContent` (`src/mainview/layouts/PageContent.tsx`) MUST have `flex flex-col` classes — the real scrollbar lives on `contentRef` only when `PageContent` is a flex container. Without them, `div.flex.flex-1.overflow-hidden` inside `LessonSection` gets unbounded height → inner `contentRef` (`overflow-y-auto`) never overflows → `scrollToSection` on `contentRef.scrollTop` silently does nothing. If `contentRef` has `overflow-y-auto` but sections are always at scrollTop 0, check `PageContent` hasn't lost `flex flex-col`.
@@ -149,7 +156,7 @@ LessonPage supports 4 styles: none, flip, slide, fade. Stored in `settingsStore.
 
 ## AI Integration
 
-Two tiers: clipboard-forwarding (no setup) vs deep API (Gemini key).
+Single tier: clipboard-forwarding (no setup, no API key, zero cost). The documented "deep API (Gemini key)" tier was never implemented — no prefs.json reader, no AI RPC surface. Local-only UX improvements (one-shot CoT prompts, Drill output import, `ai_skill` session logging) keep this deliberate constraint.
 
 ### Tier 1: Clipboard + Browser (default, no API key)
 
@@ -203,6 +210,14 @@ Lesson markdown can include `## Feynman Explain`, `## Reframe`, `## Drill` headi
 - Quiz completion: "Next Chapter →" (if not last module) or "Back to Dashboard" (if last module). Navigates `push({ type: 'lesson', course, module: nextModule })`
 - No auto-redirect. User clicks buttons.
 
+## Bookmarks = Saved hub
+
+Bookmarks are **typed saves** with a distinct job from notes (annotations) and highlights (markup). `Bookmark.kind?: 'module' | 'section' | 'highlight'` (+ `snippet?` for highlight saves; legacy rows derive kind from `sectionID`). `scrollPosition` is legacy — no longer written, validator keeps accepting it.
+
+- **Store** (`bookmarksStore.ts`): `loadAll()`/`all` = global list (Saved hub + highlight bridge); `toggleHighlightSave(courseId, moduleId, snippet, sectionID)` toggles a kind='highlight' bookmark keyed by snippet within the module; `toggle` stamps kind automatically.
+- **SavedPage** (still `pages/BookmarksPage.tsx`, route `bookmarks`): type tabs (All/Modules/Sections/Highlights with counts) + course filter chips + rows grouped by course, per-tab empty states. i18n under `bookmarks.*` (`savedTitle` = "Saved"; nav label = `common.bookmarks`).
+- **Highlight→Saved bridge**: `HighlightItem` has a Save toggle → creates highlight-kind bookmark (snippet truncated 120 chars, sectionID from stored highlight or DOM walk).
+
 ## Quiz types (2)
 
 | Type | Data file | Page | Section | View type |
@@ -231,9 +246,10 @@ All study pages (QuizPage, CumulativeQuizPage, ReviewPage, QuizHubPage) use shar
 - **CumulativeQuizSection** (`sections/CumulativeQuizSection.tsx`): Mixed MCQ + cloze + TF. Uses `useQuizEngine(courseId, quizId, loader)` with custom loader → `api.quiz.cumulative()`. NOTE: `getCumulativeQuizMilestones` does NOT exist in code — QuizHubPage shows cumulative quizzes from `getQuizIndex`.
 - **QuizSection + CumulativeQuizSection** share `QuizCompletionView` for post-quiz summary (confetti, SVG score ring, filter tabs, review cards).
 - **TF questions**: parser auto-fills `options: { True: 'True', False: 'False' }` when type=`tf` and options empty. Rendered as 2-button MCQ grid.
-- **Cloze scoring** (`quizUtil.ts`): `cloze.yaml` `answer` field holds only FIRST `{term}`; multi-blank questions need all terms. Backend normalizes cloze answer at load time (`normalizedClozeAnswer` in `courseLoader.ts` parses all `{term}`s, comma-joins). `clozeAnswers(q)` (parses all `{term}`s from question text, falls back to `[q.answer]`) and `clozeCorrect(q, ua)` (trim/lowercase compare against comma-joined parsed answers) handle scoring. Stored user answer is comma-joined full blank set — NEVER compare cloze against `q.answer` alone or multi-blank questions score wrong. Session-log scoring in `useQuizEngine` (`hooks/useQuizEngine.ts`) MUST reuse `clozeCorrect(q, userAnswer)` — a former inline `userAnswer === q.answer` compare diverged from display scoring and mis-logged multi-blank/case-mixed cloze (logged a "failed" last attempt for actually-correct answers).
+- **Cloze per-blank scoring** (`quizUtil.ts`): `cloze.yaml` `answer` field holds only FIRST `{term}`; multi-blank questions need all terms. Backend normalizes cloze answer at load time (`normalizedClozeAnswer` in `courseLoader.ts` parses all `{term}`s, comma-joins). `clozeAnswers(q)` parses all `{term}`s from question text, falls back to `[q.answer]`. `clozeScore(q, ua)` → `{correctBlanks, totalBlanks, results}` compares **per blank**; `clozeCorrect(q, ua)` = all blanks correct. `blankCorrect(expected, user)` normalizes (lowercase, collapse whitespace, strip trailing punctuation) and accepts ONE typo (substitution/insert/delete/adjacent swap) for words ≥ 4 chars. When `clozeAnswers` length is 1 (single `{term}` or `{blank}`-directive fallback), the whole comma-joined user string is compared as ONE answer (covers `"A {blank}...{blank} block."` + `"trace_id, finally"`). Stored user answer stays comma-joined per blank order. **Partial credit**: score is points-based — cloze earns 1 per correct blank, mcq/tf 1/0 (`questionPoints`/`totalPointsFor`); `quizStore.totalPoints` is one per blank + one per non-cloze; session-log scoring in `useQuizEngine` uses the same helpers (a former inline `userAnswer === q.answer` compare diverged from display scoring — keep scoring single-source in `quizUtil`).
 - **Cloze question formats** (two in the wild): inline `{term}` (answer inside braces; `normalizedClozeAnswer` extracts terms) vs literal `{blank}` directive (real answer in `answer:` field, multi-blank comma-joined). `normalizedClozeAnswer` MUST be `{blank}`-aware: skip placeholders whose term is literally `blank` (probe: `"A {blank}...{blank} block."` + `"trace_id, finally"` → `"blank, blank"` before fix). Quiz question display: `QuizSection`/`CumulativeQuizSection` render via `QuizClozeQuestion` (`components/quiz/QuizClozeQuestion.tsx`), which uses `parseClozeText` to replace blanks with dashed `<span>`s — do NOT render raw `{term}` in quiz `<h2>` (leaks answer) and do NOT strip braces any other way (lesson viewer `rehypeCloze` is viewer-only).
-- **Cloze two-attempt rule** (`quizStore.ts` + `QuizClozeInput`): first wrong answer → amber "try again" warn (`quiz.clozeTryAgain`), answer NOT locked, question stays editable, no reveal. Second attempt → resolves: correct scores full marks, wrong reveals answer (`quiz.clozeWrongAnswer`) and scores 0. MCQ answers lock after one click as before. `clozeAttempts: Record<qid, number>` state tracks attempts; reset on setQuestions/retry/reset.
+- **Cloze two-attempt rule** (`quizStore.ts`): first wrong submission → amber "try again" warn (`quiz.clozeTryAgain`) + wrong blanks outlined amber, question stays editable, no reveal. Second submission resolves: correct blanks score (partial credit), wrong blanks outlined red + per-blank expected answers shown (`quiz.clozeBlankIncorrect`). MCQ answers lock after one click as before. `clozeAttempts: Record<qid, number>` tracks attempts; reset on setQuestions/retry/reset.
+- **Cloze per-blank inputs** (`QuizClozeQuestion.tsx` + `QuizClozeInput.tsx`): blanks render as INLINE inputs (width = `max(len(term),4)ch` — mild length hint), values in `quizStore.clozeBlankInputs` (`setClozeBlankInput(i, v)`, cleared on question change), submit via `submitCloze()` (all blanks must be non-empty). Enter advances blank→blank, Enter on last blank submits; auto-focus first blank on question mount. `QuizClozeInput` is check-button + feedback only. Completion review shows per-blank ✓/✗ chips with expected answers. i18n: `quiz.scoreLine`, `quiz.clozeBlankIncorrect`.
 
 ### useQuizEngine custom loader
 
@@ -288,6 +304,9 @@ Key invariants:
 - **Blockquotes**: skipped (`deeper = true`). Text inside `<blockquote>` not highlighted.
 - **Mermaid code**: skipped. `isMermaidCode()` detects `code.language-mermaid`. Both `applyHighlightsByOffset` and `transformTree` skip descending into mermaid code blocks — `pos` counter doesn't advance past mermaid text. Critical because MermaidDiagram component renders SVG via `dangerouslySetInnerHTML`, so code text ABSENT from DOM. Without this skip, `getTextOffset` TreeWalker (DOM-based) returns shorter offsets than hast walker (which counts mermaid code text), causing all highlights AFTER mermaid diagram to shift by mermaid code text length, corrupting rendering.
 - **Text-based fallback** (`transformTree`/`splitText`): only used for highlights with `endOffset === 0` (legacy data). Uses `indexOf` on individual hast text nodes — fails for cross-element selections. New highlights always have offsets.
+- **Anchoring/validation** (`resolveOffsets` in `rehypeHighlightText.ts`): before applying offsets, each highlight's offset window is validated against `selectedText` (whitespace-collapsed compare via `normalizeWithMap` — DOM selections across blocks contain newlines hast never has). Mismatch → re-anchor to the nearest occurrence of the selected text (handles course-content drift); text gone → highlight dropped + `logger.warn` instead of marking wrong text. `collectFullText` mirrors the `pos` counter walk (mermaid excluded).
+- **getTextOffset DOM filters** (`lessonHelpers.tsx`): TreeWalker REJECTS text inside `svg` subtrees (mermaid diagram labels) and `[data-code-copy]` (code-block copy button "Copy"/"Copied" label) — both have no hast counterpart, would shift offsets for every highlight after the code block/diagram. Add `data-code-copy` to any new floating UI inside `markdownRef`.
+- **Section-scoped capture**: `Highlight.sectionID` (optional, null for legacy) stamped at selection time via `findSectionIdForRange` (`studyTools/notesHelpers.ts`) in `SelectionToolbar.handleAddHighlight`; persistence dedupes/recolors by text+offsets and updates sectionID. `HighlightItem` prefers stored sectionID, falls back to legacy DOM walk (`findSectionIdForHighlight`); raw offset readout removed from UI.
 
 ## Test conventions
 
