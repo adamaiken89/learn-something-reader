@@ -3,28 +3,21 @@ import { useTranslation } from 'react-i18next';
 
 import { textareaVariants } from '@/lib/textarea-styles';
 
-import { copyPrompt } from '../../ai/utils';
+import { askPrompt } from '../../ai/skills';
+import { copyPrompt, logAiSkillUsage, stripContentForAI } from '../../ai/utils';
 import { useLessonViewStore } from '../../stores/lessonViewStore';
-
-const ASK_PROMPT = (question: string, context: string) =>
-  [
-    'You are a helpful tutor. Answer the question based on the lesson content provided.',
-    '',
-    'Lesson content:',
-    context,
-    '',
-    'Question:',
-    question,
-  ].join('\n');
 
 export default function AITab() {
   const { t } = useTranslation();
   const content = useLessonViewStore((s) => s.content);
+  const courseId = useLessonViewStore((s) => s.courseId);
+  const moduleId = useLessonViewStore((s) => s.moduleId);
   const [question, setQuestion] = useState('');
 
   const handleAsk = async () => {
     if (!question.trim()) return;
-    const prompt = ASK_PROMPT(question.trim(), content);
+    const prompt = askPrompt(question.trim(), content ? stripContentForAI(content) : '');
+    if (courseId && moduleId) logAiSkillUsage(courseId, moduleId);
     void copyPrompt(prompt);
     setQuestion('');
   };

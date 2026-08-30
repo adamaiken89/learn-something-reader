@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
-import { AI_SKILLS } from './skills';
+import { AI_SKILLS, drillToYaml, parseDrillOutput } from './skills';
 
 describe('AI_SKILLS', () => {
   test('exports three skills in declared order', () => {
@@ -44,5 +44,49 @@ describe('AI_SKILLS', () => {
     expect(out).toContain('recall (2), application (2), analysis (1)');
     expect(out).toContain('Topic hint: core concept');
     expect(out).toContain('--- Lesson ---');
+  });
+
+  describe('parseDrillOutput / drillToYaml', () => {
+    test('parses numbered Q/A/Explanation blocks, skips incomplete ones', () => {
+      const text = [
+        'Here are your questions:',
+        '',
+        '1. Q: What does the indexer do?',
+        'A: Parses and stores events',
+        'Explanation: The indexer is the storage brain.',
+        '',
+        '2. Q: Incomplete block only',
+        '',
+        '3. Q: What runs on the edge?',
+        'A: A forwarder',
+      ].join('\n');
+      const { questions, invalid } = parseDrillOutput(text);
+      expect(questions).toHaveLength(2);
+      expect(invalid).toBe(1);
+      expect(questions[0].question).toBe('What does the indexer do?');
+      expect(questions[0].answer).toBe('Parses and stores events');
+      expect(questions[0].explanation).toBe('The indexer is the storage brain.');
+      expect(questions[1].explanation).toBe('');
+    });
+
+    test('continuation lines append to the current field', () => {
+      const { questions } = parseDrillOutput('Q: long question\nspanning lines\nA: answer');
+      expect(questions[0].question).toBe('long question spanning lines');
+    });
+
+    test('drillToYaml emits {blank}-directive cloze entries', () => {
+      const yaml = drillToYaml([
+        { question: 'What does the indexer do?', answer: 'parses events', explanation: 'why' },
+      ]);
+      expect(yaml).toContain('- id: "drill.1"');
+      expect(yaml).toContain('"What does the indexer do? {blank}"');
+      expect(yaml).toContain('"parses events"');
+      expect(yaml).toContain('"why"');
+    });
+
+    test('drillToYaml omits empty explanation', () => {
+      const yaml = drillToYaml([{ question: 'Q', answer: 'A', explanation: '' }]);
+      expect(yaml).not.toContain('explanation');
+    });
   });
 });
