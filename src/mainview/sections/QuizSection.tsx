@@ -15,7 +15,7 @@ import QuizMCQGrid from '../components/quiz/QuizMCQGrid';
 import QuizProgressBar from '../components/quiz/QuizProgressBar';
 import { useQuizEngine } from '../hooks/useQuizEngine';
 import { nextQuizAfter, presenceFromIndex, targetToView } from '../quizDrive';
-import { clozeCorrect } from '../quizUtil';
+import { clozeAnswers, clozeCorrect, clozeScore } from '../quizUtil';
 import { useQuizStore } from '../stores/quizStore';
 import { useViewStore } from '../stores/viewStore';
 
@@ -40,6 +40,7 @@ export default function QuizSection({ course, module }: Props) {
   const currentQuestion = useQuizStore((s) => s.currentQuestion);
   const hasAnswer = useQuizStore((s) => s.hasAnswer);
   const score = useQuizStore((s) => s.score);
+  const totalPts = useQuizStore((s) => s.totalPoints);
   const selectAnswer = useQuizStore((s) => s.selectAnswer);
   const nextQuestion = useQuizStore((s) => s.nextQuestion);
   const skipQuestion = useQuizStore((s) => s.skipQuestion);
@@ -153,13 +154,19 @@ export default function QuizSection({ course, module }: Props) {
     const questionResults = questions.map((q) => {
       const ua = selectedAnswers[q.id];
       const correct = q.type === 'cloze' ? clozeCorrect(q, ua) : ua === q.answer;
-      return { question: q, isCorrect: correct, userAnswer: ua };
+      return {
+        question: q,
+        isCorrect: correct,
+        userAnswer: ua,
+        blankResults: q.type === 'cloze' ? clozeScore(q, ua).results : undefined,
+        expectedAnswers: q.type === 'cloze' ? clozeAnswers(q) : undefined,
+      };
     });
 
     return (
       <QuizCompletionView
         score={score}
-        total={questions.length}
+        total={totalPts}
         previousSession={previousSession}
         questionResults={questionResults}
         onRetry={retry}

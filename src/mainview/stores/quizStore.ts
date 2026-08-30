@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 import type { QuizQuestion } from '../../bun/types';
-import { clozeCorrect } from '../quizUtil';
+import { clozeCorrect, questionPoints, totalPointsFor } from '../quizUtil';
 
 type QuizStatus = 'loading' | 'ready' | 'completed';
 
@@ -14,16 +14,23 @@ interface QuizState {
   highlightedIdx: number;
   /** Number of submitted attempts per cloze question. Max 2: a wrong 1st attempt allows one retry, then reveal + fixed score. */
   clozeAttempts: Record<string, number>;
+  /** Per-blank input values for the current cloze question (index = blank position). */
+  clozeBlankInputs: string[];
+  /** Achievable points: one per cloze blank, one per mcq/tf. */
+  totalPoints: number;
 
   // Derived (via selectors)
   currentQuestion: QuizQuestion | undefined;
   hasAnswer: boolean;
+  /** Points earned (partial credit: cloze blanks count individually). */
   score: number;
 
   // Actions
   setQuestions: (qs: QuizQuestion[]) => void;
   loadFailed: () => void;
   selectAnswer: (key: string) => void;
+  setClozeBlankInput: (index: number, value: string) => void;
+  submitCloze: () => void;
   nextQuestion: () => void;
   skipQuestion: () => void;
   retry: () => void;
@@ -40,6 +47,8 @@ const INITIAL = {
   textInput: '',
   highlightedIdx: -1,
   clozeAttempts: {},
+  clozeBlankInputs: [] as string[],
+  totalPoints: 0,
 };
 
 function isCorrect(q: QuizQuestion, ua: string | undefined): boolean {
@@ -63,6 +72,8 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       textInput: '',
       highlightedIdx: -1,
       clozeAttempts: {},
+      clozeBlankInputs: [],
+      totalPoints: totalPointsFor(qs),
       currentQuestion: qs[0],
       hasAnswer: false,
       score: 0,
@@ -84,7 +95,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     const q = state.questions[state.currentIndex];
     if (!q) return;
     const scoreFor = (selected: Record<string, string>) =>
-      state.questions.filter((qq) => isCorrect(qq, selected[qq.id])).length;
+      state.questions.reduce((sum, qq) => sum + questionPoints(qq, selected[qq.id]), 0);
 
     if (q.type === 'cloze') {
       const attempt = (state.clozeAttempts[q.id] ?? 0) + 1;
@@ -116,6 +127,22 @@ export const useQuizStore = create<QuizState>((set, get) => ({
     });
   },
 
+  setClozeBlankInput: (index, value) => {
+    const inputs = [...get().clozeBlankInputs];
+    while (inputs.length <= index) inputs.push('');
+    inputs[index] = value;
+    set({ clozeBlankInputs: inputs });
+  },
+
+  submitCloze: () => {
+    const state = get();
+    const q = state.questions[state.currentIndex];
+    if (!q || q.type !== 'cloze') return;
+    if (state.clozeBlankInputs.length === 0) return;
+    if (state.clozeBlankInputs.some((v) => !v.trim())) return;
+    state.selectAnswer(state.clozeBlankInputs.map((v) => v.trim()).join(', '));
+  },
+
   nextQuestion: () => {
     const state = get();
     if (state.currentIndex < state.questions.length - 1) {
@@ -126,6 +153,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         hasAnswer: state.selectedAnswers[state.questions[nextIdx].id] !== undefined,
         textInput: '',
         highlightedIdx: -1,
+        clozeBlankInputs: [],
       });
     } else {
       set({ status: 'completed' });
@@ -142,6 +170,7 @@ export const useQuizStore = create<QuizState>((set, get) => ({
         hasAnswer: state.selectedAnswers[state.questions[nextIdx].id] !== undefined,
         textInput: '',
         highlightedIdx: -1,
+        clozeBlankInputs: [],
       });
     } else {
       set({ status: 'completed' });
@@ -156,6 +185,8 @@ export const useQuizStore = create<QuizState>((set, get) => ({
       textInput: '',
       highlightedIdx: -1,
       clozeAttempts: {},
+      clozeBlankInputs: [],
+      totalPoints: totalPointsFor(get().questions),
       currentQuestion: get().questions[0],
       hasAnswer: false,
       score: 0,

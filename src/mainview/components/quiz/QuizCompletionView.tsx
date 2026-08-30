@@ -24,6 +24,10 @@ interface QuestionResult {
   question: QuizQuestion;
   isCorrect: boolean;
   userAnswer: string | undefined;
+  /** Per-blank correctness for cloze questions (undefined for mcq/tf). */
+  blankResults?: boolean[];
+  /** Expected answer per blank for cloze questions. */
+  expectedAnswers?: string[];
 }
 
 interface Props {
@@ -55,7 +59,7 @@ export default function QuizCompletionView({
   const isPerfect = percentage === 100;
 
   const correctCount = questionResults.filter((r) => r.isCorrect).length;
-  const wrongCount = total - correctCount;
+  const wrongCount = questionResults.length - correctCount;
 
   const filteredResults = (() => {
     if (filter === 'correct') return questionResults.filter((r) => r.isCorrect);
@@ -124,7 +128,7 @@ export default function QuizCompletionView({
             </text>
           </svg>
         </div>
-        <p className="text-gray-400 mb-4">{t('quiz.correct', { score, total })}</p>
+        <p className="text-gray-400 mb-4">{t('quiz.scoreLine', { score, total })}</p>
         {previousSession?.score !== undefined && previousSession.total && (
           <div className="flex items-center justify-center gap-1.5 mb-5">
             <span
@@ -143,7 +147,8 @@ export default function QuizCompletionView({
         )}
         <div className="flex gap-2 mb-6 justify-center">
           {(['all', 'wrong', 'correct'] as const).map((f) => {
-            const count = f === 'all' ? total : f === 'wrong' ? wrongCount : correctCount;
+            const count =
+              f === 'all' ? questionResults.length : f === 'wrong' ? wrongCount : correctCount;
             return (
               <button
                 key={f}
@@ -164,45 +169,67 @@ export default function QuizCompletionView({
           })}
         </div>
         <div className="space-y-3">
-          {filteredResults.map(({ question: q, isCorrect, userAnswer }) => (
-            <div
-              key={q.id}
-              className={clsx(
-                'text-left p-4 rounded-[10px] text-sm border',
-                isCorrect
-                  ? 'border-emerald-500/20 bg-emerald-500/[0.03]'
-                  : 'border-rose-500/30 bg-rose-500/[0.04]',
-              )}
-            >
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <span
-                  className={clsx(
-                    'text-xs font-semibold px-2 py-0.5 rounded flex items-center gap-1',
-                    isCorrect
-                      ? 'bg-emerald-500/10 text-emerald-400'
-                      : 'bg-rose-500/10 text-rose-400',
-                  )}
-                >
-                  {isCorrect ? <Check size={12} /> : <X size={12} />}
-                  {isCorrect
-                    ? t('quiz.correctLabel', 'Correct')
-                    : t('quiz.incorrectLabel', 'Incorrect')}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {t('quiz.yourAnswer')} {userAnswer}. {t('quiz.correctAnswer')} {q.answer}
-                </span>
-              </div>
-              <p className="font-medium text-sm text-gray-100 mb-3">{q.question}</p>
-              {q.explanation && (
-                <div className="pt-3 border-t border-gray-700/50 text-sm text-gray-400 leading-relaxed">
-                  <span className="font-medium text-gray-300 inline-flex items-center gap-1">
-                    <Lightbulb size={14} /> {t('quiz.explanation', 'Explanation')}:
-                  </span>{' '}
-                  {q.explanation}
+          {filteredResults.map(
+            ({ question: q, isCorrect, userAnswer, blankResults, expectedAnswers }) => (
+              <div
+                key={q.id}
+                className={clsx(
+                  'text-left p-4 rounded-[10px] text-sm border',
+                  isCorrect
+                    ? 'border-emerald-500/20 bg-emerald-500/[0.03]'
+                    : 'border-rose-500/30 bg-rose-500/[0.04]',
+                )}
+              >
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <span
+                    className={clsx(
+                      'text-xs font-semibold px-2 py-0.5 rounded flex items-center gap-1',
+                      isCorrect
+                        ? 'bg-emerald-500/10 text-emerald-400'
+                        : 'bg-rose-500/10 text-rose-400',
+                    )}
+                  >
+                    {isCorrect ? <Check size={12} /> : <X size={12} />}
+                    {isCorrect
+                      ? t('quiz.correctLabel', 'Correct')
+                      : t('quiz.incorrectLabel', 'Incorrect')}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {t('quiz.yourAnswer')} {userAnswer}. {t('quiz.correctAnswer')} {q.answer}
+                  </span>
                 </div>
-              )}
-            </div>
-          ))}
+                <p className="font-medium text-sm text-gray-100 mb-3">{q.question}</p>
+                {blankResults &&
+                  expectedAnswers &&
+                  blankResults.length === expectedAnswers.length && (
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {blankResults.map((ok, i) => (
+                        <span
+                          key={i}
+                          className={clsx(
+                            'text-xs font-medium px-2 py-0.5 rounded-md inline-flex items-center gap-1',
+                            ok
+                              ? 'bg-emerald-500/10 text-emerald-400'
+                              : 'bg-rose-500/10 text-rose-400',
+                          )}
+                        >
+                          {ok ? <Check size={10} /> : <X size={10} />}
+                          {expectedAnswers[i]}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                {q.explanation && (
+                  <div className="pt-3 border-t border-gray-700/50 text-sm text-gray-400 leading-relaxed">
+                    <span className="font-medium text-gray-300 inline-flex items-center gap-1">
+                      <Lightbulb size={14} /> {t('quiz.explanation', 'Explanation')}:
+                    </span>{' '}
+                    {q.explanation}
+                  </div>
+                )}
+              </div>
+            ),
+          )}
         </div>
         <div className="flex gap-3 mt-6 justify-center flex-wrap">
           <button onClick={onRetry} className={completionBtn({ color: 'primary' })}>

@@ -3,7 +3,12 @@ import { useEffect, useRef } from 'react';
 import type { QuizQuestion } from '../../bun/types';
 import { api } from '../api';
 import { logger } from '../logger';
-import { clozeCorrect, normalizeClozeBlanks, shuffleQuestions } from '../quizUtil';
+import {
+  normalizeClozeBlanks,
+  questionPoints,
+  shuffleQuestions,
+  totalPointsFor,
+} from '../quizUtil';
 import { useQuizStore } from '../stores/quizStore';
 import { showToast } from '../toast';
 
@@ -36,14 +41,10 @@ export function useQuizEngine(courseId: string, moduleId: string, loader?: QuizL
 
   useEffect(() => {
     if (status === 'completed' && questions.length > 0) {
-      const scoreVal = questions.filter((q) => {
-        const userAnswer = selectedAnswers[q.id];
-        if (userAnswer === undefined) return false;
-        if (q.type === 'cloze') {
-          return clozeCorrect(q, userAnswer);
-        }
-        return userAnswer === q.answer;
-      }).length;
+      const scoreVal = questions.reduce(
+        (sum, q) => sum + questionPoints(q, selectedAnswers[q.id]),
+        0,
+      );
       api.stats
         .logSession({
           courseID: courseId,
@@ -51,7 +52,7 @@ export function useQuizEngine(courseId: string, moduleId: string, loader?: QuizL
           durationMinutes: Math.ceil(questions.length * 1.5),
           type: 'quiz',
           score: scoreVal,
-          total: questions.length,
+          total: totalPointsFor(questions),
         })
         .catch((err) => {
           logger.warn({ err }, 'Failed to log quiz session');
