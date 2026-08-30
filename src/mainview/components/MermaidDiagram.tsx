@@ -3,12 +3,7 @@ import mermaid from 'mermaid';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import MermaidOverlay, {
-  computeFitHome,
-  computeWidthHome,
-  parseMinFontSize,
-  parseSvgSize,
-} from './MermaidOverlay';
+import MermaidOverlay, { computeFitHome, computeWidthHome, parseSvgSize } from './MermaidOverlay';
 
 mermaid.initialize({ startOnLoad: false, theme: 'default' });
 
@@ -21,8 +16,6 @@ interface Props {
 
 const TOOLBAR_BTN =
   'px-1.5 py-0.5 rounded text-xs bg-gray-700/80 hover:bg-gray-600 text-gray-300 hover:text-white cursor-pointer transition-colors';
-
-const INLINE_MAX_BOX_H = 720;
 
 function getSvgEl(container: HTMLDivElement): SVGSVGElement | null {
   return container.querySelector('svg') as SVGSVGElement | null;
@@ -61,8 +54,10 @@ export default function MermaidDiagram({ code, isDark }: Props) {
   const applyView = (nextZoom: number, nextPan: { x: number; y: number }) => {
     setZoom(nextZoom);
     setPan(nextPan);
+    // Height tracks the diagram: full natural height at 100% default; manual
+    // zoom-in scrolls internally instead of growing the page box.
     if (contentHRef.current != null) {
-      setBoxH(Math.min(Math.round(contentHRef.current * nextZoom), INLINE_MAX_BOX_H));
+      setBoxH(Math.round(contentHRef.current * Math.min(nextZoom, 1)));
     }
   };
 
@@ -84,7 +79,7 @@ export default function MermaidDiagram({ code, isDark }: Props) {
       offX: bbox ? vbRect.x - bbox.x : 0,
       offY: bbox ? vbRect.y - bbox.y : 0,
     });
-    const home = computeWidthHome(rect.width, content, INLINE_MAX_BOX_H, parseMinFontSize(svg));
+    const home = computeWidthHome(rect.width, content);
     contentHRef.current = vbRect.h;
     homeRef.current = home;
     applyView(home.zoom, home.pan);
@@ -163,10 +158,7 @@ export default function MermaidDiagram({ code, isDark }: Props) {
     const rect = containerRef.current?.getBoundingClientRect();
     const content = lastContentRef.current;
     if (!rect || !content) return;
-    const fit = computeFitHome(
-      { w: rect.width, h: Math.min(rect.height, INLINE_MAX_BOX_H) },
-      content,
-    );
+    const fit = computeFitHome({ w: rect.width, h: rect.height }, content);
     applyView(fit.zoom, fit.pan);
   };
 

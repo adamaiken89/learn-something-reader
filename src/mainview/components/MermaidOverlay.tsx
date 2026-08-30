@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 
 const TOOLBAR_BTN = 'px-2 py-1 rounded bg-gray-700 hover:bg-gray-600 cursor-pointer';
 const PAD = 48;
-const LEGIBLE_PX = 12;
 const MAX_LEGIBLE_ZOOM = 2;
 
 interface Home {
@@ -29,16 +28,6 @@ export function parseSvgSize(svg: string): ContentBox | null {
   return null;
 }
 
-export function parseMinFontSize(svg: string): number | null {
-  const sizes: number[] = [];
-  const re = /font-size\s*:\s*([\d.]+)px|font-size="([\d.]+)"/g;
-  for (const m of svg.matchAll(re)) {
-    const v = parseFloat(m[1] ?? m[2]);
-    if (v > 0) sizes.push(v);
-  }
-  return sizes.length > 0 ? Math.min(...sizes) : null;
-}
-
 interface ContentBox {
   x: number;
   y: number;
@@ -49,19 +38,15 @@ interface ContentBox {
 export function computeHome(
   viewport: { w: number; h: number },
   size: { w: number; h: number },
-  minFontSize?: number | null,
   bbox?: ContentBox | null,
 ): Home {
   const availW = viewport.w - PAD;
   const availH = viewport.h - PAD;
   if (availW <= 0 || availH <= 0) return { zoom: 1, pan: { x: 0, y: 0 } };
   const content = bbox ?? { x: 0, y: 0, w: size.w, h: size.h };
+  // 100% default: never magnify above natural size; shrink only to fit.
   const fit = Math.min(1, availW / content.w, availH / content.h);
-  let zoom = fit;
-  if (minFontSize && minFontSize > 0) {
-    zoom = Math.max(fit, LEGIBLE_PX / minFontSize);
-  }
-  zoom = Math.max(0.5, Math.min(MAX_LEGIBLE_ZOOM, zoom));
+  const zoom = Math.max(0.5, Math.min(MAX_LEGIBLE_ZOOM, fit));
   return {
     zoom,
     pan: {
@@ -71,10 +56,6 @@ export function computeHome(
   };
 }
 
-const INLINE_MAX_ZOOM = 3;
-export const MAX_COMFORT_FONT_PX = 18;
-export const INLINE_FIT_HEADROOM = 0.85;
-const MERMAID_BASE_FONT_PX = 16;
 export const FIT_VIEW_RATIO = 0.8;
 const FIT_MIN_ZOOM = 0.2;
 
@@ -99,21 +80,15 @@ export function computeFitHome(
   };
 }
 
-export function computeWidthHome(
-  viewportW: number,
-  content: ContentBox,
-  heightBudget: number,
-  minFontSize?: number | null,
-): Home {
+export function computeWidthHome(viewportW: number, content: ContentBox): Home {
   const availW = viewportW - PAD;
   if (availW <= 0 || content.w <= 0 || content.h <= 0) {
     return { zoom: 1, pan: { x: 0, y: 0 } };
   }
-  const base = minFontSize && minFontSize > 0 ? minFontSize : MERMAID_BASE_FONT_PX;
-  const floor = LEGIBLE_PX / base;
-  const ceiling = Math.min(MAX_COMFORT_FONT_PX / base, INLINE_MAX_ZOOM);
-  const zoomFit = Math.min(availW / content.w, heightBudget / content.h) * INLINE_FIT_HEADROOM;
-  const zoom = Math.min(ceiling, Math.max(floor, zoomFit));
+  // 100% default: never magnify above natural size (the old legibility
+  // floor/ceiling auto-expanded small-font diagrams to ~132-140%); shrink
+  // only when the diagram is wider than the column.
+  const zoom = Math.min(1, availW / content.w);
   return {
     zoom,
     pan: {
@@ -146,7 +121,7 @@ export default function MermaidOverlay({ svg, onClose }: Props) {
     return () => window.removeEventListener('keydown', onEscape);
   }, []);
 
-  useEffect(() => {
+  const rehome = useEffectEvent(() => {
     const rect = contentRef.current?.getBoundingClientRect();
     const size = parseSvgSize(svg);
     if (!rect || !size) {
@@ -172,16 +147,25 @@ export default function MermaidOverlay({ svg, onClose }: Props) {
         contentBbox = null;
       }
     }
-    const home = computeHome(
-      { w: rect.width, h: rect.height },
-      size,
-      parseMinFontSize(svg),
-      contentBbox,
-    );
+    const home = computeHome({ w: rect.width, h: rect.height }, size, contentBbox);
     homeRef.current = home;
     setZoom(home.zoom);
     setPan(home.pan);
+  });
+
+  useEffect(() => {
+    rehome();
   }, [svg]);
+
+  // Re-fit when the modal box resizes (window resize while open) — otherwise
+  // zoom/pan keep the stale home and the diagram sits off-center with gaps.
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container || typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(() => rehome());
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!isPanning) return;
@@ -276,6 +260,7 @@ export default function MermaidOverlay({ svg, onClose }: Props) {
         <div
           ref={contentRef}
           className="overflow-hidden flex-1 bg-gray-900"
+          data-testid="mermaid-overlay-content"
           onMouseDown={handleMouseDown}
           onWheel={handleWheel}
         >

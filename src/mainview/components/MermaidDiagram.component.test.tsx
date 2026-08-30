@@ -1,4 +1,4 @@
-import { fireEvent, render, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, spyOn, test } from 'bun:test';
 
 import { mermaidMockImpl } from '../../testFsShared';
@@ -9,9 +9,6 @@ import {
   computeHome,
   computeWidthHome,
   FIT_VIEW_RATIO,
-  INLINE_FIT_HEADROOM,
-  MAX_COMFORT_FONT_PX,
-  parseMinFontSize,
   parseSvgSize,
 } from './MermaidOverlay';
 
@@ -176,91 +173,67 @@ describe('MermaidDiagram', () => {
     expect(utils.queryByTestId('mermaid-overlay-svg')).toBeNull();
   });
 
-  test('parseMinFontSize detects smallest text size', () => {
-    const svg =
-      '<svg><text style="font-size: 16px">A</text><text font-size="12">B</text><text style="font-size: 14px">C</text></svg>';
-    expect(parseMinFontSize(svg)).toBe(12);
-    expect(parseMinFontSize('<svg><text>A</text></svg>')).toBeNull();
+  test('home zoom shrinks to fit oversized diagram', () => {
+    const home = computeHome({ w: 1000, h: 800 }, { w: 1600, h: 1400 });
+    expect(home.zoom).toBeCloseTo(752 / 1400);
   });
 
-  test('home zoom boosts when fit makes text too small', () => {
-    const home = computeHome({ w: 1000, h: 800 }, { w: 2000, h: 1600 }, 10);
-    expect(home.zoom).toBeCloseTo(1.2);
-  });
-
-  test('home zoom keeps fit when text already legible', () => {
-    const home = computeHome({ w: 1000, h: 800 }, { w: 2000, h: 1600 }, 16);
-    expect(home.zoom).toBeCloseTo(0.75);
-  });
-
-  test('home zoom stays 1 for small diagrams', () => {
-    const home = computeHome({ w: 1000, h: 800 }, { w: 400, h: 300 }, 16);
+  test('home zoom stays 1 for small diagrams (never magnifies)', () => {
+    const home = computeHome({ w: 1000, h: 800 }, { w: 400, h: 300 });
     expect(home.zoom).toBe(1);
   });
 
-  test('home zoom caps at MAX_LEGIBLE_ZOOM', () => {
-    const home = computeHome({ w: 1000, h: 800 }, { w: 2000, h: 1600 }, 5);
-    expect(home.zoom).toBe(2);
+  test('home zoom floors at 0.5 for extremely large diagrams', () => {
+    const home = computeHome({ w: 1000, h: 800 }, { w: 4000, h: 3200 });
+    expect(home.zoom).toBe(0.5);
   });
 
   test('computeHome with bbox centers content midpoint', () => {
-    const home = computeHome({ w: 1000, h: 800 }, { w: 1200, h: 600 }, null, {
-      x: 100,
-      y: 50,
-      w: 800,
-      h: 400,
-    });
+    const home = computeHome(
+      { w: 1000, h: 800 },
+      { w: 1200, h: 600 },
+      {
+        x: 100,
+        y: 50,
+        w: 800,
+        h: 400,
+      },
+    );
     expect(home.zoom).toBe(1);
     expect(home.pan.x).toBeCloseTo(-24);
     expect(home.pan.y).toBeCloseTo(126);
   });
 
-  test('computeWidthHome fits median diagram within height budget', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 846, h: 440 }, 720);
-    expect(home.zoom).toBeCloseTo((952 / 846) * INLINE_FIT_HEADROOM);
-    expect(home.pan.x).toBeCloseTo((952 - 846 * home.zoom) / 2);
-    expect(home.pan.y).toBe(0);
-  });
-
-  test('computeWidthHome boosts zoom for tiny text', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 2000, h: 400 }, 720, 5);
-    expect(home.zoom).toBeCloseTo(12 / 5);
-  });
-
-  test('computeWidthHome font ceiling pins oversized text', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 900, h: 300 }, 720, 30);
-    expect(home.zoom).toBeCloseTo(MAX_COMFORT_FONT_PX / 30);
-  });
-
-  test('computeWidthHome font ceiling caps width-fill enlargement', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 300, h: 100 }, 720, 8);
-    expect(home.zoom).toBeCloseTo(MAX_COMFORT_FONT_PX / 8);
-  });
-
-  test('computeWidthHome enlarges modestly to comfort ceiling for small diagrams', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 100, h: 50 }, 720);
-    expect(home.zoom).toBeCloseTo(MAX_COMFORT_FONT_PX / 16);
-    expect(home.pan.x).toBeCloseTo((952 - 100 * home.zoom) / 2);
-    expect(home.pan.y).toBe(0);
-  });
-
-  test('computeWidthHome guards zero-width viewport', () => {
-    const home = computeWidthHome(0, { x: 0, y: 0, w: 900, h: 300 }, 720);
+  test('computeWidthHome homes at 100% when diagram fits the column', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 846, h: 440 });
     expect(home.zoom).toBe(1);
-    expect(home.pan).toEqual({ x: 0, y: 0 });
+    expect(home.pan.x).toBeCloseTo((952 - 846) / 2);
+    expect(home.pan.y).toBe(0);
   });
 
-  test('computeWidthHome clamps wide diagram to legibility floor', () => {
-    const home = computeWidthHome(1000, { x: 0, y: 0, w: 2000, h: 400 }, 720);
-    expect(home.zoom).toBeCloseTo(12 / 16);
+  test('computeWidthHome never magnifies small diagrams (100% default)', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 100, h: 50 });
+    expect(home.zoom).toBe(1);
+    expect(home.pan.x).toBeCloseTo((952 - 100) / 2);
+  });
+
+  test('computeWidthHome shrinks wide diagram to fit width', () => {
+    const home = computeWidthHome(1000, { x: 0, y: 0, w: 2000, h: 400 });
+    expect(home.zoom).toBeCloseTo(952 / 2000);
     expect(home.pan.x).toBe(0);
     expect(home.pan.y).toBe(0);
   });
 
-  test('computeWidthHome floor wins over fit for very tall diagram', () => {
-    const home = computeWidthHome(1000, { x: -450, y: -350, w: 900, h: 2000 }, 720);
-    expect(home.zoom).toBeCloseTo(12 / 16);
-    expect(home.pan.x).toBeCloseTo((952 - 900 * (12 / 16)) / 2);
+  test('computeWidthHome guards zero-width viewport', () => {
+    const home = computeWidthHome(0, { x: 0, y: 0, w: 900, h: 300 });
+    expect(home.zoom).toBe(1);
+    expect(home.pan).toEqual({ x: 0, y: 0 });
+  });
+
+  test('computeWidthHome ignores height (tall diagram keeps 100% if width fits)', () => {
+    const home = computeWidthHome(1000, { x: -450, y: -350, w: 900, h: 2000 });
+    expect(home.zoom).toBe(1);
+    expect(home.pan.x).toBeCloseTo((952 - 900) / 2);
     expect(home.pan.y).toBe(0);
   });
 
@@ -283,7 +256,7 @@ describe('MermaidDiagram', () => {
     expect(home).toEqual({ zoom: 1, pan: { x: 0, y: 0 } });
   });
 
-  test('tall diagram container height capped at 720px', async () => {
+  test('tall diagram container height tracks diagram height', async () => {
     mermaidMockImpl.render = (..._args: unknown[]) =>
       Promise.resolve({ svg: '<svg viewBox="0 0 400 2000">mock</svg>' });
     const utils = renderDiagram();
@@ -291,8 +264,62 @@ describe('MermaidDiagram', () => {
 
     const container = utils.getByTestId('mermaid-diagram');
     await waitFor(() => {
-      expect(container.style.height).toBe('720px');
+      expect(container.style.height).toBe('2000px');
     });
+  });
+
+  test('overlay re-fits when its box resizes while open', async () => {
+    // Regression: overlay computed home once on mount; resizing the modal box
+    // (window resize) kept stale zoom/pan — diagram sat off-center with gaps.
+    let roCallback: ((entries: unknown[], obs: unknown) => void) | null = null;
+    class FakeRO {
+      constructor(cb: (entries: unknown[], obs: unknown) => void) {
+        roCallback = cb;
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    }
+    const OrigRO = (globalThis as { ResizeObserver: unknown }).ResizeObserver;
+    (globalThis as { ResizeObserver: unknown }).ResizeObserver = FakeRO;
+    try {
+      const utils = renderDiagram();
+      await waitForSvg(utils);
+      fireEvent.click(utils.getByTestId('mermaid-fullscreen'));
+      await waitFor(() => {
+        expect(utils.getByTestId('mermaid-overlay-svg')).toBeInTheDocument();
+      });
+      const svgWrapper = utils.getByTestId('mermaid-overlay-svg');
+      const before = svgWrapper.style.transform;
+      expect(before).toContain('scale(');
+
+      // Simulate the modal box growing (window resize while open)
+      const content = utils.getByTestId('mermaid-overlay-content');
+      const rectSpy = spyOn(content, 'getBoundingClientRect').mockReturnValue({
+        width: 2000,
+        height: 1200,
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        right: 2000,
+        bottom: 1200,
+        toJSON: () => '',
+      } as DOMRect);
+      expect(roCallback).toBeTruthy();
+      act(() => {
+        roCallback!([], null);
+      });
+      rectSpy.mockRestore();
+
+      const after = svgWrapper.style.transform;
+      // Fresh home for a much larger box: still 100% (fit capped at 1), but
+      // re-centered for the new width
+      expect(after).not.toBe(before);
+      expect(after).toContain('scale(1)');
+    } finally {
+      (globalThis as { ResizeObserver: unknown }).ResizeObserver = OrigRO;
+    }
   });
 
   test('parseSvgSize returns viewBox rect incl origin', () => {
