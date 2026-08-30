@@ -48,7 +48,10 @@ export default function CourseCard({ course }: { course: Course }) {
       className="text-left bg-[#131620] border border-white/[0.06] hover:border-indigo-500/25 rounded-lg p-4 transition-all duration-200 group cursor-pointer flex flex-col h-full justify-between"
     >
       <div className="min-w-0">
-        <h2 className="text-base font-semibold text-white group-hover:text-indigo-400 transition-colors line-clamp-1 truncate">
+        <h2
+          title={course.displayName}
+          className="text-base font-semibold text-white group-hover:text-indigo-400 transition-colors line-clamp-1"
+        >
           {course.displayName}
         </h2>
         <div className="flex items-center gap-2 mt-1">

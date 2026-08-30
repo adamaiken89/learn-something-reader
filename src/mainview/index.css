@@ -660,6 +660,11 @@ body {
 }
 .mermaid-inline {
   justify-content: flex-start;
+  /* Box height is set to exactly the diagram height (border-box), so any
+     vertical padding here becomes a phantom ~16px scrollbar; 80vh cap would
+     re-clamp tall diagrams. Spacing comes from the outer margin. */
+  padding: 0;
+  max-height: none;
 }
 .mermaid-inline svg {
   width: 100% !important;

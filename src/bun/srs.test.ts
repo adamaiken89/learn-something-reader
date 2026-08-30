@@ -172,7 +172,7 @@ describe('toggleStar', () => {
   });
 });
 
-describe('performReview (FSRS-5)', () => {
+describe('performReview (FSRS-6)', () => {
   const now = new Date('2024-06-15T12:00:00Z');
 
   function makeReviewCard(overrides: Partial<SRSCard> & { id: string }): SRSCard {
@@ -312,7 +312,7 @@ describe('performReview (FSRS-5)', () => {
   });
 });
 
-describe('createSRSCard (FSRS)', () => {
+describe('createSRSCard (FSRS-6)', () => {
   const q: QuizQuestion = {
     id: 'q1',
     question: 'What is 2+2?',

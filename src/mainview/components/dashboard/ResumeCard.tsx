@@ -35,7 +35,10 @@ export default function ResumeCard({ lastSession }: { lastSession: LastSession }
         <p className="text-[10px] font-semibold text-indigo-400 mb-0.5 uppercase tracking-wider">
           {t('dashboard.resume')}
         </p>
-        <h2 className="text-base font-semibold text-white truncate">
+        <h2
+          title={lastSession.course.displayName}
+          className="text-base font-semibold text-white truncate"
+        >
           {lastSession.course.displayName}
         </h2>
         <p className="text-xs text-gray-400 truncate">
