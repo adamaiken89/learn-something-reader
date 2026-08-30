@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 
 import type { Highlight } from '../../bun/types';
 import type { HastElement, HastNode, HastRoot } from './rehypeHighlightText';
-import { rehypeHighlightText } from './rehypeHighlightText';
+import { normalizeWithMap, rehypeHighlightText, resolveOffsets } from './rehypeHighlightText';
 function mkHighlight(id: string, text: string, color: string): Highlight {
   return {
     id,
@@ -282,6 +282,61 @@ describe('rehypeHighlightText', () => {
       const tree = rootNode([element('p', [textNode('Hello')])]);
       callPlugin(tree, [mkOffsetHighlight('1', 'nope', 100, 105, 'yellow')]);
       expect(textVal(asEl(tree.children[0]).children[0])).toBe('Hello');
+    });
+  });
+
+  describe('resolveOffsets / re-anchoring', () => {
+    test('normalizeWithMap collapses whitespace and maps back to original indices', () => {
+      const { norm, map, origToNorm } = normalizeWithMap('Hello\n  world  ');
+      expect(norm).toBe('Hello world');
+      expect(map[6]).toBe(8); // 'w' of world in original (both spaces after \n dropped)
+      expect(origToNorm[0]).toBe(0);
+      expect(origToNorm[13]).toBe(11);
+    });
+
+    test('valid offsets pass through unchanged', () => {
+      const full = 'The indexer stores events';
+      const h = mkOffsetHighlight('1', 'indexer stores', 4, 18, 'yellow');
+      expect(resolveOffsets(full, [h])).toEqual([h]);
+    });
+
+    test('cross-block selection text with newlines validates via whitespace collapse', () => {
+      const full = 'First para.\nSecond sentence here';
+      // Selection text as range.toString() reports it: newline between blocks
+      const h = mkOffsetHighlight('1', 'para.\nSecond', 6, 18, 'yellow');
+      const out = resolveOffsets(full, [h]);
+      expect(out).toHaveLength(1);
+      expect(out[0].startOffset).toBe(6);
+      expect(out[0].endOffset).toBe(18);
+    });
+
+    test('drifted offsets re-anchor to the nearest occurrence of selected text', () => {
+      // Content edited: 10 chars inserted before the highlighted phrase
+      const full = 'Intro prelude. The indexer stores events. Another indexer stores events too.';
+      // Stale offset now sits before the 1st occurrence — nearest occurrence wins
+      const h = mkOffsetHighlight('1', 'indexer stores', 15, 29, 'yellow');
+      const out = resolveOffsets(full, [h]);
+      expect(out).toHaveLength(1);
+      expect(full.slice(out[0].startOffset, out[0].endOffset)).toBe('indexer stores');
+      expect(out[0].startOffset).toBe(19);
+
+      // Offset drifted near the 2nd occurrence — re-anchors there instead
+      const h2 = mkOffsetHighlight('2', 'indexer stores', 44, 58, 'blue');
+      const out2 = resolveOffsets(full, [h2]);
+      expect(out2[0].startOffset).toBe(50);
+    });
+
+    test('deleted selected text drops the highlight', () => {
+      const full = 'Unrelated content only';
+      const h = mkOffsetHighlight('1', 'vanished text', 0, 13, 'yellow');
+      const out = resolveOffsets(full, [h]);
+      expect(out).toHaveLength(0);
+    });
+
+    test('plugin drops stale highlight instead of marking wrong text', () => {
+      const tree = rootNode([element('p', [textNode('New content entirely')])]);
+      callPlugin(tree, [mkOffsetHighlight('1', 'old phrase here', 0, 15, 'yellow')]);
+      expect(textVal(asEl(tree.children[0]).children[0])).toBe('New content entirely');
     });
   });
 });

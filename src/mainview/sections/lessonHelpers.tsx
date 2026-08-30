@@ -29,6 +29,7 @@ function CodeBlockWithCopy({ children }: { children?: React.ReactNode }) {
       <pre>{children}</pre>
       <button
         onClick={() => void handleCopy()}
+        data-code-copy
         className="absolute top-2 right-2 px-2 py-1 text-xs rounded bg-gray-800/80 border border-gray-600/50 text-gray-300 hover:bg-gray-700 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
       >
         {copied ? t('selection.copied') : t('lesson.copy')}
@@ -86,7 +87,20 @@ export function getTextOffset(
   range: Range,
 ): { start: number; end: number } | null {
   try {
-    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+    // Skip DOM text that has no counterpart in the hast tree the highlight
+    // renderer measures: code-copy button labels (React-only) and mermaid SVG
+    // text nodes (hast skips mermaid code blocks entirely). Without these
+    // filters, offsets for highlights after a code block or diagram drift.
+    const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, {
+      acceptNode(node: Text) {
+        const el = node.parentElement;
+        if (!el) return NodeFilter.FILTER_REJECT;
+        if (el.closest('svg') || el.closest('[data-code-copy]')) {
+          return NodeFilter.FILTER_REJECT;
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
     let pos = 0;
     let start = -1;
     let end = -1;

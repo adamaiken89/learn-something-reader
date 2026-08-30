@@ -16,6 +16,7 @@ interface HighlightsState {
     color: string,
     startOffset?: number,
     endOffset?: number,
+    sectionID?: string | null,
   ): Promise<void>;
   remove(id: string): Promise<void>;
   getForModule(courseId: string, moduleId: string): Highlight[];
@@ -39,7 +40,15 @@ export const useHighlightsStore = create<HighlightsState>((set, get) => ({
     }
   },
 
-  add: async (courseId, moduleId, text, color, startOffset = 0, endOffset = 0) => {
+  add: async (
+    courseId,
+    moduleId,
+    text,
+    color,
+    startOffset = 0,
+    endOffset = 0,
+    sectionID = null,
+  ) => {
     const highlight = await api.storage.addHighlight({
       courseID: courseId,
       moduleID: moduleId,
@@ -47,6 +56,7 @@ export const useHighlightsStore = create<HighlightsState>((set, get) => ({
       startOffset,
       endOffset,
       color,
+      sectionID,
     });
     const k = key(courseId, moduleId);
     set((s) => {

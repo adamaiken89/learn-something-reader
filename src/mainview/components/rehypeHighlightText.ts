@@ -1,4 +1,5 @@
 import type { Highlight } from '../../bun/types';
+import { logger } from '../logger';
 
 type HastText = { type: 'text'; value: string };
 export type HastElement = {
@@ -98,6 +99,122 @@ function transformTree(node: HastElement, highlights: Highlight[], skip = false)
   node.children = newChildren;
 }
 
+/** Concatenate all hast text, mirroring exactly what the offset `pos` counter
+ * sees in applyHighlightsByOffset: mermaid code blocks are excluded (not
+ * counted), everything else — including blockquotes and code — is counted. */
+function collectFullText(children: HastNode[]): string {
+  let out = '';
+  const walk = (nodes: HastNode[]): void => {
+    for (const child of nodes) {
+      if (child == null || typeof child !== 'object') continue;
+      if (child.type === 'text' && 'value' in child && typeof child.value === 'string') {
+        out += child.value;
+        continue;
+      }
+      const el = child as HastElement;
+      if (el.tagName === 'code' && isMermaidCode(el)) continue;
+      if (
+        el.tagName === 'pre' &&
+        el.children?.some(
+          (c) => (c as HastElement).tagName === 'code' && isMermaidCode(c as HastElement),
+        )
+      ) {
+        continue;
+      }
+      if (el.children && Array.isArray(el.children)) walk(el.children);
+    }
+  };
+  walk(children);
+  return out;
+}
+
+/** Whitespace-collapsed text plus two-way index maps to the original string. */
+export interface NormalizedText {
+  norm: string;
+  /** norm index → original index. */
+  map: number[];
+  /** original index → norm index (length s.length + 1). */
+  origToNorm: number[];
+}
+
+export function normalizeWithMap(s: string): NormalizedText {
+  const chars: string[] = [];
+  const map: number[] = [];
+  const origToNorm: number[] = [];
+  let lastWs = true;
+  for (let i = 0; i < s.length; i++) {
+    origToNorm[i] = chars.length;
+    const ch = s[i];
+    if (/\s/.test(ch)) {
+      if (lastWs) continue;
+      chars.push(' ');
+      map.push(i);
+      lastWs = true;
+    } else {
+      chars.push(ch);
+      map.push(i);
+      lastWs = false;
+    }
+  }
+  origToNorm[s.length] = chars.length;
+  // Trim leading/trailing collapsed whitespace, adjusting the norm→orig map.
+  let lead = 0;
+  let trail = chars.length;
+  while (lead < trail && chars[lead] === ' ') lead++;
+  while (trail > lead && chars[trail - 1] === ' ') trail--;
+  return {
+    norm: chars.slice(lead, trail).join(''),
+    map: map.slice(lead, trail),
+    origToNorm,
+  };
+}
+
+/**
+ * Validate offset-based highlights against the actual hast text and re-anchor
+ * ones whose offsets drifted (course content edited after the highlight was
+ * captured). A highlight whose `selectedText` no longer exists is dropped
+ * (warned) instead of silently rendering marks at wrong positions.
+ *
+ * Comparison is whitespace-collapsed: DOM selections across block boundaries
+ * contain newlines that hast text never has.
+ */
+export function resolveOffsets(fullText: string, highlights: Highlight[]): Highlight[] {
+  const { norm, map, origToNorm } = normalizeWithMap(fullText);
+  const out: Highlight[] = [];
+
+  for (const h of highlights) {
+    const selNorm = normalizeWithMap(h.selectedText).norm;
+    if (selNorm === '') {
+      out.push(h);
+      continue;
+    }
+    const nStart = origToNorm[Math.min(h.startOffset, fullText.length)];
+    const nEnd = origToNorm[Math.min(h.endOffset, fullText.length)];
+    if (norm.slice(nStart, nEnd) === selNorm) {
+      out.push(h);
+      continue;
+    }
+
+    // Drifted — re-anchor to the nearest occurrence of the selected text.
+    const candidates: number[] = [];
+    let idx = norm.indexOf(selNorm);
+    while (idx !== -1) {
+      candidates.push(idx);
+      idx = norm.indexOf(selNorm, idx + 1);
+    }
+    if (candidates.length === 0) {
+      logger.warn({ id: h.id }, 'Highlight dropped: selected text no longer in content');
+      continue;
+    }
+    const best = candidates.reduce((a, b) => (Math.abs(b - nStart) < Math.abs(a - nStart) ? b : a));
+    const start = map[best];
+    const end = map[best + selNorm.length - 1] + 1;
+    out.push({ ...h, startOffset: start, endOffset: end });
+    logger.warn({ id: h.id, startOffset: start }, 'Highlight re-anchored after content drift');
+  }
+  return out;
+}
+
 function applyHighlightsByOffset(node: HastElement, highlights: Highlight[]): void {
   if (!node?.children || !Array.isArray(node.children)) return;
 
@@ -191,7 +308,8 @@ export function rehypeHighlightText(highlights: Highlight[]) {
     }
 
     if (offsetHighlights.length > 0) {
-      applyHighlightsByOffset(root, offsetHighlights);
+      const fullText = collectFullText(root.children);
+      applyHighlightsByOffset(root, resolveOffsets(fullText, offsetHighlights));
     }
 
     if (textHighlights.length > 0) {

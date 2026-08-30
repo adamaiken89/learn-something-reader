@@ -11,6 +11,7 @@ import { getTextOffset } from '../../sections/lessonHelpers';
 import { useHighlightsStore } from '../../stores/highlightsStore';
 import { useLessonViewStore } from '../../stores/lessonViewStore';
 import { useSelectionStore } from '../../stores/selectionStore';
+import { findSectionIdForRange } from '../studyTools/notesHelpers';
 import { ColorPickerRow } from './ColorPickerRow';
 import NoteEditor from './NoteEditor';
 
@@ -33,6 +34,7 @@ export default function SelectionToolbar() {
   const moduleId = useLessonViewStore((s) => s.moduleId);
   const contentRef = useLessonViewStore((s) => s.contentRef);
   const markdownRef = useLessonViewStore((s) => s.markdownRef);
+  const sections = useLessonViewStore((s) => s.sections);
 
   const highlights =
     useHighlightsStore((s) => {
@@ -47,9 +49,10 @@ export default function SelectionToolbar() {
     if (!root) return;
     const offsets = getTextOffset(root, sel.range);
     if (!offsets) return;
+    const sec = findSectionIdForRange(sel.range, contentRef, sections);
     await useHighlightsStore
       .getState()
-      .add(courseId, moduleId, sel.text, color, offsets.start, offsets.end);
+      .add(courseId, moduleId, sel.text, color, offsets.start, offsets.end, sec?.id ?? null);
     void navigator.clipboard.writeText(sel.text);
     setTimeout(() => closeToolbar(), 700);
     requestAnimationFrame(() => {
