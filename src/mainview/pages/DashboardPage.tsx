@@ -40,7 +40,7 @@ export default function DashboardPage() {
       <button
         onClick={() => push({ type: 'bookmarks' })}
         className={iconBtn}
-        title={t('common.bookmarks')}
+        title={t('common.saved')}
       >
         <Bookmark size={14} />
       </button>

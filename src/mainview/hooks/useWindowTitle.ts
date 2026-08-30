@@ -32,7 +32,7 @@ export function useWindowTitle() {
         title = `CourseReader — ${t('common.settings')}`;
         break;
       case 'bookmarks':
-        title = `CourseReader — ${t('common.bookmarks')}`;
+        title = `CourseReader — ${t('common.saved')}`;
         break;
       case 'dashboard':
         title = `CourseReader — ${t('dashboard.title')}`;

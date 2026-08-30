@@ -6,7 +6,7 @@
     "loading": "Loading...",
     "back": "← Back",
     "settings": "Settings",
-    "bookmarks": "Bookmarks",
+    "bookmarks": "Saved",
     "quiz": "Quiz",
     "review": "Review",
     "save": "Save",
@@ -17,7 +17,8 @@
     "modules": "Modules",
     "courses": "Courses",
     "courseReader": "CourseReader",
-    "notes": "Notes"
+    "notes": "Notes",
+    "saved": "Saved"
   },
   "landing": {
     "title": "Welcome to CourseReader",
@@ -132,7 +133,9 @@
     "clozePlaceholder": "Type the missing term",
     "clozeCheck": "Check",
     "clozeTryAgain": "Try again — you'll get a second chance before the answer is shown",
-    "clozeWrongAnswer": "Your answer \"{{user}}\" — correct: {{answer}}"
+    "clozeWrongAnswer": "Your answer \"{{user}}\" — correct: {{answer}}",
+    "scoreLine": "Score: {{score}} / {{total}}",
+    "clozeBlankIncorrect": "Blank {{index}}: expected \"{{answer}}\""
   },
   "quizHub": {
     "title": "Quiz Hub",
@@ -299,13 +302,30 @@
     "cardFront": "Question / prompt",
     "cardReps": "Reps",
     "cards": "Cards",
-    "noCards": "No cards yet. Select text in the lesson to create cards."
+    "noCards": "No cards yet. Select text in the lesson to create cards.",
+    "importQuiz": "Import AI quiz",
+    "importQuizHint": "Paste a Drill response generated in your browser — it becomes a cloze quiz fragment you can paste into your course's cloze.yaml.",
+    "importQuizPlaceholder": "Paste AI output here...\n\nQ: ...\nA: ...\nExplanation: ...",
+    "importQuizPreview": "{{valid}} question(s) parsed, {{invalid}} skipped.",
+    "copyYaml": "Copy as YAML",
+    "yamlCopied": "YAML copied — paste it into cloze.yaml"
   },
   "bookmarks": {
     "loadingBookmarks": "Loading bookmarks...",
     "noBookmarks": "No bookmarks yet. Bookmark lessons while reading.",
     "sectionLabel": " — Section",
-    "moduleLabel": " — Module"
+    "moduleLabel": " — Module",
+    "savedTitle": "Saved",
+    "tabAll": "All ({{count}})",
+    "tabModule": "Modules ({{count}})",
+    "tabSection": "Sections ({{count}})",
+    "tabHighlight": "Highlights ({{count}})",
+    "allCourses": "All courses",
+    "save": "Save",
+    "saved": "Saved",
+    "emptyModules": "No saved modules yet. Use the bookmark button in the lesson toolbar to save where you can pick up later.",
+    "emptySections": "No saved sections yet. Star a section in the lesson navigation panel to return to it quickly.",
+    "emptyHighlights": "No saved highlights yet. Save a highlight from the notes panel to collect key passages."
   },
   "syllabus": {
     "startLearning": "Start Learning",

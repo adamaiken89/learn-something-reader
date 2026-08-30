@@ -6,7 +6,7 @@ import { useBookmarksStore } from './bookmarksStore';
 setupRPC();
 
 beforeEach(() => {
-  useBookmarksStore.setState({ byModule: {}, loading: {} });
+  useBookmarksStore.setState({ byModule: {}, loading: {}, all: [], allLoading: false });
   clearMocks();
 });
 
@@ -144,5 +144,54 @@ describe('bookmarksStore', () => {
     });
     expect(useBookmarksStore.getState().getActive('math', '01', 's1')?.id).toBe('b1');
     expect(useBookmarksStore.getState().getActive('math', '01', null)?.id).toBe('b2');
+  });
+
+  describe('toggleHighlightSave', () => {
+    test('adds a kind:highlight bookmark, then toggles it off', async () => {
+      const nextId = 'h1';
+      mockResponse('getAllBookmarks', []);
+      mockResponse('addBookmark', () => ({
+        id: nextId,
+        courseID: 'math',
+        moduleID: '01',
+        sectionID: null,
+        title: 'key passage',
+        createdAt: '2024-01-01',
+        kind: 'highlight',
+        snippet: 'key passage',
+      }));
+      mockResponse('deleteBookmark', { ok: true as const });
+
+      const saved = await useBookmarksStore
+        .getState()
+        .toggleHighlightSave('math', '01', 'key passage', null);
+      expect(saved).toBe(true);
+      expect(useBookmarksStore.getState().all).toHaveLength(1);
+      expect(useBookmarksStore.getState().all[0].kind).toBe('highlight');
+
+      const savedAgain = await useBookmarksStore
+        .getState()
+        .toggleHighlightSave('math', '01', 'key passage', null);
+      expect(savedAgain).toBe(false);
+      expect(useBookmarksStore.getState().all).toHaveLength(0);
+    });
+
+    test('loadAll populates the global list', async () => {
+      const all = [
+        {
+          id: 'b1',
+          courseID: 'math',
+          moduleID: '01',
+          sectionID: null,
+          title: 'Intro',
+          createdAt: '2024-01-01',
+          kind: 'module' as const,
+        },
+      ];
+      mockResponse('getAllBookmarks', all);
+      await useBookmarksStore.getState().loadAll();
+      expect(useBookmarksStore.getState().all).toEqual(all);
+      expect(useBookmarksStore.getState().allLoading).toBe(false);
+    });
   });
 });

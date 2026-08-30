@@ -8,6 +8,17 @@ import { key } from './storageUtils';
 interface BookmarksState {
   byModule: Record<string, Bookmark[]>;
   loading: Record<string, boolean>;
+  /** All bookmarks across courses — used by the Saved hub and highlight bridge. */
+  all: Bookmark[];
+  allLoading: boolean;
+  loadAll(): Promise<void>;
+  /** Toggle a kind:'highlight' bookmark keyed by snippet within the module. */
+  toggleHighlightSave(
+    courseId: string,
+    moduleId: string,
+    snippet: string,
+    sectionID: string | null,
+  ): Promise<boolean>;
   load(courseId: string, moduleId: string): Promise<void>;
   toggle(
     courseId: string,
@@ -23,6 +34,52 @@ interface BookmarksState {
 export const useBookmarksStore = create<BookmarksState>((set, get) => ({
   byModule: {},
   loading: {},
+  all: [],
+  allLoading: false,
+
+  loadAll: async () => {
+    set({ allLoading: true });
+    try {
+      const all = await api.storage.bookmarks();
+      set({ all, allLoading: false });
+    } catch {
+      showToast.error('toast.loadFailed');
+      set({ all: [], allLoading: false });
+    }
+  },
+
+  toggleHighlightSave: async (courseId, moduleId, snippet, sectionID) => {
+    const existing = get().all.find(
+      (b) =>
+        b.kind === 'highlight' &&
+        b.moduleID === moduleId &&
+        b.courseID === courseId &&
+        b.snippet === snippet,
+    );
+    if (existing) {
+      await api.storage.deleteBookmark(existing.id);
+      set((s) => ({
+        all: s.all.filter((b) => b.id !== existing.id),
+        byModule: {
+          ...s.byModule,
+          [key(courseId, moduleId)]: (s.byModule[key(courseId, moduleId)] ?? []).filter(
+            (b) => b.id !== existing.id,
+          ),
+        },
+      }));
+      return false;
+    }
+    const bookmark = await api.storage.addBookmark({
+      courseID: courseId,
+      moduleID: moduleId,
+      title: snippet,
+      sectionID: sectionID ?? undefined,
+      kind: 'highlight',
+      snippet,
+    });
+    set((s) => ({ all: [...s.all, bookmark] }));
+    return true;
+  },
 
   load: async (courseId, moduleId) => {
     const k = key(courseId, moduleId);
@@ -54,7 +111,7 @@ export const useBookmarksStore = create<BookmarksState>((set, get) => ({
         moduleID: moduleId,
         title,
         sectionID: sectionID ?? undefined,
-        scrollPosition: 0,
+        kind: sectionID ? 'section' : 'module',
       });
       set((s) => ({
         byModule: { ...s.byModule, [k]: [...(s.byModule[k] ?? []), bookmark] },
@@ -69,7 +126,7 @@ export const useBookmarksStore = create<BookmarksState>((set, get) => ({
       for (const k of Object.keys(byModule)) {
         byModule[k] = byModule[k].filter((b) => b.id !== id);
       }
-      return { byModule };
+      return { byModule, all: s.all.filter((b) => b.id !== id) };
     });
   },
 

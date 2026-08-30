@@ -6,7 +6,7 @@
     "loading": "加载中...",
     "back": "← 返回",
     "settings": "设置",
-    "bookmarks": "书签",
+    "bookmarks": "收藏",
     "quiz": "测验",
     "review": "复习",
     "save": "保存",
@@ -17,7 +17,8 @@
     "modules": "单元",
     "courses": "课程",
     "courseReader": "CourseReader",
-    "notes": "笔记"
+    "notes": "笔记",
+    "saved": "收藏"
   },
   "landing": {
     "title": "欢迎使用 CourseReader",
@@ -131,7 +132,9 @@
     "clozePlaceholder": "输入缺失的术语",
     "clozeCheck": "检查",
     "clozeTryAgain": "再试一次 — 第二次失败将显示答案",
-    "clozeWrongAnswer": "你的答案 \"{{user}}\" — 正确答案：{{answer}}"
+    "clozeWrongAnswer": "你的答案 \"{{user}}\" — 正确答案：{{answer}}",
+    "scoreLine": "得分：{{score}} / {{total}}",
+    "clozeBlankIncorrect": "第 {{index}} 空：应为 \"{{answer}}\""
   },
   "quizHub": {
     "title": "测验中心",
@@ -298,13 +301,30 @@
     "cardFront": "问题 / 提示",
     "cardReps": "次数",
     "cards": "卡片",
-    "noCards": "尚无卡片。在课程中选取文字以创建卡片。"
+    "noCards": "尚无卡片。在课程中选取文字以创建卡片。",
+    "importQuiz": "导入 AI 练习题",
+    "importQuizHint": "粘贴浏览器中生成的 Drill 回复——转换为填空题片段，可粘贴进课程的 cloze.yaml。",
+    "importQuizPlaceholder": "在此粘贴 AI 输出……\n\nQ: ……\nA: ……\nExplanation: ……",
+    "importQuizPreview": "已解析 {{valid}} 道题，跳过 {{invalid}} 道。",
+    "copyYaml": "复制为 YAML",
+    "yamlCopied": "YAML 已复制——请粘贴到 cloze.yaml"
   },
   "bookmarks": {
     "loadingBookmarks": "正在加载书签...",
     "noBookmarks": "尚无书签。阅读时可将课程加入书签。",
     "sectionLabel": " — 章节",
-    "moduleLabel": " — 单元"
+    "moduleLabel": " — 单元",
+    "savedTitle": "收藏",
+    "tabAll": "全部（{{count}}）",
+    "tabModule": "模块（{{count}}）",
+    "tabSection": "章节（{{count}}）",
+    "tabHighlight": "划线（{{count}}）",
+    "allCourses": "全部课程",
+    "save": "收藏",
+    "saved": "已收藏",
+    "emptyModules": "还没有收藏的模块。使用课程工具栏中的收藏按钮，标记下次继续学习的地方。",
+    "emptySections": "还没有收藏的章节。在课程导航面板中点亮章节星标，方便快速返回。",
+    "emptyHighlights": "还没有收藏的划线。在笔记面板中收藏划线，汇聚关键内容。"
   },
   "syllabus": {
     "startLearning": "开始学习",
