@@ -52,13 +52,13 @@ export interface SRSCard {
   nextReviewDate: string;
   lastReviewed: string | null;
   isStarred: boolean;
-  /** FSRS-5: memory stability (days until ~90% retention) */
+  /** FSRS-6: memory stability (days until ~90% retention) */
   stability?: number;
-  /** FSRS-5: card difficulty (1=easist, 10=hardest) */
+  /** FSRS-6: card difficulty (1=easist, 10=hardest) */
   difficulty?: number;
-  /** FSRS-5: how many times forgotten */
+  /** FSRS-6: how many times forgotten */
   lapses?: number;
-  /** FSRS-5: card state (New, Review, Relearning) */
+  /** FSRS-6: card state (New, Review, Relearning) */
   state?: string;
 }
 

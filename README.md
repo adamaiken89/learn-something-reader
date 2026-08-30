@@ -23,7 +23,7 @@
 
 - **Course reading** — structured curricula with book-like prose, 18 themes, adjustable font size, page transitions, section navigation, and in-lesson search
 - **Quizzes** — MCQ, cloze drill, and cumulative review quizzes with instant scoring and confetti
-- **Spaced repetition** — FSRS-5 flashcard deck with due/starred/all filters + custom user cards
+- **Spaced repetition** — FSRS-6 flashcard deck with due/starred/all filters + custom user cards
 - **AI study tools** — Feynman Explain, Reframe, and Drill skills that copy prompts to Perplexity (zero setup, no API key)
 - **Annotations** — persistent highlights, notes, and bookmarks per module
 - **Search** — ⌘K global search across lessons, notes, and highlights with section-level scroll-to

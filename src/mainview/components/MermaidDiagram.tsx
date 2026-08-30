@@ -55,9 +55,11 @@ export default function MermaidDiagram({ code, isDark }: Props) {
     setZoom(nextZoom);
     setPan(nextPan);
     // Height tracks the diagram: full natural height at 100% default; manual
-    // zoom-in scrolls internally instead of growing the page box.
+    // zoom-in scrolls internally instead of growing the page box. Ceil so the
+    // box is never a sub-pixel shorter than the rendered frame (phantom
+    // scrollbar).
     if (contentHRef.current != null) {
-      setBoxH(Math.round(contentHRef.current * Math.min(nextZoom, 1)));
+      setBoxH(Math.ceil(contentHRef.current * Math.min(nextZoom, 1)));
     }
   };
 
