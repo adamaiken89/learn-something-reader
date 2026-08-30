@@ -22,7 +22,7 @@ interface Props {
 const TOOLBAR_BTN =
   'px-1.5 py-0.5 rounded text-xs bg-gray-700/80 hover:bg-gray-600 text-gray-300 hover:text-white cursor-pointer transition-colors';
 
-const INLINE_MAX_BOX_H = 520;
+const INLINE_MAX_BOX_H = 720;
 
 function getSvgEl(container: HTMLDivElement): SVGSVGElement | null {
   return container.querySelector('svg') as SVGSVGElement | null;
@@ -94,7 +94,11 @@ export default function MermaidDiagram({ code, isDark }: Props) {
     rehome();
   }, [svg]);
 
+  // Attach the RO only once the svg exists — before that the early-return
+  // loading branch leaves containerRef null, and with [] deps the observer
+  // would never attach (rehome on width change silently dead).
   useEffect(() => {
+    if (!svg) return;
     const container = containerRef.current;
     if (!container || typeof ResizeObserver === 'undefined') return;
     const ro = new ResizeObserver((entries) => {
@@ -106,7 +110,7 @@ export default function MermaidDiagram({ code, isDark }: Props) {
     });
     ro.observe(container);
     return () => ro.disconnect();
-  }, []);
+  }, [svg]);
 
   useEffect(() => {
     const id = `mermaid-${++counter}`;
